@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "023_notification_history_dialog",
+    "captured_at":  "2026-08-01T13:19:03.6529196-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Notification history"
+                        ],
+    "required_starting_state":  "Default settings; no history records",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{44f8100 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\023_notification_history_dialog-20260801-131900.png",
+                     "ui_xml":  "evidence\\ui-xml\\023_notification_history_dialog-20260801-131900.xml",
+                     "activity_dump":  "evidence\\activity\\023_notification_history_dialog-20260801-131900.txt",
+                     "window_dump":  "evidence\\activity\\023_notification_history_dialog-20260801-131900-window.txt",
+                     "input_method_dump":  "evidence\\activity\\023_notification_history_dialog-20260801-131900-input-method.txt"
+                 }
+}

@@ -1,0 +1,10 @@
+validation_id,screen_or_flow,trigger,observed_behavior,exact_text,classification,evidence
+V001,Rule builder,Tap Save with required action missing,"Missing span turns red with red wavy underline; warning row appears","You have a missing field. Please tap to fill it in to complete the rule.",CONFIRMED,059_rule_builder_validation_missing
+V002,Rule builder phrase dialog,Empty phrase,"Done control is present; empty submission outcome not committed",,PARTIALLY_TESTED,034_phrase_filter_input
+V003,Shortcut editor,No rules exist,"Create shortcut button is disabled",,CONFIRMED,025_create_shortcut_empty
+V004,App selector search,Search for BuzzKill self app,"No app results shown; Pick all apps remains",,CONFIRMED,031_app_selector_search
+V005,History search,Query audit with empty history,"No result row or error; list remains empty",,CONFIRMED,015_history_search_no_results
+V006,Folder dialog,Empty folder name,"Done is visible; commit not tested",,PARTIALLY_TESTED,068_rule_folder_dialog
+V007,Rename dialog,Empty nickname,"Done is visible; commit not tested",,PARTIALLY_TESTED,069_rule_rename_dialog
+V008,Onboarding,Capability denied,Not selected; denial/retry copy unknown,,UNKNOWN,003;005;009
+V009,Backup folder picker,Disallowed root folder,"Android system picker reports the folder cannot be used","Can't use this folder",CONFIRMED,026_automatic_backups_dialog

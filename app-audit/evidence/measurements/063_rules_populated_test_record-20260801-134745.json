@@ -1,0 +1,20 @@
+{
+  "screen_id": "063_rules_populated_test_record",
+  "captured_at": "2026-08-01T13:47:49.2516409-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Create rule > Save rule"
+  ],
+  "required_starting_state": "Complete rule containing AUDIT_SENTINEL_8675309; Mute action",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\063_rules_populated_test_record-20260801-134745.png",
+    "ui_xml": "evidence\\ui-xml\\063_rules_populated_test_record-20260801-134745.xml",
+    "activity_dump": "evidence\\activity\\063_rules_populated_test_record-20260801-134745.txt",
+    "window_dump": "evidence\\activity\\063_rules_populated_test_record-20260801-134745-window.txt",
+    "input_method_dump": "evidence\\activity\\063_rules_populated_test_record-20260801-134745-input-method.txt"
+  }
+}

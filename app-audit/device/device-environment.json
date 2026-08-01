@@ -1,0 +1,52 @@
+{
+  "classification": "CONFIRMED",
+  "captured_at": "2026-08-01T14:00:11-04:00",
+  "device_serial": "emulator-5554",
+  "avd_name": "BuzzKill_Audit_API36",
+  "virtual_device": true,
+  "manufacturer": "Google",
+  "model": "sdk_gphone64_x86_64",
+  "device_codename": "emu64xa",
+  "android_version": "16",
+  "sdk_int": 36,
+  "build_display_id": "BE2A.250530.026.D1",
+  "build_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys",
+  "screen": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "density_scale": 2.625,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "refresh_rate_hz": 60.0,
+    "orientation_at_baseline": "portrait",
+    "rotation_mode_at_baseline": "free"
+  },
+  "font_scale": 1.0,
+  "effective_locale": "en-US",
+  "navigation_mode": {
+    "raw_value": 2,
+    "classification": "gestural"
+  },
+  "system_night_mode": false,
+  "app_theme_observed": "Dark",
+  "enabled_accessibility_services": [],
+  "display_cutout": {
+    "top_inset_px": 136,
+    "top_inset_dp": 51.8,
+    "bounding_rect_px": [480, 0, 625, 136]
+  },
+  "rounded_corners": {
+    "top_radius_px": 47,
+    "bottom_radius_px": 48,
+    "approx_radius_dp": 18.1
+  },
+  "evidence": [
+    "evidence/measurements/device-display-20260801-140011.txt",
+    "evidence/measurements/device-window-displays-20260801-140011.txt",
+    "evidence/measurements/device-wm-size-20260801-140011.txt",
+    "evidence/measurements/device-wm-density-20260801-140011.txt",
+    "evidence/measurements/device-font-scale-20260801-140011.txt",
+    "evidence/measurements/device-locale-effective-20260801-1409.txt"
+  ]
+}

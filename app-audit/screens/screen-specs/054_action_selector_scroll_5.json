@@ -1,0 +1,301 @@
+{
+  "screen_id": "054_action_selector_scroll_5",
+  "screen_name": "Action Selector Scroll 5",
+  "state_name": "action_selector_scroll_5",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "action_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Action selector"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > Action selector > scroll"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/054_action_selector_scroll_5-20260801-133946.png",
+    "ui_xml": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml",
+    "activity_dump": "evidence/activity/054_action_selector_scroll_5-20260801-133946.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 1844
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 702.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "element_2",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 568,
+        "width": 954,
+        "height": 327
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 216.4,
+        "width": 363.4,
+        "height": 124.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "dismiss_actions",
+      "visible_label": "Dismiss actions",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 620,
+        "right": 1017,
+        "bottom": 791,
+        "width": 954,
+        "height": 171
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 236.2,
+        "right": 387.4,
+        "bottom": 301.3,
+        "width": 363.4,
+        "height": 65.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "element_7",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 843,
+        "right": 1017,
+        "bottom": 1209,
+        "width": 954,
+        "height": 366
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 321.1,
+        "right": 387.4,
+        "bottom": 460.6,
+        "width": 363.4,
+        "height": 139.4
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "element_10",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1261,
+        "right": 1017,
+        "bottom": 1798,
+        "width": 954,
+        "height": 537
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 480.4,
+        "right": 387.4,
+        "bottom": 685.0,
+        "width": 363.4,
+        "height": 204.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "element_13",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1850,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 235
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 704.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 89.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick action",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/054_action_selector_scroll_5-20260801-133946.xml"
+    }
+  ],
+  "visible_text": [
+    "🧪 Experimental",
+    "Add share button",
+    "Adds a button to the notification that allows it to be shared to other apps.",
+    "Dismiss actions",
+    "Dismiss",
+    "Automatically dismiss the notification.",
+    "Keep if",
+    "Keep a notification only if it matches, such as \"when I get a notification from Office Group then keep only if it contains Boss or Emergency\".",
+    "Undo dismiss",
+    "Pick action"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 7,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

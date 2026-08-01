@@ -1,0 +1,25 @@
+stateDiagram-v2
+    [*] --> OnboardingIncomplete
+    OnboardingIncomplete --> NotificationsGranted: Allow POST_NOTIFICATIONS
+    NotificationsGranted --> BackgroundAllowed: Allow background access
+    BackgroundAllowed --> Ready: Allow notification listener
+
+    Ready --> RulesEmpty: no rules
+    RulesEmpty --> BuilderIncomplete: Create rule
+    BuilderIncomplete --> BuilderFiltered: apply content filter
+    BuilderFiltered --> BuilderInvalid: Save without selected action
+    BuilderInvalid --> BuilderComplete: choose action
+    BuilderComplete --> RuleEnabled: Save rule
+    RuleEnabled --> RuleDisabled: toggle off
+    RuleDisabled --> RuleEnabled: toggle on
+    RuleDisabled --> RuleDisabled: background/resume or force-stop/relaunch
+
+    Ready --> HistoryEmpty: no captured notifications
+    HistoryEmpty --> HistoryPopulated: notification-listener receives notification
+    HistoryPopulated --> HistoryFilteredEmpty: rule-triggered or dismissed filter excludes record
+    HistoryPopulated --> ActivityNoRules: View activity
+    ActivityNoRules --> Changes: select Changes tab
+
+    Ready --> ExploreTop
+    ExploreTop --> ExploreSuggestions: scroll
+    ExploreSuggestions --> BuilderComplete: Add to my rules

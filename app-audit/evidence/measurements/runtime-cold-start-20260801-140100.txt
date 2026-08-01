@@ -1,0 +1,7 @@
+Starting: Intent { cmp=com.samruston.buzzkill/.ui.MainActivity }
+Status: ok
+LaunchState: WARM
+Activity: com.samruston.buzzkill/.ui.MainActivity
+TotalTime: 6447
+WaitTime: 6450
+Complete

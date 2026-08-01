@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "019_settings_scrolled_3",
+    "captured_at":  "2026-08-01T13:16:05.6020365-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e scroll down three times"
+                        ],
+    "required_starting_state":  "Default settings; lower settings list",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\019_settings_scrolled_3-20260801-131602.png",
+                     "ui_xml":  "evidence\\ui-xml\\019_settings_scrolled_3-20260801-131602.xml",
+                     "activity_dump":  "evidence\\activity\\019_settings_scrolled_3-20260801-131602.txt",
+                     "window_dump":  "evidence\\activity\\019_settings_scrolled_3-20260801-131602-window.txt",
+                     "input_method_dump":  "evidence\\activity\\019_settings_scrolled_3-20260801-131602-input-method.txt"
+                 }
+}

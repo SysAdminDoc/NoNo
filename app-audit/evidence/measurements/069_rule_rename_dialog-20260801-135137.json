@@ -1,0 +1,20 @@
+{
+  "screen_id": "069_rule_rename_dialog",
+  "captured_at": "2026-08-01T13:51:41.0394895-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Test rule > More > Rename"
+  ],
+  "required_starting_state": "Saved disabled test rule",
+  "focused_window": [
+    "  mCurrentFocus=Window{d3fc869 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\069_rule_rename_dialog-20260801-135137.png",
+    "ui_xml": "evidence\\ui-xml\\069_rule_rename_dialog-20260801-135137.xml",
+    "activity_dump": "evidence\\activity\\069_rule_rename_dialog-20260801-135137.txt",
+    "window_dump": "evidence\\activity\\069_rule_rename_dialog-20260801-135137-window.txt",
+    "input_method_dump": "evidence\\activity\\069_rule_rename_dialog-20260801-135137-input-method.txt"
+  }
+}

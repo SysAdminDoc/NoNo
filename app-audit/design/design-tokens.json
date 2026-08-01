@@ -1,0 +1,53 @@
+{
+  "classification": "PROPOSED NORMALIZATION OF OBSERVED VALUES",
+  "source": "evidence/measurements/color-analysis.json and UI XML bounds",
+  "color": {
+    "background": {"value": "#0A0B0D", "confidence": "HIGH"},
+    "surface": {"value": "#1A1C21", "confidence": "HIGH"},
+    "surface_selected_subtle": {"value": "#1D1D17", "confidence": "HIGH"},
+    "accent_yellow": {"value": "#FFF387", "confidence": "HIGH"},
+    "text_primary": {"value": "#FFFFFF", "confidence": "HIGH"},
+    "text_secondary": {"value": "#858586", "confidence": "HIGH"},
+    "text_icon_muted": {"value": "#535559", "confidence": "HIGH"},
+    "border_muted": {"value": "#3F414B", "confidence": "HIGH"},
+    "error": {"value": "#FF7070", "confidence": "HIGH"},
+    "rule_enabled_blue": {"value": "#93D1F3", "confidence": "HIGH"},
+    "rule_disabled_gray": {"value": "#3F414B", "confidence": "HIGH"},
+    "suggestion_green": {"value": "#80DB94", "confidence": "HIGH"},
+    "suggestion_purple": {"value": "#A16FFF", "confidence": "HIGH"}
+  },
+  "spacing_dp": {
+    "2xs": 4,
+    "xs": 8,
+    "sm": 12,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "2xl": 48
+  },
+  "size_dp": {
+    "page_horizontal_margin": 24,
+    "list_horizontal_margin": 16,
+    "primary_button_height": 48,
+    "bottom_navigation_height": 70,
+    "system_gesture_area_height_observed": 24,
+    "icon_touch_box_observed": 44.2,
+    "rule_card_outer_radius_estimate": 18,
+    "button_radius_estimate": 14,
+    "dialog_radius_estimate": 20
+  },
+  "typography_sp_estimates": {
+    "display_count": 48,
+    "screen_hero": 26,
+    "title": 24,
+    "section_title": 20,
+    "body_large": 18,
+    "body": 16,
+    "label": 14
+  },
+  "motion_ms_estimates": {
+    "tap_state": 100,
+    "dialog_or_menu": 200,
+    "page_transition": 250
+  }
+}

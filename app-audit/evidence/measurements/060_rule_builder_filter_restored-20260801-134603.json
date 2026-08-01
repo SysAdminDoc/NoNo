@@ -1,0 +1,20 @@
+{
+  "screen_id": "060_rule_builder_filter_restored",
+  "captured_at": "2026-08-01T13:46:07.5486296-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Create rule > filter applied after validation"
+  ],
+  "required_starting_state": "Unsaved rule; action missing",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\060_rule_builder_filter_restored-20260801-134603.png",
+    "ui_xml": "evidence\\ui-xml\\060_rule_builder_filter_restored-20260801-134603.xml",
+    "activity_dump": "evidence\\activity\\060_rule_builder_filter_restored-20260801-134603.txt",
+    "window_dump": "evidence\\activity\\060_rule_builder_filter_restored-20260801-134603-window.txt",
+    "input_method_dump": "evidence\\activity\\060_rule_builder_filter_restored-20260801-134603-input-method.txt"
+  }
+}

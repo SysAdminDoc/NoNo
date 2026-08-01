@@ -1,0 +1,44 @@
+[
+  {
+    "step": "environment",
+    "status": "PASS",
+    "duration_seconds": 0.28,
+    "detail": ""
+  },
+  {
+    "step": "unit-tests",
+    "status": "PASS",
+    "duration_seconds": 32.28,
+    "detail": ""
+  },
+  {
+    "step": "lint",
+    "status": "PASS",
+    "duration_seconds": 38.86,
+    "detail": ""
+  },
+  {
+    "step": "build",
+    "status": "PASS",
+    "duration_seconds": 20.72,
+    "detail": ""
+  },
+  {
+    "step": "ui-tests",
+    "status": "PASS",
+    "duration_seconds": 52.46,
+    "detail": ""
+  },
+  {
+    "step": "install",
+    "status": "PASS",
+    "duration_seconds": 0.92,
+    "detail": ""
+  },
+  {
+    "step": "visual-validation",
+    "status": "FAIL",
+    "duration_seconds": 704.27,
+    "detail": "12 visual validation rows did not meet their configured threshold."
+  }
+]

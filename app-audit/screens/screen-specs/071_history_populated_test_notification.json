@@ -1,0 +1,465 @@
+{
+  "screen_id": "071_history_populated_test_notification",
+  "screen_name": "History Populated Test Notification",
+  "state_name": "history_populated_test_notification",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "history",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Disabled test rule; notification access enabled"
+  ],
+  "navigation_path": [
+    "Post shell test notification > History"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/071_history_populated_test_notification-20260801-135246.png",
+    "ui_xml": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml",
+    "activity_dump": "evidence/activity/071_history_populated_test_notification-20260801-135246.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "container",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/container",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "closeButton",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/closeButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 911,
+        "top": 178,
+        "right": 1027,
+        "bottom": 294,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 347.0,
+        "top": 67.8,
+        "right": 391.2,
+        "bottom": 112.0,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "timeline",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/timeline",
+      "element_type": "View",
+      "bounds_px": {
+        "left": 42,
+        "top": 538,
+        "right": 1038,
+        "bottom": 664,
+        "width": 996,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 205.0,
+        "right": 395.4,
+        "bottom": 253.0,
+        "width": 379.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "all",
+      "visible_label": "All",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/all",
+      "element_type": "CompoundButton",
+      "bounds_px": {
+        "left": 42,
+        "top": 727,
+        "right": 370,
+        "bottom": 853,
+        "width": 328,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 277.0,
+        "right": 141.0,
+        "bottom": 325.0,
+        "width": 125.0,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": true,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "summary",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/summary",
+      "element_type": "CompoundButton",
+      "bounds_px": {
+        "left": 362,
+        "top": 727,
+        "right": 519,
+        "bottom": 853,
+        "width": 157,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 137.9,
+        "top": 277.0,
+        "right": 197.7,
+        "bottom": 325.0,
+        "width": 59.8,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "sent",
+      "visible_label": "Sent at",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/sent",
+      "element_type": "CompoundButton",
+      "bounds_px": {
+        "left": 561,
+        "top": 727,
+        "right": 889,
+        "bottom": 853,
+        "width": 328,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 213.7,
+        "top": 277.0,
+        "right": 338.7,
+        "bottom": 325.0,
+        "width": 125.0,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": true,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "dismissed",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/dismissed",
+      "element_type": "CompoundButton",
+      "bounds_px": {
+        "left": 881,
+        "top": 727,
+        "right": 1038,
+        "bottom": 853,
+        "width": 157,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 335.6,
+        "top": 277.0,
+        "right": 395.4,
+        "bottom": 325.0,
+        "width": 59.8,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 916,
+        "right": 1038,
+        "bottom": 1283,
+        "width": 996,
+        "height": 367
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 349.0,
+        "right": 395.4,
+        "bottom": 488.8,
+        "width": 379.4,
+        "height": 139.8
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "rules",
+      "visible_label": "",
+      "accessibility_label": "Rules",
+      "resource_id": "com.samruston.buzzkill:id/rules",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 2154,
+        "right": 270,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 820.6,
+        "right": 102.9,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "explore",
+      "visible_label": "",
+      "accessibility_label": "Explore",
+      "resource_id": "com.samruston.buzzkill:id/explore",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 540,
+        "top": 2154,
+        "right": 810,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 205.7,
+        "top": 820.6,
+        "right": 308.6,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    },
+    {
+      "element_id": "settings",
+      "visible_label": "",
+      "accessibility_label": "Settings",
+      "resource_id": "com.samruston.buzzkill:id/settings",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 810,
+        "top": 2154,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 308.6,
+        "top": 820.6,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/071_history_populated_test_notification-20260801-135246.xml"
+    }
+  ],
+  "visible_text": [
+    "1",
+    "Notifications today",
+    "All",
+    "Sent at",
+    "Shell",
+    "1:52 PM",
+    "Audit_Notice",
+    "AUDIT_SENTINEL_8675309",
+    "No rules triggered"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 12,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

@@ -1,0 +1,22 @@
+{
+  "screen_id": "067_rule_priority_dialog",
+  "baseline": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\baseline\\067_rule_priority_dialog.png",
+  "current": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\current\\067_rule_priority_dialog.png",
+  "mask": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\masks\\system-bars.json",
+  "baseline_dimensions": [
+    1080,
+    2400
+  ],
+  "current_dimensions": [
+    1080,
+    2400
+  ],
+  "dimensions_match": true,
+  "compared_pixel_ratio": 0.93,
+  "mean_absolute_error": 26.186842,
+  "root_mean_square_error": 46.106377,
+  "pixel_similarity": 0.8973065,
+  "global_structural_similarity": 0.27616541,
+  "threshold": 0.85,
+  "result": "PASS"
+}

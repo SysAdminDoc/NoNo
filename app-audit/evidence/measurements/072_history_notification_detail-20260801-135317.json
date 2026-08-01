@@ -1,0 +1,20 @@
+{
+  "screen_id": "072_history_notification_detail",
+  "captured_at": "2026-08-01T13:53:22.9814073-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "History > Shell test notification"
+  ],
+  "required_starting_state": "History contains one shell test notification",
+  "focused_window": [
+    "  mCurrentFocus=Window{c939fc8 u0 PopupWindow:e13f8ae}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\072_history_notification_detail-20260801-135317.png",
+    "ui_xml": "evidence\\ui-xml\\072_history_notification_detail-20260801-135317.xml",
+    "activity_dump": "evidence\\activity\\072_history_notification_detail-20260801-135317.txt",
+    "window_dump": "evidence\\activity\\072_history_notification_detail-20260801-135317-window.txt",
+    "input_method_dump": "evidence\\activity\\072_history_notification_detail-20260801-135317-input-method.txt"
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "screen_id": "058_action_selector_bottom_2",
+  "screen_name": "Action Selector Bottom 2",
+  "state_name": "action_selector_bottom_2",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "action_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Action selector"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > Action selector > bottom"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/058_action_selector_bottom_2-20260801-134053.png",
+    "ui_xml": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml",
+    "activity_dump": "evidence/activity/058_action_selector_bottom_2-20260801-134053.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 1844
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 702.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    },
+    {
+      "element_id": "element_2",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 266,
+        "right": 1017,
+        "bottom": 746,
+        "width": 954,
+        "height": 480
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 101.3,
+        "right": 387.4,
+        "bottom": 284.2,
+        "width": 363.4,
+        "height": 182.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    },
+    {
+      "element_id": "element_6",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 798,
+        "right": 1017,
+        "bottom": 1278,
+        "width": 954,
+        "height": 480
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 304.0,
+        "right": 387.4,
+        "bottom": 486.9,
+        "width": 363.4,
+        "height": 182.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    },
+    {
+      "element_id": "advanced_actions",
+      "visible_label": "Advanced actions",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 1330,
+        "right": 1017,
+        "bottom": 1501,
+        "width": 954,
+        "height": 171
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 506.7,
+        "right": 387.4,
+        "bottom": 571.8,
+        "width": 363.4,
+        "height": 65.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    },
+    {
+      "element_id": "element_10",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1553,
+        "right": 1017,
+        "bottom": 2033,
+        "width": 954,
+        "height": 480
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 591.6,
+        "right": 387.4,
+        "bottom": 774.5,
+        "width": 363.4,
+        "height": 182.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick action",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/058_action_selector_bottom_2-20260801-134053.xml"
+    }
+  ],
+  "visible_text": [
+    "🧪 Experimental",
+    "Trigger MacroDroid",
+    "Fire an event that MacroDroid can use as a trigger. Notification details are passed as variables.",
+    "Trigger Tasker",
+    "Run a task in Tasker when you get a notification. You'll need Tasker installed and a task setup. Check settings for a full tutorial.",
+    "Advanced actions",
+    "Multi-tool",
+    "A special action that allows you to trigger multiple other actions for the same rule. This is equivalent to adding a rule for each action.",
+    "Pick action"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 6,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

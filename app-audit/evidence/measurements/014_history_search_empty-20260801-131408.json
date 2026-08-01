@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "014_history_search_empty",
+    "captured_at":  "2026-08-01T13:14:11.9637686-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "History \u003e Search"
+                        ],
+    "required_starting_state":  "History empty; no notifications",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\014_history_search_empty-20260801-131408.png",
+                     "ui_xml":  "evidence\\ui-xml\\014_history_search_empty-20260801-131408.xml",
+                     "activity_dump":  "evidence\\activity\\014_history_search_empty-20260801-131408.txt",
+                     "window_dump":  "evidence\\activity\\014_history_search_empty-20260801-131408-window.txt",
+                     "input_method_dump":  "evidence\\activity\\014_history_search_empty-20260801-131408-input-method.txt"
+                 }
+}

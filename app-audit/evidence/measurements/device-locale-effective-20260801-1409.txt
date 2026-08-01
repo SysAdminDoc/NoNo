@@ -1,0 +1,4 @@
+persist.sys.locale: (unset)
+settings system_locales: null
+ro.product.locale: en-US
+Effective default locale classification: en-US (CONFIRMED by ro.product.locale and English system UI)

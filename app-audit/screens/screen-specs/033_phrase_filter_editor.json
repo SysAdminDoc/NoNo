@@ -1,0 +1,206 @@
+{
+  "screen_id": "033_phrase_filter_editor",
+  "screen_name": "Phrase Filter Editor",
+  "state_name": "phrase_filter_editor",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "condition_builder",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Default filter builder; no filters"
+  ],
+  "navigation_path": [
+    "Create rule > contains > Phrase"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/033_phrase_filter_editor-20260801-132531.png",
+    "ui_xml": "evidence/ui-xml/033_phrase_filter_editor-20260801-132531.xml",
+    "activity_dump": "evidence/activity/033_phrase_filter_editor-20260801-132531.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "button1",
+      "visible_label": "Phrase",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button1",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 924,
+        "right": 364,
+        "bottom": 1116,
+        "width": 301,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 352.0,
+        "right": 138.7,
+        "bottom": 425.1,
+        "width": 114.7,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/033_phrase_filter_editor-20260801-132531.xml"
+    },
+    {
+      "element_id": "button2",
+      "visible_label": "Extras",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button2",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 390,
+        "top": 924,
+        "right": 690,
+        "bottom": 1116,
+        "width": 300,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 148.6,
+        "top": 352.0,
+        "right": 262.9,
+        "bottom": 425.1,
+        "width": 114.3,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/033_phrase_filter_editor-20260801-132531.xml"
+    },
+    {
+      "element_id": "button3",
+      "visible_label": "Group",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button3",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 716,
+        "top": 924,
+        "right": 1017,
+        "bottom": 1116,
+        "width": 301,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 272.8,
+        "top": 352.0,
+        "right": 387.4,
+        "bottom": 425.1,
+        "width": 114.7,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/033_phrase_filter_editor-20260801-132531.xml"
+    },
+    {
+      "element_id": "apply_filter",
+      "visible_label": "Apply filter",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/033_phrase_filter_editor-20260801-132531.xml"
+    }
+  ],
+  "visible_text": [
+    "When notification contains any of",
+    "Filter with a name, word or phrase",
+    "Filter by images in notifications & more",
+    "For more complex filters add a group",
+    "Phrase",
+    "Extras",
+    "Group",
+    "When you're done tap apply to set the filter for your notification rule.",
+    "Apply filter"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 4,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [
+    {
+      "classification": "CONFIRMED",
+      "finding": "This is a repeat/returned visual state, not a newly discovered native surface."
+    }
+  ],
+  "unknowns": [],
+  "notes": "Repeat capture of the content-filter editor after a missed tap; not a new surface."
+}

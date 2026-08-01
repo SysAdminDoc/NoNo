@@ -1,0 +1,20 @@
+{
+  "screen_id": "086_rules_landscape_rotation",
+  "captured_at": "2026-08-01T14:02:59.3126815-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > rotate device to landscape"
+  ],
+  "required_starting_state": "Saved disabled test rule after cold relaunch",
+  "focused_window": [
+    "  mCurrentFocus=Window{36cdf37 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{197332003 u0 com.samruston.buzzkill/.ui.MainActivity t11}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\086_rules_landscape_rotation-20260801-140250.png",
+    "ui_xml": "evidence\\ui-xml\\086_rules_landscape_rotation-20260801-140250.xml",
+    "activity_dump": "evidence\\activity\\086_rules_landscape_rotation-20260801-140250.txt",
+    "window_dump": "evidence\\activity\\086_rules_landscape_rotation-20260801-140250-window.txt",
+    "input_method_dump": "evidence\\activity\\086_rules_landscape_rotation-20260801-140250-input-method.txt"
+  }
+}

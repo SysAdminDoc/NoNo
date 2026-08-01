@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "030_app_selector",
+    "captured_at":  "2026-08-01T13:23:39.6545601-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Create rule \u003e any app"
+                        ],
+    "required_starting_state":  "Default unsaved rule",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\030_app_selector-20260801-132335.png",
+                     "ui_xml":  "evidence\\ui-xml\\030_app_selector-20260801-132335.xml",
+                     "activity_dump":  "evidence\\activity\\030_app_selector-20260801-132335.txt",
+                     "window_dump":  "evidence\\activity\\030_app_selector-20260801-132335-window.txt",
+                     "input_method_dump":  "evidence\\activity\\030_app_selector-20260801-132335-input-method.txt"
+                 }
+}

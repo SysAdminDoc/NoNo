@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "036_extras_filter_selector",
+    "captured_at":  "2026-08-01T13:27:46.8393505-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Create rule \u003e contains \u003e Extras"
+                        ],
+    "required_starting_state":  "Default filter builder; no filters",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{3c46b2d u0 PopupWindow:3b97eeb}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\036_extras_filter_selector-20260801-132743.png",
+                     "ui_xml":  "evidence\\ui-xml\\036_extras_filter_selector-20260801-132743.xml",
+                     "activity_dump":  "evidence\\activity\\036_extras_filter_selector-20260801-132743.txt",
+                     "window_dump":  "evidence\\activity\\036_extras_filter_selector-20260801-132743-window.txt",
+                     "input_method_dump":  "evidence\\activity\\036_extras_filter_selector-20260801-132743-input-method.txt"
+                 }
+}

@@ -1,0 +1,395 @@
+{
+  "screen_id": "087_rules_landscape_native",
+  "screen_name": "Rules Landscape Native",
+  "state_name": "rules_landscape_native",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "rules_home",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule after cold relaunch"
+  ],
+  "navigation_path": [
+    "Rules > rotate device to landscape > close non-native overlay"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/087_rules_landscape_native-20260801-140337.png",
+    "ui_xml": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml",
+    "activity_dump": "evidence/activity/087_rules_landscape_native-20260801-140337.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 2400,
+    "height_px": 1080,
+    "density_dpi": 420,
+    "width_dp": 914.3,
+    "height_dp": 411.4,
+    "orientation": "landscape",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 2400,
+        "bottom": 834,
+        "width": 2400,
+        "height": 834
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 914.3,
+        "bottom": 317.7,
+        "width": 914.3,
+        "height": 317.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "container",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/container",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 2400,
+        "bottom": 834,
+        "width": 2400,
+        "height": 834
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 914.3,
+        "bottom": 317.7,
+        "width": 914.3,
+        "height": 317.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "closeButton",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/closeButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 1819,
+        "top": 116,
+        "right": 1935,
+        "bottom": 232,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 693.0,
+        "top": 44.2,
+        "right": 737.1,
+        "bottom": 88.4,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "element_7",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 454,
+        "top": 649,
+        "right": 1946,
+        "bottom": 834,
+        "width": 1492,
+        "height": 185
+      },
+      "bounds_dp": {
+        "left": 173.0,
+        "top": 247.2,
+        "right": 741.3,
+        "bottom": 317.7,
+        "width": 568.4,
+        "height": 70.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "more",
+      "visible_label": "",
+      "accessibility_label": "More",
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 470,
+        "top": 670,
+        "right": 586,
+        "bottom": 786,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 179.0,
+        "top": 255.2,
+        "right": 223.2,
+        "bottom": 299.4,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "switchView",
+      "visible_label": "Disabled",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/switchView",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 1574,
+        "top": 665,
+        "right": 1914,
+        "bottom": 791,
+        "width": 340,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 599.6,
+        "top": 253.3,
+        "right": 729.1,
+        "bottom": 301.3,
+        "width": 129.5,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "fab",
+      "visible_label": "Create rule",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/fab",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 1578,
+        "top": 648,
+        "right": 1935,
+        "bottom": 781,
+        "width": 357,
+        "height": 133
+      },
+      "bounds_dp": {
+        "left": 601.1,
+        "top": 246.9,
+        "right": 737.1,
+        "bottom": 297.5,
+        "width": 136.0,
+        "height": 50.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": "History",
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 826,
+        "top": 834,
+        "right": 1268,
+        "bottom": 1017,
+        "width": 442,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 314.7,
+        "top": 317.7,
+        "right": 483.0,
+        "bottom": 387.4,
+        "width": 168.4,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "explore",
+      "visible_label": "",
+      "accessibility_label": "Explore",
+      "resource_id": "com.samruston.buzzkill:id/explore",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 1268,
+        "top": 834,
+        "right": 1710,
+        "bottom": 1017,
+        "width": 442,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 483.0,
+        "top": 317.7,
+        "right": 651.4,
+        "bottom": 387.4,
+        "width": 168.4,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    },
+    {
+      "element_id": "settings",
+      "visible_label": "",
+      "accessibility_label": "Settings",
+      "resource_id": "com.samruston.buzzkill:id/settings",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 1710,
+        "top": 834,
+        "right": 2152,
+        "bottom": 1017,
+        "width": 442,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 651.4,
+        "top": 317.7,
+        "right": 819.8,
+        "bottom": 387.4,
+        "width": 168.4,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/087_rules_landscape_native-20260801-140337.xml"
+    }
+  ],
+  "visible_text": [
+    "Notification rules",
+    "When you get a notification, if it matches any of the following rules it will perform the chosen action.",
+    "Disabled",
+    "When I get a notification from any app that contains \"AUDIT_SENTINEL_8675309\" then   mute",
+    "Create rule"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 10,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": "Native landscape state after closing the excluded overlay; rotation was restored immediately afterward."
+}

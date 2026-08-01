@@ -1,0 +1,138 @@
+{
+  "screen_id": "009_notification_access_confirmation",
+  "screen_name": "Notification Access Confirmation",
+  "state_name": "notification_access_confirmation",
+  "classification": "CONFIRMED",
+  "scope": "external_system",
+  "unique_surface_group": "notification_access_confirmation",
+  "package_name": "com.android.settings",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Notification listener disabled"
+  ],
+  "navigation_path": [
+    "Welcome > Enable BuzzKill > Notification access > BuzzKill > Allow notification access toggle"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/009_notification_access_confirmation-20260801-131126.png",
+    "ui_xml": "evidence/ui-xml/009_notification_access_confirmation-20260801-131126.xml",
+    "activity_dump": "evidence/activity/009_notification_access_confirmation-20260801-131126.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "allow_button",
+      "visible_label": "Allow",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/allow_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 70,
+        "top": 1722,
+        "right": 1010,
+        "bottom": 1869,
+        "width": 940,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 26.7,
+        "top": 656.0,
+        "right": 384.8,
+        "bottom": 712.0,
+        "width": 358.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/009_notification_access_confirmation-20260801-131126.xml"
+    },
+    {
+      "element_id": "deny_button",
+      "visible_label": "Deny",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/deny_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 70,
+        "top": 1872,
+        "right": 1010,
+        "bottom": 2019,
+        "width": 940,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 26.7,
+        "top": 713.1,
+        "right": 384.8,
+        "bottom": 769.1,
+        "width": 358.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/009_notification_access_confirmation-20260801-131126.xml"
+    }
+  ],
+  "visible_text": [
+    "Allow notification access for BuzzKill?",
+    "The BuzzKill app will be able to:",
+    "Read your notifications",
+    "It can read your notifications, including personal information such as contacts, messages, and photos.",
+    "Reply to messages",
+    "It can reply to messages and take action on buttons in notifications, including snoozing or dismissing notifications and answering calls.",
+    "Change settings",
+    "It can manage and activate Modes, and change related settings.",
+    "Allow",
+    "Deny"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 2,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": ""
+}

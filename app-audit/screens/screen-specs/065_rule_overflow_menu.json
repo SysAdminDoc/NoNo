@@ -1,0 +1,65 @@
+{
+  "screen_id": "065_rule_overflow_menu",
+  "screen_name": "Rule Overflow Menu",
+  "state_name": "rule_overflow_menu",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "rule_overflow_menu",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule"
+  ],
+  "navigation_path": [
+    "Rules > Test rule > More"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/065_rule_overflow_menu-20260801-134830.png",
+    "ui_xml": "evidence/ui-xml/065_rule_overflow_menu-20260801-134830.xml",
+    "activity_dump": "evidence/activity/065_rule_overflow_menu-20260801-134830.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [],
+  "visible_text": [
+    "Enable for…",
+    "Set priority",
+    "Set folder",
+    "Rename",
+    "Duplicate",
+    "Delete"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 0,
+    "custom_span_limitation": true
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

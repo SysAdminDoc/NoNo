@@ -1,0 +1,400 @@
+{
+  "screen_id": "067_rule_priority_dialog",
+  "screen_name": "Rule Priority Dialog",
+  "state_name": "rule_priority_dialog",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "rules_home",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule"
+  ],
+  "navigation_path": [
+    "Rules > Test rule > More > Set priority"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/067_rule_priority_dialog-20260801-134916.png",
+    "ui_xml": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml",
+    "activity_dump": "evidence/activity/067_rule_priority_dialog-20260801-134916.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "container",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/container",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "closeButton",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/closeButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 911,
+        "top": 178,
+        "right": 1027,
+        "bottom": 294,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 347.0,
+        "top": 67.8,
+        "right": 391.2,
+        "bottom": 112.0,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "element_7",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 766,
+        "right": 1038,
+        "bottom": 1347,
+        "width": 996,
+        "height": 581
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 291.8,
+        "right": 395.4,
+        "bottom": 513.1,
+        "width": 379.4,
+        "height": 221.3
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "more",
+      "visible_label": "",
+      "accessibility_label": "More",
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 58,
+        "top": 787,
+        "right": 174,
+        "bottom": 903,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 22.1,
+        "top": 299.8,
+        "right": 66.3,
+        "bottom": 344.0,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "switchView",
+      "visible_label": "Disabled",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/switchView",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 666,
+        "top": 782,
+        "right": 1006,
+        "bottom": 908,
+        "width": 340,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 253.7,
+        "top": 297.9,
+        "right": 383.2,
+        "bottom": 345.9,
+        "width": 129.5,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "fab",
+      "visible_label": "Create rule",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/fab",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 670,
+        "top": 1968,
+        "right": 1027,
+        "bottom": 2101,
+        "width": 357,
+        "height": 133
+      },
+      "bounds_dp": {
+        "left": 255.2,
+        "top": 749.7,
+        "right": 391.2,
+        "bottom": 800.4,
+        "width": 136.0,
+        "height": 50.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": "History",
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 270,
+        "top": 2154,
+        "right": 540,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 102.9,
+        "top": 820.6,
+        "right": 205.7,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "explore",
+      "visible_label": "",
+      "accessibility_label": "Explore",
+      "resource_id": "com.samruston.buzzkill:id/explore",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 540,
+        "top": 2154,
+        "right": 810,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 205.7,
+        "top": 820.6,
+        "right": 308.6,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    },
+    {
+      "element_id": "settings",
+      "visible_label": "",
+      "accessibility_label": "Settings",
+      "resource_id": "com.samruston.buzzkill:id/settings",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 810,
+        "top": 2154,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 308.6,
+        "top": 820.6,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/067_rule_priority_dialog-20260801-134916.xml"
+    }
+  ],
+  "visible_text": [
+    "Notification rules",
+    "When you get a notification, if it matches any of the following rules it will perform the chosen action.",
+    "Disabled",
+    "When I get a notification from any app that contains \"AUDIT_SENTINEL_8675309\" then   mute",
+    "Create rule"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 10,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [
+    {
+      "classification": "CONFIRMED",
+      "finding": "This is a repeat/returned visual state, not a newly discovered native surface."
+    }
+  ],
+  "unknowns": [],
+  "notes": "Set priority dismissed the overflow menu without presenting a persistent dialog; this capture is the returned Rules state."
+}

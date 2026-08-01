@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "id": 1,
+      "app": "Shell",
+      "title": "Audit test notification",
+      "body": "Sanitized local test record",
+      "time": "Now",
+      "dismissed": false,
+      "triggered_rule": false
+    }
+  ]
+}

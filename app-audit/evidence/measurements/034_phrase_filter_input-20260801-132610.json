@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "034_phrase_filter_input",
+    "captured_at":  "2026-08-01T13:26:14.4451435-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Create rule \u003e contains \u003e Phrase button"
+                        ],
+    "required_starting_state":  "Default filter builder; no filters",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{4b278fe u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\034_phrase_filter_input-20260801-132610.png",
+                     "ui_xml":  "evidence\\ui-xml\\034_phrase_filter_input-20260801-132610.xml",
+                     "activity_dump":  "evidence\\activity\\034_phrase_filter_input-20260801-132610.txt",
+                     "window_dump":  "evidence\\activity\\034_phrase_filter_input-20260801-132610-window.txt",
+                     "input_method_dump":  "evidence\\activity\\034_phrase_filter_input-20260801-132610-input-method.txt"
+                 }
+}

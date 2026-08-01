@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "002_welcome_default",
+    "captured_at":  "2026-08-01T13:07:48.0380371-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Fresh install launch \u003e Close repackaging overlay"
+                        ],
+    "required_starting_state":  "Fresh BuzzKill app data; repackaging overlay dismissed",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\002_welcome_default-20260801-130744.png",
+                     "ui_xml":  "evidence\\ui-xml\\002_welcome_default-20260801-130744.xml",
+                     "activity_dump":  "evidence\\activity\\002_welcome_default-20260801-130744.txt",
+                     "window_dump":  "evidence\\activity\\002_welcome_default-20260801-130744-window.txt",
+                     "input_method_dump":  "evidence\\activity\\002_welcome_default-20260801-130744-input-method.txt"
+                 }
+}

@@ -1,0 +1,167 @@
+{
+  "screen_id": "084_cold_relaunch_persisted",
+  "screen_name": "Cold Relaunch Persisted",
+  "state_name": "cold_relaunch_persisted",
+  "classification": "CONFIRMED",
+  "scope": "excluded_repackaging",
+  "unique_surface_group": "cold_relaunch_persisted",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule and one history record"
+  ],
+  "navigation_path": [
+    "Force-stop > cold launch"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/084_cold_relaunch_persisted-20260801-140126.png",
+    "ui_xml": "evidence/ui-xml/084_cold_relaunch_persisted-20260801-140126.xml",
+    "activity_dump": "evidence/activity/084_cold_relaunch_persisted-20260801-140126.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "element_4",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Switch",
+      "bounds_px": {
+        "left": 176,
+        "top": 1358,
+        "right": 298,
+        "bottom": 1429,
+        "width": 122,
+        "height": 71
+      },
+      "bounds_dp": {
+        "left": 67.0,
+        "top": 517.3,
+        "right": 113.5,
+        "bottom": 544.4,
+        "width": 46.5,
+        "height": 27.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/084_cold_relaunch_persisted-20260801-140126.xml"
+    },
+    {
+      "element_id": "close",
+      "visible_label": "CLOSE",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 172,
+        "top": 1483,
+        "right": 519,
+        "bottom": 1609,
+        "width": 347,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 65.5,
+        "top": 565.0,
+        "right": 197.7,
+        "bottom": 613.0,
+        "width": 132.2,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/084_cold_relaunch_persisted-20260801-140126.xml"
+    },
+    {
+      "element_id": "download",
+      "visible_label": "DOWNLOAD✅",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 561,
+        "top": 1483,
+        "right": 908,
+        "bottom": 1609,
+        "width": 347,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 213.7,
+        "top": 565.0,
+        "right": 345.9,
+        "bottom": 613.0,
+        "width": 132.2,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": false,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/084_cold_relaunch_persisted-20260801-140126.xml"
+    }
+  ],
+  "visible_text": [
+    "LITEAPKS",
+    "Safest and Fastest",
+    "Endless Modded Apps & Games, All in One Place. Get LITEAPKs App Store Now",
+    "Don't show again",
+    "CLOSE",
+    "DOWNLOAD✅"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "This overlay is outside the native product scope and was not analyzed as a BuzzKill feature."
+  ],
+  "notes": "Cold-relaunch persistence capture obscured by the excluded LiteAPKS/repackaging overlay."
+}

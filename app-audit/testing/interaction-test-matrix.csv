@@ -1,0 +1,33 @@
+test_id,area,interaction,expected_observed_result,status,safety,evidence
+T001,Onboarding,Tap Allow notifications,Android POST_NOTIFICATIONS dialog,FULLY_TESTED,SAFE,003
+T002,Onboarding,Allow notifications,First card completes,FULLY_TESTED,SAFE,004
+T003,Onboarding,Tap background access,Android background confirmation,FULLY_TESTED,SAFE,005
+T004,Onboarding,Allow background access,Second card completes,FULLY_TESTED,SAFE,006
+T005,Onboarding,Enable notification listener,Android settings and warning then Rules,FULLY_TESTED,SAFE_AUTHORIZED,"007;008;009;010"
+T006,Bottom navigation,Select each destination,Selected pill/label changes and page appears,FULLY_TESTED,SAFE,"010;011;013;016"
+T007,History,Open search and type audit,Keyboard and no-result state,FULLY_TESTED,SAFE,"014;015"
+T008,Settings,Scroll top to bottom,All preference groups reachable,FULLY_TESTED,SAFE,"016-020"
+T009,Settings,Open selection dialogs,Selected defaults visible and Cancel returns,FULLY_TESTED,SAFE,"021-024;027;028"
+T010,Shortcut editor,Open with no rules,Create shortcut disabled,FULLY_TESTED,SAFE,025
+T011,Backup,Open automatic backup folder picker,System picker appears; cancel without selection,PARTIALLY_TESTED,SAFE,"018;026"
+T012,Rule builder,Open app selector and search,Grid/search/empty self result,FULLY_TESTED,SAFE,"030;031"
+T013,Rule builder,Compose phrase filter,Row appears and main sentence updates,FULLY_TESTED,SAFE,"034;041;042;043"
+T014,Rule builder,Inspect extras/group/operator options,All visible options cataloged,FULLY_TESTED,SAFE,"036-040"
+T015,Action selector,Scroll full catalog,All visible categories/actions cataloged,FULLY_TESTED,SAFE,"049-058"
+T016,Action selector,Select Mute,Pick action enables; builder complete,FULLY_TESTED,SAFE_NO_EXECUTION,"061;062"
+T017,Rule validation,Save without selected action,Red token and warning,FULLY_TESTED,SAFE,059
+T018,Rule persistence,Save sentinel test rule,Enabled card appears,FULLY_TESTED,SAFE_TEST_RECORD,063
+T019,Rule persistence,Disable test rule,Gray struck-through state persists,FULLY_TESTED,SAFE_TEST_RECORD,"064;085"
+T020,Rule menu,Open More and safe subdialogs,Menu/duration/folder/rename states visible,PARTIALLY_TESTED,SAFE_NO_COMMIT,"065;066;068;069"
+T021,History,Post sanitized Shell notification,History count/card populated,FULLY_TESTED,SAFE_TEST_RECORD,071
+T022,History,Open item menu,All item actions visible,FULLY_TESTED,SAFE_NO_ACTION,072
+T023,History,View activity and switch tab,Rules empty state and Changes record,FULLY_TESTED,SAFE,"073;074"
+T024,History,Toggle rule-triggered/dismissed filters,Existing item filtered out,FULLY_TESTED,SAFE,"075;076"
+T025,Explore,Scroll full article/suggestion list,Bottom suggestions reached,FULLY_TESTED,SAFE,"011;077-081"
+T026,Explore,Add suggestion to rules,Prepopulated unsaved builder appears,FULLY_TESTED,SAFE_NO_SAVE,082
+T027,Lifecycle,Home/resume and force-stop/relaunch,Disabled rule persists,PARTIALLY_TESTED,SAFE,"064;085"
+T028,Rotation,Rotate Rules landscape then restore,Landscape reflow and persisted state,FULLY_TESTED,SAFE_REVERSIBLE,087
+T029,Accessibility,Inspect UI Automator semantics,Labels/bounds cataloged; custom sentence spans limited,PARTIALLY_TESTED,READ_ONLY,"screens/screen-specs/*.json"
+T030,Destructive controls,Delete rule/history/all rules,Not executed,NOT_TESTED,UNSAFE,065;072;020
+T031,Automated actions,Execute action types,Not executed,NOT_TESTED,PRIVACY_OR_DEVICE_EFFECT,"049-058"
+T032,External integrations,Configure Tasker/MacroDroid/Wear/Quick Settings,Not executed,NOT_TESTED,MISSING_DEPENDENCY,"057;058"

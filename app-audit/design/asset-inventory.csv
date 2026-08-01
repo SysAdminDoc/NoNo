@@ -1,0 +1,10 @@
+asset_id,asset_type,description,observed_location,classification,reconstruction_requirement,evidence
+A001,App icon,"BuzzKill speech-bubble/rule symbol",Rules hero and Android settings,CONFIRMED,Requires authorization or an original replacement,"007;063"
+A002,Bottom-nav icons,"Bell, stacked history cards, compass, gears",All primary screens,CONFIRMED,Create original vector icons or use licensed icon set,"010;011;013;016"
+A003,Rule-action icons,"Colored circular icons for mute, flashlight, secret and other actions",Rule cards/action catalog/suggestions,CONFIRMED,Create original coherent icon family,"049-058;063;082"
+A004,Wavy underline,"Hand-drawn yellow/red token underline",Rule builder and history headings,CONFIRMED,Recreate procedurally as original code/vector styling,"029;059;071"
+A005,Article illustrations,"Four editorial illustrations at Explore top",Explore,CONFIRMED,Do not copy without authorization; commission original replacements,"011"
+A006,Suggestion color treatments,"Green/purple/other thick outlines and buttons",Explore suggestions,CONFIRMED,Recreate with tokens and original layout,"077-081"
+A007,Typeface,"Rounded heavy humanist sans",All native surfaces,CONFIRMED family category / UNKNOWN exact family,Use authorized/open substitute after visual QA,"002;029;063"
+A008,System icons and Chrome imagery,"Android permission/settings and Chrome surfaces",External integrations,CONFIRMED,Do not bundle; rely on system intents,"003;007-009;012;026"
+A009,LiteAPKS artwork,"Promotional logo/gradient popup",Excluded repackaging overlay,CONFIRMED EXCLUDED,Must not appear in rebuild,"001;084;086"

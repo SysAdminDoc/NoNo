@@ -1,0 +1,20 @@
+{
+  "screen_id": "057_action_selector_bottom",
+  "captured_at": "2026-08-01T13:40:39.3853855-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Create/Edit rule > Action selector > bottom"
+  ],
+  "required_starting_state": "Action selector",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\057_action_selector_bottom-20260801-134035.png",
+    "ui_xml": "evidence\\ui-xml\\057_action_selector_bottom-20260801-134035.xml",
+    "activity_dump": "evidence\\activity\\057_action_selector_bottom-20260801-134035.txt",
+    "window_dump": "evidence\\activity\\057_action_selector_bottom-20260801-134035-window.txt",
+    "input_method_dump": "evidence\\activity\\057_action_selector_bottom-20260801-134035-input-method.txt"
+  }
+}

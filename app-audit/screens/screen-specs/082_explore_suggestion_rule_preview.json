@@ -1,0 +1,167 @@
+{
+  "screen_id": "082_explore_suggestion_rule_preview",
+  "screen_name": "Explore Suggestion Rule Preview",
+  "state_name": "explore_suggestion_rule_preview",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "rule_builder",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Explore suggestions bottom"
+  ],
+  "navigation_path": [
+    "Explore > Flash torch suggestion > Add to my rules"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/082_explore_suggestion_rule_preview-20260801-135816.png",
+    "ui_xml": "evidence/ui-xml/082_explore_suggestion_rule_preview-20260801-135816.xml",
+    "activity_dump": "evidence/activity/082_explore_suggestion_rule_preview-20260801-135816.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "container",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/container",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2400,
+        "width": 1080,
+        "height": 2400
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 914.3,
+        "width": 411.4,
+        "height": 914.3
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/082_explore_suggestion_rule_preview-20260801-135816.xml"
+    },
+    {
+      "element_id": "saveButton",
+      "visible_label": "Save rule",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/saveButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 1318,
+        "right": 1017,
+        "bottom": 1444,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 502.1,
+        "right": 387.4,
+        "bottom": 550.1,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/082_explore_suggestion_rule_preview-20260801-135816.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 2040,
+        "right": 1017,
+        "bottom": 2332,
+        "width": 954,
+        "height": 292
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 777.1,
+        "right": 387.4,
+        "bottom": 888.4,
+        "width": 363.4,
+        "height": 111.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/082_explore_suggestion_rule_preview-20260801-135816.xml"
+    }
+  ],
+  "visible_text": [
+    "When I get a notification from any app that contains anything and device is in pocket/face down and device is on table  +  then   flashlight with ██",
+    "Save rule",
+    "Recent matching notifications",
+    "These recent notifications from your history may have triggered your rule.",
+    "Shell",
+    "1:52 PM",
+    "Audit_Notice",
+    "AUDIT_SENTINEL_8675309"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

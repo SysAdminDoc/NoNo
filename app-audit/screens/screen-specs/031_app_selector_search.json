@@ -1,0 +1,129 @@
+{
+  "screen_id": "031_app_selector_search",
+  "screen_name": "App Selector Search",
+  "state_name": "app_selector_search",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "app_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "App selector open"
+  ],
+  "navigation_path": [
+    "Create rule > any app > Search > BuzzKill"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/031_app_selector_search-20260801-132417.png",
+    "ui_xml": "evidence/ui-xml/031_app_selector_search-20260801-132417.xml",
+    "activity_dump": "evidence/activity/031_app_selector_search-20260801-132417.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "buzzkill",
+      "visible_label": "BuzzKill",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "EditText",
+      "bounds_px": {
+        "left": 63,
+        "top": 365,
+        "right": 1017,
+        "bottom": 512,
+        "width": 954,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 139.0,
+        "right": 387.4,
+        "bottom": 195.0,
+        "width": 363.4,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/031_app_selector_search-20260801-132417.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick all apps",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 1328,
+        "right": 1017,
+        "bottom": 1454,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 505.9,
+        "right": 387.4,
+        "bottom": 553.9,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/031_app_selector_search-20260801-132417.xml"
+    }
+  ],
+  "visible_text": [
+    "When notification is from",
+    "BuzzKill",
+    "Pick all apps"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 2,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

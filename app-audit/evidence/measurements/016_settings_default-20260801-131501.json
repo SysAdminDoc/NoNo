@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "016_settings_default",
+    "captured_at":  "2026-08-01T13:15:04.7841790-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "History search \u003e Back \u003e Back \u003e Settings tab"
+                        ],
+    "required_starting_state":  "Onboarding complete; defaults unchanged",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\016_settings_default-20260801-131501.png",
+                     "ui_xml":  "evidence\\ui-xml\\016_settings_default-20260801-131501.xml",
+                     "activity_dump":  "evidence\\activity\\016_settings_default-20260801-131501.txt",
+                     "window_dump":  "evidence\\activity\\016_settings_default-20260801-131501-window.txt",
+                     "input_method_dump":  "evidence\\activity\\016_settings_default-20260801-131501-input-method.txt"
+                 }
+}

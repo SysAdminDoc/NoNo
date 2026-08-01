@@ -1,0 +1,103 @@
+{
+  "screen_id": "037_extras_filter_selector_scrolled",
+  "screen_name": "Extras Filter Selector Scrolled",
+  "state_name": "extras_filter_selector_scrolled",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "condition_extras_menu",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Extras popup open"
+  ],
+  "navigation_path": [
+    "Create rule > contains > Extras > scroll menu"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/037_extras_filter_selector_scrolled-20260801-132825.png",
+    "ui_xml": "evidence/ui-xml/037_extras_filter_selector_scrolled-20260801-132825.xml",
+    "activity_dump": "evidence/activity/037_extras_filter_selector_scrolled-20260801-132825.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "element_1",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ListView",
+      "bounds_px": {
+        "left": 390,
+        "top": 1075,
+        "right": 905,
+        "bottom": 2316,
+        "width": 515,
+        "height": 1241
+      },
+      "bounds_dp": {
+        "left": 148.6,
+        "top": 409.5,
+        "right": 344.8,
+        "bottom": 882.3,
+        "width": 196.2,
+        "height": 472.8
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/037_extras_filter_selector_scrolled-20260801-132825.xml"
+    }
+  ],
+  "visible_text": [
+    "Any phone number",
+    "Any emoji",
+    "Group conversation",
+    "Language",
+    "Custom layout",
+    "Fixed notification",
+    "Media notification",
+    "Category",
+    "Image of",
+    "Text length"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 1,
+    "custom_span_limitation": true
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

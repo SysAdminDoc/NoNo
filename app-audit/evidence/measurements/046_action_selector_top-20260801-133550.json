@@ -1,0 +1,20 @@
+{
+  "screen_id": "046_action_selector_top",
+  "captured_at": "2026-08-01T13:35:54.8357886-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Create/Edit rule > do nothing"
+  ],
+  "required_starting_state": "Filtered unsaved rule",
+  "focused_window": [
+    "  mCurrentFocus=Window{eee68e1 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\046_action_selector_top-20260801-133550.png",
+    "ui_xml": "evidence\\ui-xml\\046_action_selector_top-20260801-133550.xml",
+    "activity_dump": "evidence\\activity\\046_action_selector_top-20260801-133550.txt",
+    "window_dump": "evidence\\activity\\046_action_selector_top-20260801-133550-window.txt",
+    "input_method_dump": "evidence\\activity\\046_action_selector_top-20260801-133550-input-method.txt"
+  }
+}

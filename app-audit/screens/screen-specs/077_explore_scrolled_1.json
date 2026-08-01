@@ -1,0 +1,463 @@
+{
+  "screen_id": "077_explore_scrolled_1",
+  "screen_name": "Explore Scrolled 1",
+  "state_name": "explore_scrolled_1",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "explore",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Explore default article list"
+  ],
+  "navigation_path": [
+    "Explore > scroll"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/077_explore_scrolled_1-20260801-135617.png",
+    "ui_xml": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml",
+    "activity_dump": "evidence/activity/077_explore_scrolled_1-20260801-135617.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "element_3",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 0,
+        "right": 1038,
+        "bottom": 352,
+        "width": 996,
+        "height": 352
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 0.0,
+        "right": 395.4,
+        "bottom": 134.1,
+        "width": 379.4,
+        "height": 134.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "element_8",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 623,
+        "right": 1038,
+        "bottom": 1215,
+        "width": 996,
+        "height": 592
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 237.3,
+        "right": 395.4,
+        "bottom": 462.9,
+        "width": 379.4,
+        "height": 225.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "button",
+      "visible_label": "Add to my rules",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 85,
+        "top": 1046,
+        "right": 995,
+        "bottom": 1172,
+        "width": 910,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 32.4,
+        "top": 398.5,
+        "right": 379.0,
+        "bottom": 446.5,
+        "width": 346.7,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "element_11",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 1257,
+        "right": 1038,
+        "bottom": 1769,
+        "width": 996,
+        "height": 512
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 478.9,
+        "right": 395.4,
+        "bottom": 673.9,
+        "width": 379.4,
+        "height": 195.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "button",
+      "visible_label": "Add to my rules",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 85,
+        "top": 1600,
+        "right": 995,
+        "bottom": 1726,
+        "width": 910,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 32.4,
+        "top": 609.5,
+        "right": 379.0,
+        "bottom": 657.5,
+        "width": 346.7,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "element_14",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 42,
+        "top": 1811,
+        "right": 1038,
+        "bottom": 2154,
+        "width": 996,
+        "height": 343
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 689.9,
+        "right": 395.4,
+        "bottom": 820.6,
+        "width": 379.4,
+        "height": 130.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "button",
+      "visible_label": "Add to my rules",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 85,
+        "top": 2074,
+        "right": 995,
+        "bottom": 2154,
+        "width": 910,
+        "height": 80
+      },
+      "bounds_dp": {
+        "left": 32.4,
+        "top": 790.1,
+        "right": 379.0,
+        "bottom": 820.6,
+        "width": 346.7,
+        "height": 30.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "rules",
+      "visible_label": "",
+      "accessibility_label": "Rules",
+      "resource_id": "com.samruston.buzzkill:id/rules",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 2154,
+        "right": 270,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 820.6,
+        "right": 102.9,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": "History",
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 270,
+        "top": 2154,
+        "right": 540,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 102.9,
+        "top": 820.6,
+        "right": 205.7,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    },
+    {
+      "element_id": "settings",
+      "visible_label": "",
+      "accessibility_label": "Settings",
+      "resource_id": "com.samruston.buzzkill:id/settings",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 810,
+        "top": 2154,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 308.6,
+        "top": 820.6,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/077_explore_scrolled_1-20260801-135617.xml"
+    }
+  ],
+  "visible_text": [
+    "How I use BuzzKill for better sleep",
+    "A guide to how I use BuzzKill to improve sleep by checking my phone less near bed time.",
+    "Suggestions",
+    "When I get a notification from any app that contains \"Basketball Team\" then   keep if it contains \"Training\"",
+    "Add to my rules",
+    "When I get a notification from   Messages then   copy verification code then dismiss",
+    "Mute notifications whilst screen is on"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 12,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

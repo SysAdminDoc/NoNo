@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "007_notification_access_system",
+    "captured_at":  "2026-08-01T13:10:36.9897810-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Welcome \u003e Enable BuzzKill"
+                        ],
+    "required_starting_state":  "Notification listener access disabled",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{d0d79a1 u0 com.android.settings/com.android.settings.Settings$NotificationAccessSettingsActivity}",
+                           "  mFocusedApp=ActivityRecord{96861096 u0 com.android.settings/.Settings$NotificationAccessSettingsActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\007_notification_access_system-20260801-131033.png",
+                     "ui_xml":  "evidence\\ui-xml\\007_notification_access_system-20260801-131033.xml",
+                     "activity_dump":  "evidence\\activity\\007_notification_access_system-20260801-131033.txt",
+                     "window_dump":  "evidence\\activity\\007_notification_access_system-20260801-131033-window.txt",
+                     "input_method_dump":  "evidence\\activity\\007_notification_access_system-20260801-131033-input-method.txt"
+                 }
+}

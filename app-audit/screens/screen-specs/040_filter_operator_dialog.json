@@ -1,0 +1,63 @@
+{
+  "screen_id": "040_filter_operator_dialog",
+  "screen_name": "Filter Operator Dialog",
+  "state_name": "filter_operator_dialog",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "filter_operator_menu",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Top-level filter builder; no filters"
+  ],
+  "navigation_path": [
+    "Create rule > contains filter builder > contains any of heading"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/040_filter_operator_dialog-20260801-133015.png",
+    "ui_xml": "evidence/ui-xml/040_filter_operator_dialog-20260801-133015.xml",
+    "activity_dump": "evidence/activity/040_filter_operator_dialog-20260801-133015.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [],
+  "visible_text": [
+    "contains any of",
+    "contains all of",
+    "doesn't contain any of",
+    "doesn't contain all of"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 0,
+    "custom_span_limitation": true
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

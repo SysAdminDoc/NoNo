@@ -1,0 +1,20 @@
+{
+  "screen_id": "059_rule_builder_validation_missing",
+  "captured_at": "2026-08-01T13:43:39.2162888-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Create rule > Save with incomplete content filter"
+  ],
+  "required_starting_state": "Unsaved incomplete rule",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\059_rule_builder_validation_missing-20260801-134335.png",
+    "ui_xml": "evidence\\ui-xml\\059_rule_builder_validation_missing-20260801-134335.xml",
+    "activity_dump": "evidence\\activity\\059_rule_builder_validation_missing-20260801-134335.txt",
+    "window_dump": "evidence\\activity\\059_rule_builder_validation_missing-20260801-134335-window.txt",
+    "input_method_dump": "evidence\\activity\\059_rule_builder_validation_missing-20260801-134335-input-method.txt"
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "screen_id": "051_action_selector_scroll_2",
+  "screen_name": "Action Selector Scroll 2",
+  "state_name": "action_selector_scroll_2",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "action_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Action selector"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > Action selector > scroll"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/051_action_selector_scroll_2-20260801-133852.png",
+    "ui_xml": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml",
+    "activity_dump": "evidence/activity/051_action_selector_scroll_2-20260801-133852.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 1844
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 702.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "element_2",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 630,
+        "width": 954,
+        "height": 389
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 240.0,
+        "width": 363.4,
+        "height": 148.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "delay_actions",
+      "visible_label": "Delay actions",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 682,
+        "right": 1017,
+        "bottom": 853,
+        "width": 954,
+        "height": 171
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 259.8,
+        "right": 387.4,
+        "bottom": 325.0,
+        "width": 363.4,
+        "height": 65.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "element_6",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 905,
+        "right": 1017,
+        "bottom": 1328,
+        "width": 954,
+        "height": 423
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 344.8,
+        "right": 387.4,
+        "bottom": 505.9,
+        "width": 363.4,
+        "height": 161.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "element_9",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1380,
+        "right": 1017,
+        "bottom": 1860,
+        "width": 954,
+        "height": 480
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 525.7,
+        "right": 387.4,
+        "bottom": 708.6,
+        "width": 363.4,
+        "height": 182.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "element_12",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1912,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 173
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 728.4,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 65.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick action",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/051_action_selector_scroll_2-20260801-133852.xml"
+    }
+  ],
+  "visible_text": [
+    "Unsilence",
+    "Allows a notification to make a vibration & sound when the ringer is in silent mode.",
+    "Delay actions",
+    "Add snooze button",
+    "Adds a button to the notification that allows it to be snoozed to a particular time.",
+    "Batch",
+    "Receive notifications in batches instead of when they were sent. You set specific hours or times when notifications can be delivered.",
+    "Pick action"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 7,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

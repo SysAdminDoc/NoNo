@@ -1,0 +1,294 @@
+--------- beginning of main
+08-01 14:01:06.271 13753 13753 I ruston.buzzkill: Using CollectorTypeCMC GC.
+08-01 14:01:06.282 13753 13753 W ruston.buzzkill: Unexpected CPU variant for x86: x86_64.
+08-01 14:01:06.282 13753 13753 W ruston.buzzkill: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+08-01 14:01:07.187 13753 13753 I berberis: Initialized Berberis (aarch64), version 16.0.0
+08-01 14:01:07.460 13753 13753 E ruston.buzzkill: Not starting debugger since process cannot load the jdwp agent.
+08-01 14:01:07.469 13753 13753 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+08-01 14:01:07.494 13753 13753 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+08-01 14:01:07.494 13753 13753 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+08-01 14:01:07.544 13753 13753 D nativeloader: Configuring clns-9 for other apk /data/app/~~cIkPVMwlp595R5sWgkw2VA==/com.samruston.buzzkill-huhRPlaJd_fxybur0wMIZA==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~cIkPVMwlp595R5sWgkw2VA==/com.samruston.buzzkill-huhRPlaJd_fxybur0wMIZA==/lib/arm64:/data/app/~~cIkPVMwlp595R5sWgkw2VA==/com.samruston.buzzkill-huhRPlaJd_fxybur0wMIZA==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.samruston.buzzkill
+08-01 14:01:07.597 13753 13753 D CompatChangeReporter: Compat change id reported: 202956589; UID 10217; state: ENABLED
+08-01 14:01:07.602 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f0d3d8) locale list changing from [] to [en-US]
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment: Currently set values for:
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment: com.samruston.buzzkill is not listed in per-application setting
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment: ANGLE allowlist from config: com.dreamgames.royalmatch com.dts.freefiremax com.dxx.firenow com.gramgames.mergedragons com.ludo.king com.mojang.minecraftpe com.my.defense com.nintendo.zaka com.os.airforce com.playrix.fishdomdd.gplay io.teslatech.callbreak jp.konami.prospia net.peakgames.toonblast
+08-01 14:01:07.611 13753 13753 V GraphicsEnvironment: com.samruston.buzzkill is not listed in ANGLE allowlist or settings, returning default
+08-01 14:01:07.612 13753 13753 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+08-01 14:01:07.622 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f0d0b8) locale list changing from [] to [en-US]
+08-01 14:01:07.640 13753 13753 D CompatChangeReporter: Compat change id reported: 279646685; UID 10217; state: ENABLED
+08-01 14:01:07.894 13753 13753 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+08-01 14:01:07.900 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f088d8) locale list changing from [] to [en-US]
+08-01 14:01:07.923 13753 13753 I TextToSpeech: Sucessfully bound to com.google.android.tts
+--------- beginning of system
+08-01 14:01:08.057 13753 13823 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+08-01 14:01:08.079 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f0cd98) locale list changing from [] to [en-US]
+08-01 14:01:08.086 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f12b58) locale list changing from [] to [en-US]
+08-01 14:01:08.092 13753 13753 D AppCompatDelegate: Checking for metadata for AppLocalesMetadataHolderService : Service not found
+08-01 14:01:08.093 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f08bf8) locale list changing from [] to [en-US]
+08-01 14:01:08.104 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f121f8) locale list changing from [] to [en-US]
+08-01 14:01:08.191 13753 13753 D CompatChangeReporter: Compat change id reported: 309578419; UID 10217; state: ENABLED
+08-01 14:01:08.199 13753 13753 D DesktopModeFlags: Toggle override initialized to: OVERRIDE_UNSET
+08-01 14:01:08.295 13753 13753 D CompatChangeReporter: Compat change id reported: 63938206; UID 10217; state: ENABLED
+08-01 14:01:08.298 13753 13823 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+08-01 14:01:08.307 13753 13823 I EGL_emulation: Opening libGLESv2_emulation.so
+08-01 14:01:08.469 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:01:08.671 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.738 13753 13823 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+08-01 14:01:08.763 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.777 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.786 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.789 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.794 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.810 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.815 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.816 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.817 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.819 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.819 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.823 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.824 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.825 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.826 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.827 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.827 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.828 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.830 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.831 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.831 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.832 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.834 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.835 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.836 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.836 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.837 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:08.864 13753 13753 D CompatChangeReporter: Compat change id reported: 352594277; UID 10217; state: ENABLED
+08-01 14:01:08.904 13753 13753 D CompatChangeReporter: Compat change id reported: 349153669; UID 10217; state: ENABLED
+08-01 14:01:08.944 13753 13753 W HWUI    : Unknown dataspace 0
+08-01 14:01:09.359 13753 13753 I Choreographer: Skipped 52 frames!  The application may be doing too much work on its main thread.
+08-01 14:01:10.539 13753 13779 I HWUI    : Davey! duration=2023ms; Flags=1, FrameTimelineVsyncId=990029, IntendedVsync=3455841278997, Vsync=3456707945629, InputEventId=0, HandleInputStart=3456710687822, AnimationStart=3456710688098, PerformTraversalsStart=3456710777627, DrawStart=3456873833018, FrameDeadline=3455857945663, FrameStartTime=3456710026389, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3456893433241, SyncStart=3456894576135, IssueDrawCommandsStart=3456895504271, SwapBuffers=3457742118793, FrameCompleted=3457865512955, DequeueBufferDuration=3131, QueueBufferDuration=370684, GpuCompleted=3457865512955, SwapBuffersCompleted=3457828151596, DisplayPresentTime=0, CommandSubmissionCompleted=3457742118793, 
+08-01 14:01:10.549 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:10.588 13753 13753 D CompatChangeReporter: Compat change id reported: 303326708; UID 10217; state: ENABLED
+08-01 14:01:10.594 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:01:10.706 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.706 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.735 13753 13753 I ImeTracker: com.samruston.buzzkill:6ac842f8: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+08-01 14:01:10.738 13753 13753 I ImeTracker: com.samruston.buzzkill:6ac842f8: onFailed at PHASE_CLIENT_VIEW_SERVED
+08-01 14:01:10.742 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.774 13753 13779 I TextToSpeech: Connected to TTS engine
+08-01 14:01:10.784 13753 13753 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+08-01 14:01:10.784 13753 13753 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+08-01 14:01:10.920 13753 13862 I TextToSpeech: Setting up the connection to TTS engine...
+08-01 14:01:10.920 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:01:10.966 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.966 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.967 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:01:10.981 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:01:11.031 13753 13753 D CompatChangeReporter: Compat change id reported: 270674727; UID 10217; state: ENABLED
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.051 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.052 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.053 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.054 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.442 13753 13753 I Choreographer: Skipped 124 frames!  The application may be doing too much work on its main thread.
+08-01 14:01:11.462 13753 13779 I HWUI    : Davey! duration=2939ms; Flags=1, FrameTimelineVsyncId=990029, IntendedVsync=3455841278997, Vsync=3456707945629, InputEventId=0, HandleInputStart=3456710687822, AnimationStart=3456710688098, PerformTraversalsStart=3456710777627, DrawStart=3458435448294, FrameDeadline=3455857945663, FrameStartTime=3456710026389, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3458457923835, SyncStart=3458458282025, IssueDrawCommandsStart=3458458456975, SwapBuffers=3458472676001, FrameCompleted=3458781260017, DequeueBufferDuration=4344, QueueBufferDuration=45529089, GpuCompleted=3458781211087, SwapBuffersCompleted=3458781260017, DisplayPresentTime=0, CommandSubmissionCompleted=3458472676001, 
+08-01 14:01:11.651 13753 13779 I HWUI    : Davey! duration=2192ms; Flags=0, FrameTimelineVsyncId=990433, IntendedVsync=3456724612295, Vsync=3458791278879, InputEventId=0, HandleInputStart=3458793368140, AnimationStart=3458793368415, PerformTraversalsStart=3458794954936, DrawStart=3458817362342, FrameDeadline=3457891278915, FrameStartTime=3458792976170, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3458818040059, SyncStart=3458844643184, IssueDrawCommandsStart=3458845062350, SwapBuffers=3458846261266, FrameCompleted=3458943490242, DequeueBufferDuration=1939238, QueueBufferDuration=211655, GpuCompleted=3458943490242, SwapBuffersCompleted=3458889498667, DisplayPresentTime=0, CommandSubmissionCompleted=3458846261266, 
+08-01 14:01:11.652 13753 13779 I HWUI    : Davey! duration=2182ms; Flags=0, FrameTimelineVsyncId=990433, IntendedVsync=3456724612295, Vsync=3458791278879, InputEventId=0, HandleInputStart=3458793368140, AnimationStart=3458793368415, PerformTraversalsStart=3458794954936, DrawStart=3458852332730, FrameDeadline=3458807945545, FrameStartTime=3458792976170, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3458853135980, SyncStart=3458889695945, IssueDrawCommandsStart=3458890019441, SwapBuffers=3458898378291, FrameCompleted=3458943485579, DequeueBufferDuration=3905, QueueBufferDuration=170425, GpuCompleted=3458943485579, SwapBuffersCompleted=3458934368316, DisplayPresentTime=0, CommandSubmissionCompleted=3458898378291, 
+08-01 14:01:11.783 13753 13845 W HWUI    : Image decoding logging dropped!
+08-01 14:01:11.833 13753 13753 I ImeTracker: com.samruston.buzzkill:a9aa24d5: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+08-01 14:01:11.834 13753 13753 I ImeTracker: com.samruston.buzzkill:a9aa24d5: onFailed at PHASE_CLIENT_VIEW_SERVED
+08-01 14:01:12.165 13753 13869 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+08-01 14:01:12.169 13753 13844 I ruston.buzzkill: AssetManager2(0x7671e2f41638) locale list changing from [] to [en-US]
+08-01 14:01:12.172 13753 13844 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.229 13753 13842 I ruston.buzzkill: AssetManager2(0x7671e2f49658) locale list changing from [] to [en-US]
+08-01 14:01:12.255 13753 13846 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.661 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.674 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.678 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.680 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.685 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.688 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.692 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.693 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.695 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.696 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:01:12.856 13753 13779 W ruston.buzzkill: Cleared Reference was only reachable from finalizer (only reported once)
+08-01 14:01:12.874 13753 13779 I ruston.buzzkill: Explicit concurrent mark compact GC freed 7834KB AllocSpace bytes, 62(1236KB) LOS objects, 49% free, 7436KB/14MB, paused 176us,1.065ms total 107.301ms
+08-01 14:01:13.146 13753 13930 D ProfileInstaller: Installing profile for com.samruston.buzzkill
+08-01 14:01:56.038 13753 13753 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@9a75a1c
+08-01 14:01:56.591 13753 13753 D InsetsController: hide(ime(), fromIme=false)
+08-01 14:01:56.593 13753 13753 I ImeTracker: com.samruston.buzzkill:2815c683: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+08-01 14:02:40.634 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:40.637 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:40.649 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:40.650 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:40.737 13753 13753 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@561e723
+08-01 14:02:40.747 13753 13753 D ViewRootImpl: Skipping stats log for color mode
+08-01 14:02:40.765 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f3ea78) locale list changing from [] to [en-US]
+08-01 14:02:40.768 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f392f8) locale list changing from [] to [en-US]
+08-01 14:02:40.795 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f41638) locale list changing from [] to [en-US]
+08-01 14:02:40.796 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f441f8) locale list changing from [] to [en-US]
+08-01 14:02:40.797 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f41958) locale list changing from [] to [en-US]
+08-01 14:02:41.074 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:02:41.144 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.182 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:02:41.261 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:02:41.264 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:02:41.280 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.287 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.288 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.288 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.288 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.289 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.289 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.289 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.290 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.290 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.292 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.293 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.294 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.295 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.295 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.296 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.297 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.298 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.298 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.298 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.299 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.300 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.300 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.300 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.301 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.302 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.302 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.303 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.316 13753 13753 I ImeTracker: com.samruston.buzzkill:2640cff5: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+08-01 14:02:41.317 13753 13753 I ImeTracker: com.samruston.buzzkill:2640cff5: onFailed at PHASE_CLIENT_VIEW_SERVED
+08-01 14:02:41.321 13753 13753 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+08-01 14:02:41.321 13753 13753 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+08-01 14:02:41.399 13753 13753 I Choreographer: Skipped 57 frames!  The application may be doing too much work on its main thread.
+08-01 14:02:41.533 13753 13781 I HWUI    : Davey! duration=1083ms; Flags=1, FrameTimelineVsyncId=1011781, IntendedVsync=3547791275319, Vsync=3548741275281, InputEventId=0, HandleInputStart=3548749922265, AnimationStart=3548749922812, PerformTraversalsStart=3548751367586, DrawStart=3548791175321, FrameDeadline=3547807941985, FrameStartTime=3548749410689, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3548801193898, SyncStart=3548802438408, IssueDrawCommandsStart=3548808394316, SwapBuffers=3548842025729, FrameCompleted=3548876243511, DequeueBufferDuration=3518, QueueBufferDuration=201169, GpuCompleted=3548876243511, SwapBuffersCompleted=3548872891434, DisplayPresentTime=0, CommandSubmissionCompleted=3548842025729, 
+08-01 14:02:41.614 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:02:41.622 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:41.657 13753 13775 I ruston.buzzkill: Background concurrent mark compact GC freed 6649KB AllocSpace bytes, 37(736KB) LOS objects, 49% free, 8489KB/16MB, paused 444us,26.538ms total 346.058ms
+08-01 14:02:41.681 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:02:41.800 13753 13842 W HWUI    : Image decoding logging dropped!
+08-01 14:02:42.698 13753 13753 I Choreographer: Skipped 77 frames!  The application may be doing too much work on its main thread.
+08-01 14:02:42.721 13753 13809 I HWUI    : Davey! duration=2242ms; Flags=1, FrameTimelineVsyncId=1011781, IntendedVsync=3547791275319, Vsync=3548741275281, InputEventId=0, HandleInputStart=3548749922265, AnimationStart=3548749922812, PerformTraversalsStart=3548751367586, DrawStart=3549105525446, FrameDeadline=3547807941985, FrameStartTime=3548749410689, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3549124597996, SyncStart=3549150156329, IssueDrawCommandsStart=3549150546197, SwapBuffers=3549178049394, FrameCompleted=3550058932624, DequeueBufferDuration=2994, QueueBufferDuration=249700, GpuCompleted=3550058932624, SwapBuffersCompleted=3550043778017, DisplayPresentTime=0, CommandSubmissionCompleted=3549178049394, 
+08-01 14:02:42.816 13753 13809 I HWUI    : Davey! duration=1373ms; Flags=0, FrameTimelineVsyncId=1012165, IntendedVsync=3548757941947, Vsync=3550041275229, InputEventId=0, HandleInputStart=3550049649479, AnimationStart=3550049650550, PerformTraversalsStart=3550052890269, DrawStart=3550078059005, FrameDeadline=3548907941941, FrameStartTime=3550048833596, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3550079355663, SyncStart=3550089753958, IssueDrawCommandsStart=3550099968003, SwapBuffers=3550101979614, FrameCompleted=3550142215940, DequeueBufferDuration=4677674, QueueBufferDuration=374900, GpuCompleted=3550142215940, SwapBuffersCompleted=3550130633483, DisplayPresentTime=0, CommandSubmissionCompleted=3550101979614, 
+08-01 14:02:42.839 13753 13779 I HWUI    : Davey! duration=1388ms; Flags=0, FrameTimelineVsyncId=1012165, IntendedVsync=3548757941947, Vsync=3550041275229, InputEventId=0, HandleInputStart=3550049649479, AnimationStart=3550049650550, PerformTraversalsStart=3550052890269, DrawStart=3550116980603, FrameDeadline=3550091275227, FrameStartTime=3550048833596, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3550123674127, SyncStart=3550130825619, IssueDrawCommandsStart=3550137415473, SwapBuffers=3550138232119, FrameCompleted=3550153921072, DequeueBufferDuration=4548, QueueBufferDuration=3843720, GpuCompleted=3550153868891, SwapBuffersCompleted=3550153921072, DisplayPresentTime=0, CommandSubmissionCompleted=3550138232119, 
+08-01 14:03:24.647 13753 13753 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@5715b17
+08-01 14:03:24.827 13753 13753 D InsetsController: hide(ime(), fromIme=false)
+08-01 14:03:24.827 13753 13753 I ImeTracker: com.samruston.buzzkill:eaa74fc0: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+08-01 14:03:39.287 13753 13753 I Choreographer: Skipped 41 frames!  The application may be doing too much work on its main thread.
+08-01 14:03:56.362 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:56.363 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:56.371 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:56.371 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:56.430 13753 13753 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@7e8a69c
+08-01 14:03:56.460 13753 13753 D ViewRootImpl: Skipping stats log for color mode
+08-01 14:03:56.478 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f46db8) locale list changing from [] to [en-US]
+08-01 14:03:56.492 13753 13753 I ruston.buzzkill: AssetManager2(0x7671e2f32ef8) locale list changing from [] to [en-US]
+08-01 14:03:56.637 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:03:56.696 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.720 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:03:56.752 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:03:56.754 13753 13753 W DataBinding: Setting the fragment as the LifecycleOwner might cause memory leaks because views lives shorter than the Fragment. Consider using Fragment's view lifecycle
+08-01 14:03:56.763 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.768 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.768 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.769 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.769 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.770 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.770 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.771 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.771 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.771 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.772 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.772 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.772 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.773 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.773 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.774 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.775 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.776 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.779 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.780 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.780 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.780 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.781 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.781 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.782 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.784 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.785 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.785 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:56.818 13753 13753 I ImeTracker: com.samruston.buzzkill:af42dcb1: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+08-01 14:03:56.819 13753 13753 I ImeTracker: com.samruston.buzzkill:af42dcb1: onFailed at PHASE_CLIENT_VIEW_SERVED
+08-01 14:03:56.821 13753 13753 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+08-01 14:03:56.821 13753 13753 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+08-01 14:03:56.893 13753 13753 I Choreographer: Skipped 40 frames!  The application may be doing too much work on its main thread.
+08-01 14:03:57.016 13753 13781 I HWUI    : Davey! duration=780ms; Flags=1, FrameTimelineVsyncId=1027123, IntendedVsync=3623574605621, Vsync=3624241272261, InputEventId=0, HandleInputStart=3624250454858, AnimationStart=3624250455853, PerformTraversalsStart=3624251664907, DrawStart=3624276175000, FrameDeadline=3623591272287, FrameStartTime=3624243744971, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3624301443068, SyncStart=3624301643587, IssueDrawCommandsStart=3624302765580, SwapBuffers=3624313084127, FrameCompleted=3624354990465, DequeueBufferDuration=7654, QueueBufferDuration=346308, GpuCompleted=3624354892081, SwapBuffersCompleted=3624354990465, DisplayPresentTime=0, CommandSubmissionCompleted=3624313084127, 
+08-01 14:03:57.034 13753 13775 I ruston.buzzkill: Background concurrent mark compact GC freed 7989KB AllocSpace bytes, 34(676KB) LOS objects, 49% free, 8873KB/17MB, paused 2.399ms,6.430ms total 261.701ms
+08-01 14:03:57.040 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.050 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:57.149 13753 13753 D AutofillManager: view not autofillable - not passing ime action check
+08-01 14:03:57.272 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.282 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.283 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.285 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.286 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.286 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.289 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.290 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.291 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.291 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.293 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.293 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.295 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.295 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.296 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.296 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.297 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.298 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.299 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.301 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.301 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.302 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.303 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.303 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.303 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.304 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.304 13753 13753 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.428 13753 13847 W HWUI    : Image decoding logging dropped!
+08-01 14:03:57.525 13753 13753 I Choreographer: Skipped 37 frames!  The application may be doing too much work on its main thread.
+08-01 14:03:57.539 13753 13808 I HWUI    : Davey! duration=1204ms; Flags=1, FrameTimelineVsyncId=1027123, IntendedVsync=3623574605621, Vsync=3624241272261, InputEventId=0, HandleInputStart=3624250454858, AnimationStart=3624250455853, PerformTraversalsStart=3624251664907, DrawStart=3624669620813, FrameDeadline=3623591272287, FrameStartTime=3624243744971, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3624681537044, SyncStart=3624778075970, IssueDrawCommandsStart=3624779362629, SwapBuffers=3624796128504, FrameCompleted=3624875955855, DequeueBufferDuration=27133, QueueBufferDuration=338045, GpuCompleted=3624875955855, SwapBuffersCompleted=3624868186981, DisplayPresentTime=0, CommandSubmissionCompleted=3624796128504, 
+08-01 14:03:57.650 13753 13808 I HWUI    : Davey! duration=702ms; Flags=0, FrameTimelineVsyncId=1027531, IntendedVsync=3624257938927, Vsync=3624874605569, InputEventId=0, HandleInputStart=3624875986620, AnimationStart=3624875987440, PerformTraversalsStart=3624878258788, DrawStart=3624909401674, FrameDeadline=3624374605589, FrameStartTime=3624875297219, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3624912748112, SyncStart=3624923288450, IssueDrawCommandsStart=3624924135294, SwapBuffers=3624949204186, FrameCompleted=3624971425078, DequeueBufferDuration=3772058, QueueBufferDuration=201407, GpuCompleted=3624967581683, SwapBuffersCompleted=3624971425078, DisplayPresentTime=0, CommandSubmissionCompleted=3624949204186, 
+08-01 14:03:57.662 13753 13808 I HWUI    : Davey! duration=742ms; Flags=0, FrameTimelineVsyncId=1027531, IntendedVsync=3624257938927, Vsync=3624874605569, InputEventId=0, HandleInputStart=3624875986620, AnimationStart=3624875987440, PerformTraversalsStart=3624878258788, DrawStart=3624951744276, FrameDeadline=3624907938901, FrameStartTime=3624875297219, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3624971342655, SyncStart=3624971742736, IssueDrawCommandsStart=3624972159963, SwapBuffers=3624974408012, FrameCompleted=3625000570890, DequeueBufferDuration=3211, QueueBufferDuration=205764, GpuCompleted=3625000570890, SwapBuffersCompleted=3624993739829, DisplayPresentTime=0, CommandSubmissionCompleted=3624974408012, 
+08-01 14:04:18.581 13753 13753 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@c445a22
+08-01 14:04:18.932 13753 13753 D InsetsController: hide(ime(), fromIme=false)
+08-01 14:04:18.934 13753 13753 I ImeTracker: com.samruston.buzzkill:a0134daf: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+08-01 14:04:22.782 13753 13753 I Choreographer: Skipped 30 frames!  The application may be doing too much work on its main thread.

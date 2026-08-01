@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "021_mute_mode_dialog",
+    "captured_at":  "2026-08-01T13:17:43.4260372-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Mute mode"
+                        ],
+    "required_starting_state":  "Default settings",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{703caef u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\021_mute_mode_dialog-20260801-131739.png",
+                     "ui_xml":  "evidence\\ui-xml\\021_mute_mode_dialog-20260801-131739.xml",
+                     "activity_dump":  "evidence\\activity\\021_mute_mode_dialog-20260801-131739.txt",
+                     "window_dump":  "evidence\\activity\\021_mute_mode_dialog-20260801-131739-window.txt",
+                     "input_method_dump":  "evidence\\activity\\021_mute_mode_dialog-20260801-131739-input-method.txt"
+                 }
+}

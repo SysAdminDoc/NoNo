@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "028_language_system",
+    "captured_at":  "2026-08-01T13:22:09.5104484-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Language"
+                        ],
+    "required_starting_state":  "Locale en-US; no app-specific language override",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{8ce4317 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\028_language_system-20260801-132206.png",
+                     "ui_xml":  "evidence\\ui-xml\\028_language_system-20260801-132206.xml",
+                     "activity_dump":  "evidence\\activity\\028_language_system-20260801-132206.txt",
+                     "window_dump":  "evidence\\activity\\028_language_system-20260801-132206-window.txt",
+                     "input_method_dump":  "evidence\\activity\\028_language_system-20260801-132206-input-method.txt"
+                 }
+}

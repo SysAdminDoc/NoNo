@@ -1,0 +1,12 @@
+# Android/Gradle build products and machine-local configuration
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+

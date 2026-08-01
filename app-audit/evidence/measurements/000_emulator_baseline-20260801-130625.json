@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "000_emulator_baseline",
+    "captured_at":  "2026-08-01T13:06:30.1744968-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+
+                        ],
+    "required_starting_state":  "Freshly booted AVD before launching BuzzKill",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{d2d3bb1 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}",
+                           "  mFocusedApp=ActivityRecord{98054265 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t6}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\000_emulator_baseline-20260801-130625.png",
+                     "ui_xml":  "evidence\\ui-xml\\000_emulator_baseline-20260801-130625.xml",
+                     "activity_dump":  "evidence\\activity\\000_emulator_baseline-20260801-130625.txt",
+                     "window_dump":  "evidence\\activity\\000_emulator_baseline-20260801-130625-window.txt",
+                     "input_method_dump":  "evidence\\activity\\000_emulator_baseline-20260801-130625-input-method.txt"
+                 }
+}

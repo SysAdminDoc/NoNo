@@ -1,0 +1,68 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 3445540 Realtime: 3445540
+
+** MEMINFO in pid 5999 [com.samruston.buzzkill] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    85632    84936      660     2004    89360   114676    93074    16786
+  Dalvik Heap    18579    17992      496      375    25608    36068    18034    18034
+ Dalvik Other     3777     2688      140       56     5440                           
+        Stack      804      792       12       80      812                           
+       Ashmem        9        0        0        0      640                           
+    Other dev      192        0      188        0      528                           
+     .so mmap     4886      116     1656      698    47936                           
+    .jar mmap     1621        0      124        0    44368                           
+    .apk mmap     1906        0      556        0     5224                           
+    .ttf mmap     1006        0      676        0     2304                           
+    .dex mmap     7116        0     7108        0     8020                           
+    .oat mmap      381        0        0        0    12548                           
+    .art mmap     1340      768      180      164    31820                           
+   Other mmap     3059        4      272     1496     7508                           
+      Unknown      484      240      240     2312     1328                           
+        TOTAL   137977   107536    12308     7185   283444   150744   111108    34820
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    18940                          57428
+         Native Heap:    84936                          89360
+                Code:    10248                         122300
+               Stack:      792                            812
+            Graphics:        0                              0
+       Private Other:     4928
+              System:    18133
+             Unknown:                                   13544
+ 
+           TOTAL PSS:   137977            TOTAL RSS:   283444       TOTAL SWAP PSS:     7185
+ 
+ Objects
+               Views:     1013         ViewRootImpl:        1
+         AppContexts:       53           Activities:        1
+              Assets:       20        AssetManagers:        0
+       Local Binders:       39        Proxy Binders:       73
+       Parcel memory:      130         Parcel count:       83
+    Death Recipients:        0             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+   Bitmap (malloced):      149                          37263
+Bitmap (nonmalloced):        1                             11
+    Other (malloced):    28759                           2750
+ Other (nonmalloced):      148                             99
+ 
+ SQL
+         MEMORY_USED:      400
+  PAGECACHE_OVERFLOW:      186          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       84             18    45   193     1  /data/user/0/com.samruston.buzzkill/databases/app_db
+         4       16                    0     0     0    (attached) temp
+         4       84             51   295   317     1  /data/user/0/com.samruston.buzzkill/databases/app_db (1)
+         4       84             57    80   119     1  /data/user/0/com.samruston.buzzkill/databases/app_db (2)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+            415           623          1038  /data/user/0/com.samruston.buzzkill/databases/app_db

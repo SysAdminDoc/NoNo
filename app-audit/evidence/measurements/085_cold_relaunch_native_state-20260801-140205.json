@@ -1,0 +1,20 @@
+{
+  "screen_id": "085_cold_relaunch_native_state",
+  "captured_at": "2026-08-01T14:02:12.5920903-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Force-stop > cold launch > close non-native overlay"
+  ],
+  "required_starting_state": "Saved disabled test rule and one history record",
+  "focused_window": [
+    "  mCurrentFocus=Window{9515404 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{197332003 u0 com.samruston.buzzkill/.ui.MainActivity t11}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\085_cold_relaunch_native_state-20260801-140205.png",
+    "ui_xml": "evidence\\ui-xml\\085_cold_relaunch_native_state-20260801-140205.xml",
+    "activity_dump": "evidence\\activity\\085_cold_relaunch_native_state-20260801-140205.txt",
+    "window_dump": "evidence\\activity\\085_cold_relaunch_native_state-20260801-140205-window.txt",
+    "input_method_dump": "evidence\\activity\\085_cold_relaunch_native_state-20260801-140205-input-method.txt"
+  }
+}

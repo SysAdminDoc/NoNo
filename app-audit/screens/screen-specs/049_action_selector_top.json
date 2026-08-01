@@ -1,0 +1,300 @@
+{
+  "screen_id": "049_action_selector_top",
+  "screen_name": "Action Selector Top",
+  "state_name": "action_selector_top",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "action_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Filtered unsaved rule"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > do nothing"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/049_action_selector_top-20260801-133815.png",
+    "ui_xml": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml",
+    "activity_dump": "evidence/activity/049_action_selector_top-20260801-133815.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 1844
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 702.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "silence_actions",
+      "visible_label": "Silence actions",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 412,
+        "width": 954,
+        "height": 171
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 157.0,
+        "width": 363.4,
+        "height": 65.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "element_3",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 464,
+        "right": 1017,
+        "bottom": 944,
+        "width": 954,
+        "height": 480
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 176.8,
+        "right": 387.4,
+        "bottom": 359.6,
+        "width": 363.4,
+        "height": 182.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "element_6",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 996,
+        "right": 1017,
+        "bottom": 1419,
+        "width": 954,
+        "height": 423
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 379.4,
+        "right": 387.4,
+        "bottom": 540.6,
+        "width": 363.4,
+        "height": 161.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "attention_actions",
+      "visible_label": "Attention actions",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 1471,
+        "right": 1017,
+        "bottom": 1642,
+        "width": 954,
+        "height": 171
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 560.4,
+        "right": 387.4,
+        "bottom": 625.5,
+        "width": 363.4,
+        "height": 65.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "element_10",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1694,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 391
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 645.3,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 149.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick action",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/049_action_selector_top-20260801-133815.xml"
+    }
+  ],
+  "visible_text": [
+    "Silence actions",
+    "Cooldown",
+    "Prevent the same app or conversation from buzzing you multiple times in quick succession by muting or dismissing them automatically.",
+    "Mute",
+    "Prevent the notification that matches your criteria from buzzing or playing a sound.",
+    "Attention actions",
+    "Alarm",
+    "When your screen is off a fullscreen alarm will popup with sound & vibration.",
+    "Pick action"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 7,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

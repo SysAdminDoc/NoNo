@@ -1,0 +1,20 @@
+{
+  "screen_id": "064_rules_test_record_disabled",
+  "captured_at": "2026-08-01T13:48:13.2253693-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Enabled toggle off"
+  ],
+  "required_starting_state": "Saved test rule initially enabled",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\064_rules_test_record_disabled-20260801-134809.png",
+    "ui_xml": "evidence\\ui-xml\\064_rules_test_record_disabled-20260801-134809.xml",
+    "activity_dump": "evidence\\activity\\064_rules_test_record_disabled-20260801-134809.txt",
+    "window_dump": "evidence\\activity\\064_rules_test_record_disabled-20260801-134809-window.txt",
+    "input_method_dump": "evidence\\activity\\064_rules_test_record_disabled-20260801-134809-input-method.txt"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "screen_id": "012_article_focused",
+  "screen_name": "Article Focused",
+  "state_name": "article_focused",
+  "classification": "CONFIRMED",
+  "scope": "external_browser",
+  "unique_surface_group": "article_focused",
+  "package_name": "com.android.chrome",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Explore list visible"
+  ],
+  "navigation_path": [
+    "Explore > How I use BuzzKill to stay focused and in the moment"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/012_article_focused-20260801-131310.png",
+    "ui_xml": "evidence/ui-xml/012_article_focused-20260801-131310.xml",
+    "activity_dump": "evidence/activity/012_article_focused-20260801-131310.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "signin_fre_continue_button",
+      "visible_label": "Add account to device",
+      "accessibility_label": null,
+      "resource_id": "com.android.chrome:id/signin_fre_continue_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 1899,
+        "right": 1017,
+        "bottom": 2025,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 723.4,
+        "right": 387.4,
+        "bottom": 771.4,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": false,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/012_article_focused-20260801-131310.xml"
+    },
+    {
+      "element_id": "signin_fre_dismiss_button",
+      "visible_label": "Use without an account",
+      "accessibility_label": null,
+      "resource_id": "com.android.chrome:id/signin_fre_dismiss_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2025,
+        "right": 1017,
+        "bottom": 2151,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 771.4,
+        "right": 387.4,
+        "bottom": 819.4,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/012_article_focused-20260801-131310.xml"
+    },
+    {
+      "element_id": "signin_fre_footer",
+      "visible_label": "By continuing, you agree to the Terms of Service. To help improve the app, Chrome sends usage and crash data to Google. Manage",
+      "accessibility_label": null,
+      "resource_id": "com.android.chrome:id/signin_fre_footer",
+      "element_type": "TextView",
+      "bounds_px": {
+        "left": 63,
+        "top": 2183,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 91
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 831.6,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 34.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/012_article_focused-20260801-131310.xml"
+    }
+  ],
+  "visible_text": [
+    "Make Chrome your own",
+    "Sign in to get your bookmarks, passwords, and more on all your devices",
+    "Add account to device",
+    "Use without an account",
+    "By continuing, you agree to the Terms of Service. To help improve the app, Chrome sends usage and crash data to Google. Manage"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": "External Chrome first-run screen reached by an article link; no browser onboarding was completed."
+}

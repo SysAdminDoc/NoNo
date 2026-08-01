@@ -1,0 +1,22 @@
+{
+  "screen_id": "077_explore_scrolled_1",
+  "baseline": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\baseline\\077_explore_scrolled_1.png",
+  "current": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\current\\077_explore_scrolled_1.png",
+  "mask": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\masks\\system-bars.json",
+  "baseline_dimensions": [
+    1080,
+    2400
+  ],
+  "current_dimensions": [
+    1080,
+    2400
+  ],
+  "dimensions_match": true,
+  "compared_pixel_ratio": 0.93,
+  "mean_absolute_error": 54.710075,
+  "root_mean_square_error": 101.106262,
+  "pixel_similarity": 0.78545068,
+  "global_structural_similarity": 0.10295881,
+  "threshold": 0.85,
+  "result": "FAIL_THRESHOLD"
+}

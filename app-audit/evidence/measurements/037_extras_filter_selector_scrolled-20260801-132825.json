@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "037_extras_filter_selector_scrolled",
+    "captured_at":  "2026-08-01T13:28:28.4206779-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Create rule \u003e contains \u003e Extras \u003e scroll menu"
+                        ],
+    "required_starting_state":  "Extras popup open",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{3c46b2d u0 PopupWindow:3b97eeb}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\037_extras_filter_selector_scrolled-20260801-132825.png",
+                     "ui_xml":  "evidence\\ui-xml\\037_extras_filter_selector_scrolled-20260801-132825.xml",
+                     "activity_dump":  "evidence\\activity\\037_extras_filter_selector_scrolled-20260801-132825.txt",
+                     "window_dump":  "evidence\\activity\\037_extras_filter_selector_scrolled-20260801-132825-window.txt",
+                     "input_method_dump":  "evidence\\activity\\037_extras_filter_selector_scrolled-20260801-132825-input-method.txt"
+                 }
+}

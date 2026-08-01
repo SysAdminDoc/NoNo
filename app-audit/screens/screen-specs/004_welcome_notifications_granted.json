@@ -1,0 +1,202 @@
+{
+  "screen_id": "004_welcome_notifications_granted",
+  "screen_name": "Welcome Notifications Granted",
+  "state_name": "welcome_notifications_granted",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "onboarding_welcome",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Fresh install; POST_NOTIFICATIONS prompt shown"
+  ],
+  "navigation_path": [
+    "Welcome > Allow notifications > Allow"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/004_welcome_notifications_granted-20260801-130902.png",
+    "ui_xml": "evidence/ui-xml/004_welcome_notifications_granted-20260801-130902.xml",
+    "activity_dump": "evidence/activity/004_welcome_notifications_granted-20260801-130902.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "element_7",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "View",
+      "bounds_px": {
+        "left": 63,
+        "top": 1407,
+        "right": 1017,
+        "bottom": 1565,
+        "width": 954,
+        "height": 158
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 536.0,
+        "right": 387.4,
+        "bottom": 596.2,
+        "width": 363.4,
+        "height": 60.2
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": true,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/004_welcome_notifications_granted-20260801-130902.xml"
+    },
+    {
+      "element_id": "element_10",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "View",
+      "bounds_px": {
+        "left": 63,
+        "top": 1607,
+        "right": 1017,
+        "bottom": 1859,
+        "width": 954,
+        "height": 252
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 612.2,
+        "right": 387.4,
+        "bottom": 708.2,
+        "width": 363.4,
+        "height": 96.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/004_welcome_notifications_granted-20260801-130902.xml"
+    },
+    {
+      "element_id": "element_16",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "View",
+      "bounds_px": {
+        "left": 63,
+        "top": 1901,
+        "right": 1017,
+        "bottom": 2153,
+        "width": 954,
+        "height": 252
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 724.2,
+        "right": 387.4,
+        "bottom": 820.2,
+        "width": 363.4,
+        "height": 96.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/004_welcome_notifications_granted-20260801-130902.xml"
+    },
+    {
+      "element_id": "element_22",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "View",
+      "bounds_px": {
+        "left": 63,
+        "top": 2167,
+        "right": 372,
+        "bottom": 2293,
+        "width": 309,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 825.5,
+        "right": 141.7,
+        "bottom": 873.5,
+        "width": 117.7,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/004_welcome_notifications_granted-20260801-130902.xml"
+    }
+  ],
+  "visible_text": [
+    "Welcome to BuzzKill",
+    "BuzzKill is a collection of tools to help you keep your notifications under control. You create rules which tells BuzzKill which notifications to activate for, and what to do with them.\n\nYour data is kept locally and BuzzKill doesn't have access to the internet. No ads, no tracking & no in-app purchases.",
+    "Allow notifications",
+    "2",
+    "Allow BuzzKill to run in background",
+    "This allows BuzzKill to run your automated rules when the app isn't open.",
+    "3",
+    "Enable BuzzKill",
+    "This allows BuzzKill to react to notifications you receive.",
+    "Contact support"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 4,
+    "custom_span_limitation": true
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

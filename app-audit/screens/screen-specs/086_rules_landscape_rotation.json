@@ -1,0 +1,167 @@
+{
+  "screen_id": "086_rules_landscape_rotation",
+  "screen_name": "Rules Landscape Rotation",
+  "state_name": "rules_landscape_rotation",
+  "classification": "CONFIRMED",
+  "scope": "excluded_repackaging",
+  "unique_surface_group": "rules_landscape_rotation",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule after cold relaunch"
+  ],
+  "navigation_path": [
+    "Rules > rotate device to landscape"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/086_rules_landscape_rotation-20260801-140250.png",
+    "ui_xml": "evidence/ui-xml/086_rules_landscape_rotation-20260801-140250.xml",
+    "activity_dump": "evidence/activity/086_rules_landscape_rotation-20260801-140250.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 2400,
+    "height_px": 1080,
+    "density_dpi": 420,
+    "width_dp": 914.3,
+    "height_dp": 411.4,
+    "orientation": "landscape",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "element_4",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Switch",
+      "bounds_px": {
+        "left": 376,
+        "top": 618,
+        "right": 498,
+        "bottom": 689,
+        "width": 122,
+        "height": 71
+      },
+      "bounds_dp": {
+        "left": 143.2,
+        "top": 235.4,
+        "right": 189.7,
+        "bottom": 262.5,
+        "width": 46.5,
+        "height": 27.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/086_rules_landscape_rotation-20260801-140250.xml"
+    },
+    {
+      "element_id": "close",
+      "visible_label": "CLOSE",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 372,
+        "top": 743,
+        "right": 1247,
+        "bottom": 869,
+        "width": 875,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 141.7,
+        "top": 283.0,
+        "right": 475.0,
+        "bottom": 331.0,
+        "width": 333.3,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/086_rules_landscape_rotation-20260801-140250.xml"
+    },
+    {
+      "element_id": "download",
+      "visible_label": "DOWNLOAD✅",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 1289,
+        "top": 743,
+        "right": 2164,
+        "bottom": 869,
+        "width": 875,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 491.0,
+        "top": 283.0,
+        "right": 824.4,
+        "bottom": 331.0,
+        "width": 333.3,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": false,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/086_rules_landscape_rotation-20260801-140250.xml"
+    }
+  ],
+  "visible_text": [
+    "LITEAPKS",
+    "Safest and Fastest",
+    "Endless Modded Apps & Games, All in One Place. Get LITEAPKs App Store Now",
+    "Don't show again",
+    "CLOSE",
+    "DOWNLOAD✅"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "This overlay is outside the native product scope and was not analyzed as a BuzzKill feature."
+  ],
+  "notes": "Landscape capture obscured by the excluded LiteAPKS/repackaging overlay."
+}

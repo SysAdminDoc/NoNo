@@ -1,0 +1,368 @@
+{
+  "screen_id": "007_notification_access_system",
+  "screen_name": "Notification Access System",
+  "state_name": "notification_access_system",
+  "classification": "CONFIRMED",
+  "scope": "external_system",
+  "unique_surface_group": "notification_access_system",
+  "package_name": "com.android.settings",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Notification listener access disabled"
+  ],
+  "navigation_path": [
+    "Welcome > Enable BuzzKill"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/007_notification_access_system-20260801-131033.png",
+    "ui_xml": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml",
+    "activity_dump": "evidence/activity/007_notification_access_system-20260801-131033.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "content_parent",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/content_parent",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 74,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 1080,
+        "height": 2263
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 28.2,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 411.4,
+        "height": 862.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "navigate_up",
+      "visible_label": "",
+      "accessibility_label": "Navigate up",
+      "resource_id": null,
+      "element_type": "ImageButton",
+      "bounds_px": {
+        "left": 0,
+        "top": 74,
+        "right": 147,
+        "bottom": 221,
+        "width": 147,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 28.2,
+        "right": 56.0,
+        "bottom": 84.2,
+        "width": 56.0,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_7",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 790,
+        "right": 1080,
+        "bottom": 945,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 301.0,
+        "right": 411.4,
+        "bottom": 360.0,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_9",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 945,
+        "right": 1080,
+        "bottom": 1100,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 360.0,
+        "right": 411.4,
+        "bottom": 419.0,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_13",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1235,
+        "right": 1080,
+        "bottom": 1390,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 470.5,
+        "right": 411.4,
+        "bottom": 529.5,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_15",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1390,
+        "right": 1080,
+        "bottom": 1545,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 529.5,
+        "right": 411.4,
+        "bottom": 588.6,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_17",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1545,
+        "right": 1080,
+        "bottom": 1700,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 588.6,
+        "right": 411.4,
+        "bottom": 647.6,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_19",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1700,
+        "right": 1080,
+        "bottom": 1855,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 647.6,
+        "right": 411.4,
+        "bottom": 706.7,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    },
+    {
+      "element_id": "element_21",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1855,
+        "right": 1080,
+        "bottom": 2010,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 706.7,
+        "right": 411.4,
+        "bottom": 765.7,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/007_notification_access_system-20260801-131033.xml"
+    }
+  ],
+  "visible_text": [
+    "Allowed",
+    "Android System Intelligence",
+    "Pixel Launcher",
+    "Not allowed",
+    "Android Auto",
+    "BuzzKill",
+    "Google Play services",
+    "Google Play Protect Service",
+    "Contacts"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 9,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": ""
+}

@@ -1,0 +1,470 @@
+{
+  "screen_id": "017_settings_scrolled_1",
+  "screen_name": "Settings Scrolled 1",
+  "state_name": "settings_scrolled_1",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "settings",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Default settings; top of settings list"
+  ],
+  "navigation_path": [
+    "Settings > scroll down"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/017_settings_scrolled_1-20260801-131523.png",
+    "ui_xml": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml",
+    "activity_dump": "evidence/activity/017_settings_scrolled_1-20260801-131523.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2154
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 820.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "recycler_view",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/recycler_view",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 0,
+        "top": 84,
+        "right": 1080,
+        "bottom": 2154,
+        "width": 1080,
+        "height": 2070
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 32.0,
+        "right": 411.4,
+        "bottom": 820.6,
+        "width": 411.4,
+        "height": 788.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_3",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 84,
+        "right": 1080,
+        "bottom": 328,
+        "width": 1080,
+        "height": 244
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 32.0,
+        "right": 411.4,
+        "bottom": 125.0,
+        "width": 411.4,
+        "height": 93.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_8",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 447,
+        "right": 1080,
+        "bottom": 819,
+        "width": 1080,
+        "height": 372
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 170.3,
+        "right": 411.4,
+        "bottom": 312.0,
+        "width": 411.4,
+        "height": 141.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "switch_widget",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "android:id/switch_widget",
+      "element_type": "Switch",
+      "bounds_px": {
+        "left": 926,
+        "top": 598,
+        "right": 1048,
+        "bottom": 669,
+        "width": 122,
+        "height": 71
+      },
+      "bounds_dp": {
+        "left": 352.8,
+        "top": 227.8,
+        "right": 399.2,
+        "bottom": 254.9,
+        "width": 46.5,
+        "height": 27.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_14",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 938,
+        "right": 1080,
+        "bottom": 1154,
+        "width": 1080,
+        "height": 216
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 357.3,
+        "right": 411.4,
+        "bottom": 439.6,
+        "width": 411.4,
+        "height": 82.3
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_17",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 1154,
+        "right": 1080,
+        "bottom": 1422,
+        "width": 1080,
+        "height": 268
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 439.6,
+        "right": 411.4,
+        "bottom": 541.7,
+        "width": 411.4,
+        "height": 102.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_22",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 1541,
+        "right": 1080,
+        "bottom": 1861,
+        "width": 1080,
+        "height": 320
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 587.0,
+        "right": 411.4,
+        "bottom": 709.0,
+        "width": 411.4,
+        "height": 121.9
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "element_25",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "ViewGroup",
+      "bounds_px": {
+        "left": 0,
+        "top": 1861,
+        "right": 1080,
+        "bottom": 2129,
+        "width": 1080,
+        "height": 268
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 709.0,
+        "right": 411.4,
+        "bottom": 811.0,
+        "width": 411.4,
+        "height": 102.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "rules",
+      "visible_label": "",
+      "accessibility_label": "Rules",
+      "resource_id": "com.samruston.buzzkill:id/rules",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 2154,
+        "right": 270,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 820.6,
+        "right": 102.9,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "history",
+      "visible_label": "",
+      "accessibility_label": "History",
+      "resource_id": "com.samruston.buzzkill:id/history",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 270,
+        "top": 2154,
+        "right": 540,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 102.9,
+        "top": 820.6,
+        "right": 205.7,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    },
+    {
+      "element_id": "explore",
+      "visible_label": "",
+      "accessibility_label": "Explore",
+      "resource_id": "com.samruston.buzzkill:id/explore",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 540,
+        "top": 2154,
+        "right": 810,
+        "bottom": 2337,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 205.7,
+        "top": 820.6,
+        "right": 308.6,
+        "bottom": 890.3,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/017_settings_scrolled_1-20260801-131523.xml"
+    }
+  ],
+  "visible_text": [
+    "Mute importance level",
+    "How important a notification must be to trigger the rule",
+    "Unsilence actions",
+    "Adjust silent ringer mode for calls",
+    "Temporarily adjust the ringer to sound. May have side effects like unintentionally enabling do not disturb. Only enable if it does not work by default.",
+    "Notification history",
+    "Configure which notifications to save.",
+    "Keep history for",
+    "Choose how long notifications are saved before being deleted.",
+    "Shortcuts",
+    "Create shortcut",
+    "A shortcut lets you toggle multiple rules at once. Shortcuts can be accessed from the home screen or a quick tile.",
+    "Clear shortcuts",
+    "Clear all shortcuts that have been created using BuzzKill."
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 12,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

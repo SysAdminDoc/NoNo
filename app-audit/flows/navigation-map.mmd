@@ -1,0 +1,41 @@
+flowchart TD
+    Launch["Launch"] --> Welcome["Welcome / capability onboarding"]
+    Welcome --> NotifyPerm["Android notification permission"]
+    NotifyPerm --> BackgroundPerm["Android background-access confirmation"]
+    BackgroundPerm --> ListenerSettings["Android notification-listener settings"]
+    ListenerSettings --> Rules["Rules"]
+
+    Rules <--> History["History"]
+    Rules <--> Explore["Explore"]
+    Rules <--> Settings["Settings"]
+    History <--> Explore
+    History <--> Settings
+    Explore <--> Settings
+
+    Rules --> RuleBuilder["Rule builder"]
+    RuleBuilder --> AppSelector["App selector"]
+    RuleBuilder --> ConditionBuilder["Content-filter composer"]
+    ConditionBuilder --> PhraseDialog["Phrase dialog"]
+    ConditionBuilder --> ExtrasMenu["Extras menu"]
+    ConditionBuilder --> NestedGroup["Nested group"]
+    RuleBuilder --> ActionSelector["Action selector"]
+    RuleBuilder --> Rules
+
+    Rules --> RuleMenu["Rule More menu"]
+    RuleMenu --> EnableFor["Enable-for duration menu"]
+    RuleMenu --> FolderDialog["Folder dialog"]
+    RuleMenu --> RenameDialog["Rename dialog"]
+    Rules --> RuleBuilder
+
+    History --> Search["History search"]
+    History --> HistoryMenu["History-item menu"]
+    HistoryMenu --> Activity["Activity: Rules / Changes"]
+    Activity --> History
+
+    Explore --> ExternalArticle["External browser article"]
+    Explore --> SuggestionBuilder["Prepopulated rule builder"]
+
+    Settings --> PreferenceDialogs["Mute/history/theme/language dialogs"]
+    Settings --> Shortcut["Shortcut editor"]
+    Settings --> FolderPicker["Android folder picker"]
+    Settings --> ExternalHelp["External browser/help/community"]

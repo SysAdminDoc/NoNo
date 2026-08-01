@@ -1,0 +1,18 @@
+Sanitized target-only summary derived from:
+adb -s emulator-5554 shell dumpsys notification --noredact
+Captured 2026-08-01 around 14:05 America/New_York.
+
+Package notification importance: DEFAULT; userSet=true
+
+Channels reported for com.samruston.buzzkill:
+- hidden: name Hidden, importance 1, no sound, no vibration, no badge
+- priority: name Important, importance 5, system notification sound, badge enabled
+- silent_important: name Silent, importance 4, no sound, badge enabled
+- alarm: name Alarm, importance 5, system notification sound, badge enabled
+- internal: name Internal, current importance 2, original importance 1, no sound, no badge
+
+Notification-listener state:
+- com.samruston.buzzkill/.background.service.NotificationService is allowed.
+- The same component is listed among live notification listeners.
+
+Non-native/repackaging observations were omitted from this target-only summary.

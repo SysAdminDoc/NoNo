@@ -1,0 +1,131 @@
+{
+  "screen_id": "003_notification_permission_dialog",
+  "screen_name": "Notification Permission Dialog",
+  "state_name": "notification_permission_dialog",
+  "classification": "CONFIRMED",
+  "scope": "external_system",
+  "unique_surface_group": "notification_permission_dialog",
+  "package_name": "com.google.android.permissioncontroller",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "POST_NOTIFICATIONS not granted"
+  ],
+  "navigation_path": [
+    "Welcome > Allow notifications"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/003_notification_permission_dialog-20260801-130832.png",
+    "ui_xml": "evidence/ui-xml/003_notification_permission_dialog-20260801-130832.xml",
+    "activity_dump": "evidence/activity/003_notification_permission_dialog-20260801-130832.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "permission_allow_button",
+      "visible_label": "Allow",
+      "accessibility_label": null,
+      "resource_id": "com.android.permissioncontroller:id/permission_allow_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 133,
+        "top": 1243,
+        "right": 947,
+        "bottom": 1390,
+        "width": 814,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 50.7,
+        "top": 473.5,
+        "right": 360.8,
+        "bottom": 529.5,
+        "width": 310.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/003_notification_permission_dialog-20260801-130832.xml"
+    },
+    {
+      "element_id": "permission_deny_button",
+      "visible_label": "Don’t allow",
+      "accessibility_label": null,
+      "resource_id": "com.android.permissioncontroller:id/permission_deny_button",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 133,
+        "top": 1400,
+        "right": 947,
+        "bottom": 1547,
+        "width": 814,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 50.7,
+        "top": 533.3,
+        "right": 360.8,
+        "bottom": 589.3,
+        "width": 310.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/003_notification_permission_dialog-20260801-130832.xml"
+    }
+  ],
+  "visible_text": [
+    "Allow BuzzKill to send you notifications?",
+    "Allow",
+    "Don’t allow"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 2,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": ""
+}

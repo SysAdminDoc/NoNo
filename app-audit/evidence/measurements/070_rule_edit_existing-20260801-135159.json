@@ -1,0 +1,20 @@
+{
+  "screen_id": "070_rule_edit_existing",
+  "captured_at": "2026-08-01T13:52:17.5776242-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Test rule card"
+  ],
+  "required_starting_state": "Saved disabled test rule",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\070_rule_edit_existing-20260801-135159.png",
+    "ui_xml": "evidence\\ui-xml\\070_rule_edit_existing-20260801-135159.xml",
+    "activity_dump": "evidence\\activity\\070_rule_edit_existing-20260801-135159.txt",
+    "window_dump": "evidence\\activity\\070_rule_edit_existing-20260801-135159-window.txt",
+    "input_method_dump": "evidence\\activity\\070_rule_edit_existing-20260801-135159-input-method.txt"
+  }
+}

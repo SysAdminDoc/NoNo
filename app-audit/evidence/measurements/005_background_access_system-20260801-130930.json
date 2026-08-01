@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "005_background_access_system",
+    "captured_at":  "2026-08-01T13:09:33.6059369-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Welcome \u003e Allow BuzzKill to run in background"
+                        ],
+    "required_starting_state":  "Battery optimization not exempted",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{5e0e256 u0 com.android.settings/com.android.settings.fuelgauge.RequestIgnoreBatteryOptimizations}",
+                           "  mFocusedApp=ActivityRecord{119661629 u0 com.android.settings/.fuelgauge.RequestIgnoreBatteryOptimizations t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\005_background_access_system-20260801-130930.png",
+                     "ui_xml":  "evidence\\ui-xml\\005_background_access_system-20260801-130930.xml",
+                     "activity_dump":  "evidence\\activity\\005_background_access_system-20260801-130930.txt",
+                     "window_dump":  "evidence\\activity\\005_background_access_system-20260801-130930-window.txt",
+                     "input_method_dump":  "evidence\\activity\\005_background_access_system-20260801-130930-input-method.txt"
+                 }
+}

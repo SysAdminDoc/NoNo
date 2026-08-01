@@ -1,0 +1,20 @@
+{
+  "screen_id": "067_rule_priority_dialog",
+  "captured_at": "2026-08-01T13:49:20.1071927-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > Test rule > More > Set priority"
+  ],
+  "required_starting_state": "Saved disabled test rule",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\067_rule_priority_dialog-20260801-134916.png",
+    "ui_xml": "evidence\\ui-xml\\067_rule_priority_dialog-20260801-134916.xml",
+    "activity_dump": "evidence\\activity\\067_rule_priority_dialog-20260801-134916.txt",
+    "window_dump": "evidence\\activity\\067_rule_priority_dialog-20260801-134916-window.txt",
+    "input_method_dump": "evidence\\activity\\067_rule_priority_dialog-20260801-134916-input-method.txt"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "screen_id": "072_history_notification_detail",
+  "screen_name": "History Notification Detail",
+  "state_name": "history_notification_detail",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "history_item_menu",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "History contains one shell test notification"
+  ],
+  "navigation_path": [
+    "History > Shell test notification"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/072_history_notification_detail-20260801-135317.png",
+    "ui_xml": "evidence/ui-xml/072_history_notification_detail-20260801-135317.xml",
+    "activity_dump": "evidence/activity/072_history_notification_detail-20260801-135317.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [],
+  "visible_text": [
+    "Restore",
+    "Open notification",
+    "View activity",
+    "Copy",
+    "Create rule",
+    "Delete"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 0,
+    "custom_span_limitation": true
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

@@ -1,0 +1,11 @@
+asset_id,asset_or_category,source,rights_status,replica_treatment,notes
+AR-001,Product name and wordmark,Independent reconstruction,AUTHORIZED_ORIGINAL,Use Signal Rules text only,Does not reuse BuzzKill branding
+AR-002,Launcher icon,Code-native vector authored for this project,AUTHORIZED_ORIGINAL,Use abstract signal rings,No copied logo geometry
+AR-003,Material/system icons,AndroidX Material Icons library,AUTHORIZED_DEPENDENCY,Use under dependency license,Semantically equivalent generic icons
+AR-004,Onboarding illustrations,Code-native Compose shapes,AUTHORIZED_ORIGINAL,Use abstract notification/privacy shapes,Preserve hierarchy not copyrighted pixels
+AR-005,Explore illustrations,Code-native Compose shapes,AUTHORIZED_ORIGINAL,Use abstract gradients/shapes,No original screenshots or art bundled
+AR-006,Typography,Android system sans-serif,PLATFORM_AUTHORIZED,Use platform fonts,Exact original family unknown
+AR-007,Audit screenshots,Authorized local design evidence,EVIDENCE_ONLY,Never package in APK,Stored only under app-audit and validation baseline copies
+AR-008,BuzzKill name/logo/art,Third-party; no reuse authorization,NOT_AUTHORIZED,Do not package or display,Identity-only evidence may be masked during comparison
+AR-009,LiteAPKS overlays/ads,Third-party repackaging material,EXCLUDED,Do not implement or package,Explicit user exclusion
+AR-010,Article text and remote imagery,External mutable content,NOT_AUTHORIZED,Use concise original local summaries and handoff,Do not copy page contents

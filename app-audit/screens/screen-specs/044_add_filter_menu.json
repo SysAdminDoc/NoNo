@@ -1,0 +1,270 @@
+{
+  "screen_id": "044_add_filter_menu",
+  "screen_name": "Add Filter Menu",
+  "state_name": "add_filter_menu",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "condition_builder",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Rule contains AUDIT_SENTINEL_8675309 phrase"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > + Filter"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/044_add_filter_menu-20260801-133456.png",
+    "ui_xml": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml",
+    "activity_dump": "evidence/activity/044_add_filter_menu-20260801-133456.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "element_4",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 593,
+        "right": 1017,
+        "bottom": 773,
+        "width": 954,
+        "height": 180
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 225.9,
+        "right": 387.4,
+        "bottom": 294.5,
+        "width": 363.4,
+        "height": 68.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    },
+    {
+      "element_id": "delete",
+      "visible_label": "",
+      "accessibility_label": "Delete",
+      "resource_id": "com.samruston.buzzkill:id/delete",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 848,
+        "top": 625,
+        "right": 964,
+        "bottom": 741,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 323.0,
+        "top": 238.1,
+        "right": 367.2,
+        "bottom": 282.3,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": false,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    },
+    {
+      "element_id": "button1",
+      "visible_label": "Phrase",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button1",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 910,
+        "right": 364,
+        "bottom": 1102,
+        "width": 301,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 346.7,
+        "right": 138.7,
+        "bottom": 419.8,
+        "width": 114.7,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    },
+    {
+      "element_id": "button2",
+      "visible_label": "Extras",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button2",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 390,
+        "top": 910,
+        "right": 690,
+        "bottom": 1102,
+        "width": 300,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 148.6,
+        "top": 346.7,
+        "right": 262.9,
+        "bottom": 419.8,
+        "width": 114.3,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    },
+    {
+      "element_id": "button3",
+      "visible_label": "Group",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/button3",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 716,
+        "top": 910,
+        "right": 1017,
+        "bottom": 1102,
+        "width": 301,
+        "height": 192
+      },
+      "bounds_dp": {
+        "left": 272.8,
+        "top": 346.7,
+        "right": 387.4,
+        "bottom": 419.8,
+        "width": 114.7,
+        "height": 73.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    },
+    {
+      "element_id": "apply_filter",
+      "visible_label": "Apply filter",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/044_add_filter_menu-20260801-133456.xml"
+    }
+  ],
+  "visible_text": [
+    "When notification contains any of",
+    "AUDIT_SENTINEL_8675309",
+    "Phrase",
+    "Extras",
+    "Group",
+    "When you're done tap apply to set the filter for your notification rule.",
+    "Apply filter"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 6,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [
+    {
+      "classification": "CONFIRMED",
+      "finding": "This is a repeat/returned visual state, not a newly discovered native surface."
+    }
+  ],
+  "unknowns": [],
+  "notes": "Repeat capture of the populated content-filter editor; not a new surface."
+}

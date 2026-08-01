@@ -1,0 +1,132 @@
+{
+  "screen_id": "005_background_access_system",
+  "screen_name": "Background Access System",
+  "state_name": "background_access_system",
+  "classification": "CONFIRMED",
+  "scope": "external_system",
+  "unique_surface_group": "background_access_system",
+  "package_name": "com.android.settings",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Battery optimization not exempted"
+  ],
+  "navigation_path": [
+    "Welcome > Allow BuzzKill to run in background"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/005_background_access_system-20260801-130930.png",
+    "ui_xml": "evidence/ui-xml/005_background_access_system-20260801-130930.xml",
+    "activity_dump": "evidence/activity/005_background_access_system-20260801-130930.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "button2",
+      "visible_label": "Deny",
+      "accessibility_label": null,
+      "resource_id": "android:id/button2",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 642,
+        "top": 1357,
+        "right": 810,
+        "bottom": 1499,
+        "width": 168,
+        "height": 142
+      },
+      "bounds_dp": {
+        "left": 244.6,
+        "top": 517.0,
+        "right": 308.6,
+        "bottom": 571.0,
+        "width": 64.0,
+        "height": 54.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/005_background_access_system-20260801-130930.xml"
+    },
+    {
+      "element_id": "button1",
+      "visible_label": "Allow",
+      "accessibility_label": null,
+      "resource_id": "android:id/button1",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 810,
+        "top": 1357,
+        "right": 978,
+        "bottom": 1499,
+        "width": 168,
+        "height": 142
+      },
+      "bounds_dp": {
+        "left": 308.6,
+        "top": 517.0,
+        "right": 372.6,
+        "bottom": 571.0,
+        "width": 64.0,
+        "height": 54.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/005_background_access_system-20260801-130930.xml"
+    }
+  ],
+  "visible_text": [
+    "Let app always run in background?",
+    "Allowing BuzzKill to always run in the background may reduce battery life. \n\nYou can change this later from Settings -> Apps.",
+    "Deny",
+    "Allow"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 2,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": ""
+}

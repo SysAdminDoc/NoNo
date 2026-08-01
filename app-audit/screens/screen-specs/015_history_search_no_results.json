@@ -1,0 +1,292 @@
+{
+  "screen_id": "015_history_search_no_results",
+  "screen_name": "History Search No Results",
+  "state_name": "history_search_no_results",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "history",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "History empty; search focused"
+  ],
+  "navigation_path": [
+    "History > Search > enter audit"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/015_history_search_no_results-20260801-131430.png",
+    "ui_xml": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml",
+    "activity_dump": "evidence/activity/015_history_search_no_results-20260801-131430.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "pager",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/pager",
+      "element_type": "ViewPager",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 1334,
+        "width": 1080,
+        "height": 1334
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 508.2,
+        "width": 411.4,
+        "height": 508.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "container",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/container",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 0,
+        "right": 1080,
+        "bottom": 1334,
+        "width": 1080,
+        "height": 1334
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 0.0,
+        "right": 411.4,
+        "bottom": 508.2,
+        "width": 411.4,
+        "height": 508.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "input",
+      "visible_label": "audit",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/input",
+      "element_type": "EditText",
+      "bounds_px": {
+        "left": 42,
+        "top": 168,
+        "right": 1038,
+        "bottom": 315,
+        "width": 996,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 16.0,
+        "top": 64.0,
+        "right": 395.4,
+        "bottom": 120.0,
+        "width": 379.4,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "closeButton",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/closeButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 911,
+        "top": 181,
+        "right": 1027,
+        "bottom": 297,
+        "width": 116,
+        "height": 116
+      },
+      "bounds_dp": {
+        "left": 347.0,
+        "top": 69.0,
+        "right": 391.2,
+        "bottom": 113.1,
+        "width": 44.2,
+        "height": 44.2
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "rules",
+      "visible_label": "",
+      "accessibility_label": "Rules",
+      "resource_id": "com.samruston.buzzkill:id/rules",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1334,
+        "right": 270,
+        "bottom": 1517,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 508.2,
+        "right": 102.9,
+        "bottom": 577.9,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "explore",
+      "visible_label": "",
+      "accessibility_label": "Explore",
+      "resource_id": "com.samruston.buzzkill:id/explore",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 540,
+        "top": 1334,
+        "right": 810,
+        "bottom": 1517,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 205.7,
+        "top": 508.2,
+        "right": 308.6,
+        "bottom": 577.9,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    },
+    {
+      "element_id": "settings",
+      "visible_label": "",
+      "accessibility_label": "Settings",
+      "resource_id": "com.samruston.buzzkill:id/settings",
+      "element_type": "FrameLayout",
+      "bounds_px": {
+        "left": 810,
+        "top": 1334,
+        "right": 1080,
+        "bottom": 1517,
+        "width": 270,
+        "height": 183
+      },
+      "bounds_dp": {
+        "left": 308.6,
+        "top": 508.2,
+        "right": 411.4,
+        "bottom": 577.9,
+        "width": 102.9,
+        "height": 69.7
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/015_history_search_no_results-20260801-131430.xml"
+    }
+  ],
+  "visible_text": [
+    "audit"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 7,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

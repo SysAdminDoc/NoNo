@@ -1,0 +1,24 @@
+entity,field,visible_type,required_or_optional,default_or_observed,validation_or_format,relationships,confidence,evidence
+Rule,enabled,boolean,required,true on save then false in test,Immediate switch and persisted,"Rule -> Action; Rule -> FilterExpression",CONFIRMED,"063;064;085"
+Rule,nickname,text,optional,empty,Text-entry dialog,Rule,CONFIRMED,069
+Rule,folder,text/reference,optional,none,Autocomplete text-entry dialog,Rule -> Folder,CONFIRMED,068
+Rule,priority,ordering metadata,optional/default,default unknown,Set priority menu action,Rule collection,CONFIRMED control / UNKNOWN values,065;067
+Rule,temporary_enable_duration,duration,optional,"10m,30m,1h,6h,8h,12h,1d,7d",Menu selection,Rule,CONFIRMED,066
+AppScope,apps,app set,required,any app,Search and Pick all apps,Rule -> AppScope,CONFIRMED,"029;030;031"
+FilterExpression,operator,enum,required,contains any of,"any/all/not-any/not-all",Recursive FilterExpression,CONFIRMED,040
+FilterExpression,members,list,required for content filter,anything until added,At least one member when content filter chosen,"Phrase|Extra|Group",CONFIRMED,"032;042;059"
+Phrase,value,text,required when phrase member exists,AUDIT_SENTINEL_8675309,Text entry,FilterExpression,CONFIRMED,"041;042"
+Extra,type,enum,required per extra,none,Popup choice,FilterExpression,CONFIRMED,"036;037;038"
+Action,type,enum,required,missing/do nothing placeholder then Mute selected,Selection required before save,Rule -> Action,CONFIRMED,"049-062"
+NotificationHistoryItem,app_name,text,required,Shell,Single line,History,CONFIRMED,071
+NotificationHistoryItem,title,text,optional,Audit_Notice,Wraps,History,CONFIRMED,071
+NotificationHistoryItem,body,text,optional,AUDIT_SENTINEL_8675309,Secondary text,History,CONFIRMED,071
+NotificationHistoryItem,time,local time,required,1:52 PM,en-US 12-hour formatting,History,CONFIRMED,071
+NotificationHistoryItem,dismissed,boolean,required,false,Sent/dismissed segment,History,STRONG INFERENCE,"071;076"
+HistoryActivity,rule_events,list,optional,empty,Retained 24 hours,NotificationHistoryItem,CONFIRMED,073
+HistoryActivity,changes,list,optional,one base record,Notification updates,NotificationHistoryItem,CONFIRMED,074
+ExploreArticle,title_description_image_url,composite,required,Four visible articles,External browser handoff,Explore,CONFIRMED,011
+RuleSuggestion,rule_template,Rule prototype,required,Multiple templates,Add opens unsaved builder,Explore -> Rule,CONFIRMED,"077-082"
+SettingsProfile,history_retention,enum,required,30 days,"30 days,3 months,6 months",SettingsProfile,CONFIRMED,024
+SettingsProfile,theme,enum,required,Dark,"Follow system,Light,Dark",SettingsProfile,CONFIRMED,027
+SettingsProfile,language,locale,required,Default language,Locale list,SettingsProfile,CONFIRMED,028

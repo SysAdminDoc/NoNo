@@ -1,0 +1,168 @@
+{
+  "screen_id": "045_action_selector_top",
+  "screen_name": "Action Selector Top",
+  "state_name": "action_selector_top",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "phrase_editor",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Filtered unsaved rule"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > do nothing"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/045_action_selector_top-20260801-133519.png",
+    "ui_xml": "evidence/ui-xml/045_action_selector_top-20260801-133519.xml",
+    "activity_dump": "evidence/activity/045_action_selector_top-20260801-133519.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "inputEditText",
+      "visible_label": "AUDIT_SENTINEL_8675309",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/inputEditText",
+      "element_type": "EditText",
+      "bounds_px": {
+        "left": 154,
+        "top": 1110,
+        "right": 926,
+        "bottom": 1257,
+        "width": 772,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 422.9,
+        "right": 352.8,
+        "bottom": 478.9,
+        "width": 294.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/045_action_selector_top-20260801-133519.xml"
+    },
+    {
+      "element_id": "done",
+      "visible_label": "Done",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/done",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 154,
+        "top": 1289,
+        "right": 926,
+        "bottom": 1415,
+        "width": 772,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 491.0,
+        "right": 352.8,
+        "bottom": 539.0,
+        "width": 294.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/045_action_selector_top-20260801-133519.xml"
+    },
+    {
+      "element_id": "cancel",
+      "visible_label": "CANCEL",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/cancel",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 154,
+        "top": 1420,
+        "right": 926,
+        "bottom": 1546,
+        "width": 772,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 541.0,
+        "right": 352.8,
+        "bottom": 589.0,
+        "width": 294.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/045_action_selector_top-20260801-133519.xml"
+    }
+  ],
+  "visible_text": [
+    "Notification contains",
+    "AUDIT_SENTINEL_8675309",
+    "Done",
+    "CANCEL"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [
+    {
+      "classification": "CONFIRMED",
+      "finding": "This is a repeat/returned visual state, not a newly discovered native surface."
+    }
+  ],
+  "unknowns": [],
+  "notes": "Accidental repeat of the phrase editor while locating a custom clickable span."
+}

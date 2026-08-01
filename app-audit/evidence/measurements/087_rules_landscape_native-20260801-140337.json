@@ -1,0 +1,20 @@
+{
+  "screen_id": "087_rules_landscape_native",
+  "captured_at": "2026-08-01T14:03:43.7686463-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Rules > rotate device to landscape > close non-native overlay"
+  ],
+  "required_starting_state": "Saved disabled test rule after cold relaunch",
+  "focused_window": [
+    "  mCurrentFocus=Window{4c55dc2 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{197332003 u0 com.samruston.buzzkill/.ui.MainActivity t11}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\087_rules_landscape_native-20260801-140337.png",
+    "ui_xml": "evidence\\ui-xml\\087_rules_landscape_native-20260801-140337.xml",
+    "activity_dump": "evidence\\activity\\087_rules_landscape_native-20260801-140337.txt",
+    "window_dump": "evidence\\activity\\087_rules_landscape_native-20260801-140337-window.txt",
+    "input_method_dump": "evidence\\activity\\087_rules_landscape_native-20260801-140337-input-method.txt"
+  }
+}

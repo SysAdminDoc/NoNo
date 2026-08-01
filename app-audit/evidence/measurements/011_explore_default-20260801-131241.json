@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "011_explore_default",
+    "captured_at":  "2026-08-01T13:12:44.7570460-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Rules tab \u003e Explore tab"
+                        ],
+    "required_starting_state":  "Onboarding complete; no rules",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\011_explore_default-20260801-131241.png",
+                     "ui_xml":  "evidence\\ui-xml\\011_explore_default-20260801-131241.xml",
+                     "activity_dump":  "evidence\\activity\\011_explore_default-20260801-131241.txt",
+                     "window_dump":  "evidence\\activity\\011_explore_default-20260801-131241-window.txt",
+                     "input_method_dump":  "evidence\\activity\\011_explore_default-20260801-131241-input-method.txt"
+                 }
+}

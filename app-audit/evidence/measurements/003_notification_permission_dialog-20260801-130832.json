@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "003_notification_permission_dialog",
+    "captured_at":  "2026-08-01T13:08:36.1223557-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Welcome \u003e Allow notifications"
+                        ],
+    "required_starting_state":  "POST_NOTIFICATIONS not granted",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{afd4bc1 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity}",
+                           "  mFocusedApp=ActivityRecord{247272216 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\003_notification_permission_dialog-20260801-130832.png",
+                     "ui_xml":  "evidence\\ui-xml\\003_notification_permission_dialog-20260801-130832.xml",
+                     "activity_dump":  "evidence\\activity\\003_notification_permission_dialog-20260801-130832.txt",
+                     "window_dump":  "evidence\\activity\\003_notification_permission_dialog-20260801-130832-window.txt",
+                     "input_method_dump":  "evidence\\activity\\003_notification_permission_dialog-20260801-130832-input-method.txt"
+                 }
+}

@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "012_article_focused",
+    "captured_at":  "2026-08-01T13:13:13.5521155-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Explore \u003e How I use BuzzKill to stay focused and in the moment"
+                        ],
+    "required_starting_state":  "Explore list visible",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{8cbbdda u0 com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity}",
+                           "  mFocusedApp=ActivityRecord{153318004 u0 com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity t9}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\012_article_focused-20260801-131310.png",
+                     "ui_xml":  "evidence\\ui-xml\\012_article_focused-20260801-131310.xml",
+                     "activity_dump":  "evidence\\activity\\012_article_focused-20260801-131310.txt",
+                     "window_dump":  "evidence\\activity\\012_article_focused-20260801-131310-window.txt",
+                     "input_method_dump":  "evidence\\activity\\012_article_focused-20260801-131310-input-method.txt"
+                 }
+}

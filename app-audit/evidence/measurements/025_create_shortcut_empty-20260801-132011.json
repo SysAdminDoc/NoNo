@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "025_create_shortcut_empty",
+    "captured_at":  "2026-08-01T13:20:14.7428506-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Create shortcut"
+                        ],
+    "required_starting_state":  "No rules and no shortcuts",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\025_create_shortcut_empty-20260801-132011.png",
+                     "ui_xml":  "evidence\\ui-xml\\025_create_shortcut_empty-20260801-132011.xml",
+                     "activity_dump":  "evidence\\activity\\025_create_shortcut_empty-20260801-132011.txt",
+                     "window_dump":  "evidence\\activity\\025_create_shortcut_empty-20260801-132011-window.txt",
+                     "input_method_dump":  "evidence\\activity\\025_create_shortcut_empty-20260801-132011-input-method.txt"
+                 }
+}

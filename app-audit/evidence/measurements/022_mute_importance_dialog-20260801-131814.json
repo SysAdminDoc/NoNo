@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "022_mute_importance_dialog",
+    "captured_at":  "2026-08-01T13:18:18.1316047-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Mute importance level"
+                        ],
+    "required_starting_state":  "Default settings; mute mode unchanged",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{9f94075 u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\022_mute_importance_dialog-20260801-131814.png",
+                     "ui_xml":  "evidence\\ui-xml\\022_mute_importance_dialog-20260801-131814.xml",
+                     "activity_dump":  "evidence\\activity\\022_mute_importance_dialog-20260801-131814.txt",
+                     "window_dump":  "evidence\\activity\\022_mute_importance_dialog-20260801-131814-window.txt",
+                     "input_method_dump":  "evidence\\activity\\022_mute_importance_dialog-20260801-131814-input-method.txt"
+                 }
+}

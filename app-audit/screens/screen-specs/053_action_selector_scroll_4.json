@@ -1,0 +1,301 @@
+{
+  "screen_id": "053_action_selector_scroll_4",
+  "screen_name": "Action Selector Scroll 4",
+  "state_name": "action_selector_scroll_4",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "action_selector",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Action selector"
+  ],
+  "navigation_path": [
+    "Rules > Create/Edit rule > Action selector > scroll"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/053_action_selector_scroll_4-20260801-133931.png",
+    "ui_xml": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml",
+    "activity_dump": "evidence/activity/053_action_selector_scroll_4-20260801-133931.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "epoxy",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/epoxy",
+      "element_type": "RecyclerView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 1844
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 702.5
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "element_2",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 241,
+        "right": 1017,
+        "bottom": 505,
+        "width": 954,
+        "height": 264
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 91.8,
+        "right": 387.4,
+        "bottom": 192.4,
+        "width": 363.4,
+        "height": 100.6
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "element_5",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 557,
+        "right": 1017,
+        "bottom": 923,
+        "width": 954,
+        "height": 366
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 212.2,
+        "right": 387.4,
+        "bottom": 351.6,
+        "width": 363.4,
+        "height": 139.4
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "element_8",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 975,
+        "right": 1017,
+        "bottom": 1398,
+        "width": 954,
+        "height": 423
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 371.4,
+        "right": 387.4,
+        "bottom": 532.6,
+        "width": 363.4,
+        "height": 161.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "element_11",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1450,
+        "right": 1017,
+        "bottom": 1873,
+        "width": 954,
+        "height": 423
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 552.4,
+        "right": 387.4,
+        "bottom": 713.5,
+        "width": 363.4,
+        "height": 161.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "element_14",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "CardView",
+      "bounds_px": {
+        "left": 63,
+        "top": 1925,
+        "right": 1017,
+        "bottom": 2085,
+        "width": 954,
+        "height": 160
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 733.3,
+        "right": 387.4,
+        "bottom": 794.3,
+        "width": 363.4,
+        "height": 61.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    },
+    {
+      "element_id": "save",
+      "visible_label": "Pick action",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/save",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 2148,
+        "right": 1017,
+        "bottom": 2274,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 818.3,
+        "right": 387.4,
+        "bottom": 866.3,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/053_action_selector_scroll_4-20260801-133931.xml"
+    }
+  ],
+  "visible_text": [
+    "Flashlight",
+    "Light up the torch/flashlight with a custom pattern.",
+    "Secret",
+    "Replaces a notification to hide its content.",
+    "Sticky",
+    "Prevent the notification from being swiped away.",
+    "Summarize",
+    "Bundle all matching notifications into a single notification.",
+    "🧪 Experimental",
+    "Pick action"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 7,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

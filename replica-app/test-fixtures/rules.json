@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": 1,
+      "name": "Sanitized test rule",
+      "app": "Messages",
+      "phrase": "urgent",
+      "action": "Mute",
+      "enabled": true,
+      "priority": "Normal",
+      "folder": "No folder"
+    },
+    {
+      "id": 2,
+      "name": "Explore suggestion",
+      "app": "Messages",
+      "phrase": "urgent",
+      "action": "Flashlight",
+      "enabled": false,
+      "priority": "Normal",
+      "folder": "No folder"
+    }
+  ]
+}

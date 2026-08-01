@@ -1,0 +1,20 @@
+{
+  "screen_id": "074_history_item_changes",
+  "captured_at": "2026-08-01T13:54:48.8403309-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "History > Test notification > View activity > Changes"
+  ],
+  "required_starting_state": "History contains one test notification",
+  "focused_window": [
+    "  mCurrentFocus=Window{6685c3b u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+    "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\074_history_item_changes-20260801-135444.png",
+    "ui_xml": "evidence\\ui-xml\\074_history_item_changes-20260801-135444.xml",
+    "activity_dump": "evidence\\activity\\074_history_item_changes-20260801-135444.txt",
+    "window_dump": "evidence\\activity\\074_history_item_changes-20260801-135444-window.txt",
+    "input_method_dump": "evidence\\activity\\074_history_item_changes-20260801-135444-input-method.txt"
+  }
+}

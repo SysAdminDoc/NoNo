@@ -1,0 +1,22 @@
+{
+  "screen_id": "034_phrase_filter_input",
+  "baseline": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\baseline\\034_phrase_filter_input.png",
+  "current": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\current\\034_phrase_filter_input.png",
+  "mask": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\masks\\system-bars.json",
+  "baseline_dimensions": [
+    1080,
+    2400
+  ],
+  "current_dimensions": [
+    1080,
+    2400
+  ],
+  "dimensions_match": true,
+  "compared_pixel_ratio": 0.93,
+  "mean_absolute_error": 21.708895,
+  "root_mean_square_error": 49.199886,
+  "pixel_similarity": 0.91486708,
+  "global_structural_similarity": 0.54597086,
+  "threshold": 0.85,
+  "result": "PASS"
+}

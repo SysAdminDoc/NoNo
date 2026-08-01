@@ -1,0 +1,197 @@
+{
+  "screen_id": "027_theme_dialog",
+  "screen_name": "Theme Dialog",
+  "state_name": "theme_dialog",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "theme_dialog",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "System dark theme; app default theme setting"
+  ],
+  "navigation_path": [
+    "Settings > Theme"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/027_theme_dialog-20260801-132135.png",
+    "ui_xml": "evidence/ui-xml/027_theme_dialog-20260801-132135.xml",
+    "activity_dump": "evidence/activity/027_theme_dialog-20260801-132135.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "text1",
+      "visible_label": "Follow system",
+      "accessibility_label": null,
+      "resource_id": "android:id/text1",
+      "element_type": "CheckedTextView",
+      "bounds_px": {
+        "left": 70,
+        "top": 1043,
+        "right": 1010,
+        "bottom": 1169,
+        "width": 940,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 26.7,
+        "top": 397.3,
+        "right": 384.8,
+        "bottom": 445.3,
+        "width": 358.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/027_theme_dialog-20260801-132135.xml"
+    },
+    {
+      "element_id": "text1",
+      "visible_label": "Light",
+      "accessibility_label": null,
+      "resource_id": "android:id/text1",
+      "element_type": "CheckedTextView",
+      "bounds_px": {
+        "left": 70,
+        "top": 1169,
+        "right": 1010,
+        "bottom": 1295,
+        "width": 940,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 26.7,
+        "top": 445.3,
+        "right": 384.8,
+        "bottom": 493.3,
+        "width": 358.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/027_theme_dialog-20260801-132135.xml"
+    },
+    {
+      "element_id": "text1",
+      "visible_label": "Dark",
+      "accessibility_label": null,
+      "resource_id": "android:id/text1",
+      "element_type": "CheckedTextView",
+      "bounds_px": {
+        "left": 70,
+        "top": 1295,
+        "right": 1010,
+        "bottom": 1421,
+        "width": 940,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 26.7,
+        "top": 493.3,
+        "right": 384.8,
+        "bottom": 541.3,
+        "width": 358.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": true,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/027_theme_dialog-20260801-132135.xml"
+    },
+    {
+      "element_id": "button2",
+      "visible_label": "CANCEL",
+      "accessibility_label": null,
+      "resource_id": "android:id/button2",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 687,
+        "top": 1432,
+        "right": 978,
+        "bottom": 1558,
+        "width": 291,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 261.7,
+        "top": 545.5,
+        "right": 372.6,
+        "bottom": 593.5,
+        "width": 110.9,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/027_theme_dialog-20260801-132135.xml"
+    }
+  ],
+  "visible_text": [
+    "Theme",
+    "Follow system",
+    "Light",
+    "Dark",
+    "CANCEL"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 4,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

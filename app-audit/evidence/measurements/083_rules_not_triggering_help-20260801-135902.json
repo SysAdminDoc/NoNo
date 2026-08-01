@@ -1,0 +1,20 @@
+{
+  "screen_id": "083_rules_not_triggering_help",
+  "captured_at": "2026-08-01T13:59:07.7381607-04:00",
+  "device_serial": "emulator-5554",
+  "navigation_path": [
+    "Settings > Rules are not triggering?"
+  ],
+  "required_starting_state": "Settings top",
+  "focused_window": [
+    "  mCurrentFocus=Window{a3ad1ce u0 com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity}",
+    "  mFocusedApp=ActivityRecord{251936642 u0 com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity t10}"
+  ],
+  "evidence": {
+    "screenshot": "evidence\\screenshots\\083_rules_not_triggering_help-20260801-135902.png",
+    "ui_xml": "evidence\\ui-xml\\083_rules_not_triggering_help-20260801-135902.xml",
+    "activity_dump": "evidence\\activity\\083_rules_not_triggering_help-20260801-135902.txt",
+    "window_dump": "evidence\\activity\\083_rules_not_triggering_help-20260801-135902-window.txt",
+    "input_method_dump": "evidence\\activity\\083_rules_not_triggering_help-20260801-135902-input-method.txt"
+  }
+}

@@ -1,0 +1,6 @@
+Sanitized target-only result from:
+adb -s emulator-5554 shell dumpsys deviceidle whitelist
+
+user,com.samruston.buzzkill,10217
+
+Classification: CONFIRMED. BuzzKill was in the user device-idle allowlist after the onboarding background-access step.

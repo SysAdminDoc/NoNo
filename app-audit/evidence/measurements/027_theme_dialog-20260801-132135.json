@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "027_theme_dialog",
+    "captured_at":  "2026-08-01T13:21:38.9550568-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Settings \u003e Theme"
+                        ],
+    "required_starting_state":  "System dark theme; app default theme setting",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{dc17ebb u0 com.samruston.buzzkill/com.samruston.buzzkill.ui.MainActivity}",
+                           "  mFocusedApp=ActivityRecord{256312403 u0 com.samruston.buzzkill/.ui.MainActivity t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\027_theme_dialog-20260801-132135.png",
+                     "ui_xml":  "evidence\\ui-xml\\027_theme_dialog-20260801-132135.xml",
+                     "activity_dump":  "evidence\\activity\\027_theme_dialog-20260801-132135.txt",
+                     "window_dump":  "evidence\\activity\\027_theme_dialog-20260801-132135-window.txt",
+                     "input_method_dump":  "evidence\\activity\\027_theme_dialog-20260801-132135-input-method.txt"
+                 }
+}

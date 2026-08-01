@@ -1,0 +1,20 @@
+﻿{
+    "screen_id":  "009_notification_access_confirmation",
+    "captured_at":  "2026-08-01T13:11:29.8116372-04:00",
+    "device_serial":  "emulator-5554",
+    "navigation_path":  [
+                            "Welcome \u003e Enable BuzzKill \u003e Notification access \u003e BuzzKill \u003e Allow notification access toggle"
+                        ],
+    "required_starting_state":  "Notification listener disabled",
+    "focused_window":  [
+                           "  mCurrentFocus=Window{15402a u0 com.android.settings/com.android.settings.SubSettings}",
+                           "  mFocusedApp=ActivityRecord{102506554 u0 com.android.settings/.SubSettings t8}"
+                       ],
+    "evidence":  {
+                     "screenshot":  "evidence\\screenshots\\009_notification_access_confirmation-20260801-131126.png",
+                     "ui_xml":  "evidence\\ui-xml\\009_notification_access_confirmation-20260801-131126.xml",
+                     "activity_dump":  "evidence\\activity\\009_notification_access_confirmation-20260801-131126.txt",
+                     "window_dump":  "evidence\\activity\\009_notification_access_confirmation-20260801-131126-window.txt",
+                     "input_method_dump":  "evidence\\activity\\009_notification_access_confirmation-20260801-131126-input-method.txt"
+                 }
+}

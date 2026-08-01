@@ -1,0 +1,130 @@
+{
+  "screen_id": "025_create_shortcut_empty",
+  "screen_name": "Create Shortcut Empty",
+  "state_name": "create_shortcut_empty",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "shortcut_editor",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "No rules and no shortcuts"
+  ],
+  "navigation_path": [
+    "Settings > Create shortcut"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/025_create_shortcut_empty-20260801-132011.png",
+    "ui_xml": "evidence/ui-xml/025_create_shortcut_empty-20260801-132011.xml",
+    "activity_dump": "evidence/activity/025_create_shortcut_empty-20260801-132011.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "inputEditText",
+      "visible_label": "Start typing…",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/inputEditText",
+      "element_type": "EditText",
+      "bounds_px": {
+        "left": 63,
+        "top": 352,
+        "right": 1017,
+        "bottom": 499,
+        "width": 954,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 134.1,
+        "right": 387.4,
+        "bottom": 190.1,
+        "width": 363.4,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/025_create_shortcut_empty-20260801-132011.xml"
+    },
+    {
+      "element_id": "saveButton",
+      "visible_label": "Create shortcut",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/saveButton",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 63,
+        "top": 897,
+        "right": 1017,
+        "bottom": 1023,
+        "width": 954,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 24.0,
+        "top": 341.7,
+        "right": 387.4,
+        "bottom": 389.7,
+        "width": 363.4,
+        "height": 48.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/025_create_shortcut_empty-20260801-132011.xml"
+    }
+  ],
+  "visible_text": [
+    "Shortcut name",
+    "Start typing…",
+    "Select the rules that will be toggled when this shortcut is triggered. Only the rules selected will be affected.",
+    "Create shortcut"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 2,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}

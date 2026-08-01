@@ -1,0 +1,536 @@
+{
+  "screen_id": "008_notification_access_warning",
+  "screen_name": "Notification Access Warning",
+  "state_name": "notification_access_warning",
+  "classification": "CONFIRMED",
+  "scope": "external_system",
+  "unique_surface_group": "notification_access_warning",
+  "package_name": "com.android.settings",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "BuzzKill notification listener disabled"
+  ],
+  "navigation_path": [
+    "Welcome > Enable BuzzKill > Notification access > BuzzKill"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/008_notification_access_warning-20260801-131100.png",
+    "ui_xml": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml",
+    "activity_dump": "evidence/activity/008_notification_access_warning-20260801-131100.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": false
+  },
+  "system_bars": {
+    "status_bar_background": "system-controlled",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "content_parent",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/content_parent",
+      "element_type": "ScrollView",
+      "bounds_px": {
+        "left": 0,
+        "top": 74,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 1080,
+        "height": 2263
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 28.2,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 411.4,
+        "height": 862.1
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": true,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "navigate_up",
+      "visible_label": "",
+      "accessibility_label": "Navigate up",
+      "resource_id": null,
+      "element_type": "ImageButton",
+      "bounds_px": {
+        "left": 0,
+        "top": 74,
+        "right": 147,
+        "bottom": 221,
+        "width": 147,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 28.2,
+        "right": 56.0,
+        "bottom": 84.2,
+        "width": 56.0,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "entity_header_content",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/entity_header_content",
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 447,
+        "top": 718,
+        "right": 633,
+        "bottom": 992,
+        "width": 186,
+        "height": 274
+      },
+      "bounds_dp": {
+        "left": 170.3,
+        "top": 273.5,
+        "right": 241.1,
+        "bottom": 377.9,
+        "width": 70.9,
+        "height": 104.4
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_8",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1034,
+        "right": 1080,
+        "bottom": 1189,
+        "width": 1080,
+        "height": 155
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 393.9,
+        "right": 411.4,
+        "bottom": 453.0,
+        "width": 411.4,
+        "height": 59.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "switchWidget",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "com.android.settings:id/switchWidget",
+      "element_type": "Switch",
+      "bounds_px": {
+        "left": 901,
+        "top": 1048,
+        "right": 1038,
+        "bottom": 1174,
+        "width": 137,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 343.2,
+        "top": 399.2,
+        "right": 395.4,
+        "bottom": 447.2,
+        "width": 52.2,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": false,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_11",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1189,
+        "right": 1080,
+        "bottom": 1438,
+        "width": 1080,
+        "height": 249
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 453.0,
+        "right": 411.4,
+        "bottom": 547.8,
+        "width": 411.4,
+        "height": 94.9
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "checkbox",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "android:id/checkbox",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 954,
+        "top": 1271,
+        "right": 1038,
+        "bottom": 1355,
+        "width": 84,
+        "height": 84
+      },
+      "bounds_dp": {
+        "left": 363.4,
+        "top": 484.2,
+        "right": 395.4,
+        "bottom": 516.2,
+        "width": 32.0,
+        "height": 32.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": true,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_15",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1438,
+        "right": 1080,
+        "bottom": 1687,
+        "width": 1080,
+        "height": 249
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 547.8,
+        "right": 411.4,
+        "bottom": 642.7,
+        "width": 411.4,
+        "height": 94.9
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "checkbox",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "android:id/checkbox",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 954,
+        "top": 1520,
+        "right": 1038,
+        "bottom": 1604,
+        "width": 84,
+        "height": 84
+      },
+      "bounds_dp": {
+        "left": 363.4,
+        "top": 579.0,
+        "right": 395.4,
+        "bottom": 611.0,
+        "width": 32.0,
+        "height": 32.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": true,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_19",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1687,
+        "right": 1080,
+        "bottom": 1893,
+        "width": 1080,
+        "height": 206
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 642.7,
+        "right": 411.4,
+        "bottom": 721.1,
+        "width": 411.4,
+        "height": 78.5
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "checkbox",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "android:id/checkbox",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 954,
+        "top": 1748,
+        "right": 1038,
+        "bottom": 1832,
+        "width": 84,
+        "height": 84
+      },
+      "bounds_dp": {
+        "left": 363.4,
+        "top": 665.9,
+        "right": 395.4,
+        "bottom": 697.9,
+        "width": 32.0,
+        "height": 32.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": true,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_23",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 1893,
+        "right": 1080,
+        "bottom": 2142,
+        "width": 1080,
+        "height": 249
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 721.1,
+        "right": 411.4,
+        "bottom": 816.0,
+        "width": 411.4,
+        "height": 94.9
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "checkbox",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": "android:id/checkbox",
+      "element_type": "CheckBox",
+      "bounds_px": {
+        "left": 954,
+        "top": 1975,
+        "right": 1038,
+        "bottom": 2059,
+        "width": 84,
+        "height": 84
+      },
+      "bounds_dp": {
+        "left": 363.4,
+        "top": 752.4,
+        "right": 395.4,
+        "bottom": 784.4,
+        "width": 32.0,
+        "height": 32.0
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": true,
+      "clickable": false,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    },
+    {
+      "element_id": "element_27",
+      "visible_label": "",
+      "accessibility_label": null,
+      "resource_id": null,
+      "element_type": "LinearLayout",
+      "bounds_px": {
+        "left": 0,
+        "top": 2142,
+        "right": 1080,
+        "bottom": 2337,
+        "width": 1080,
+        "height": 195
+      },
+      "bounds_dp": {
+        "left": 0.0,
+        "top": 816.0,
+        "right": 411.4,
+        "bottom": 890.3,
+        "width": 411.4,
+        "height": 74.3
+      },
+      "enabled": false,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/008_notification_access_warning-20260801-131100.xml"
+    }
+  ],
+  "visible_text": [
+    "BuzzKill",
+    "Allow notification access",
+    "Real-time",
+    "Ongoing communication from apps in use, navigation, phone calls, and more",
+    "Conversations",
+    "SMS, text messages, and other communications",
+    "Notifications",
+    "May ring or vibrate based on settings",
+    "Silent",
+    "Notifications that never make sound or vibrations",
+    "See all apps",
+    "Change settings for each app that sends notifications"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 14,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [
+    "Behavior beyond the captured external handoff was not tested."
+  ],
+  "notes": ""
+}

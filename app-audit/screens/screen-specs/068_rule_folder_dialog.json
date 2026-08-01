@@ -1,0 +1,163 @@
+{
+  "screen_id": "068_rule_folder_dialog",
+  "screen_name": "Rule Folder Dialog",
+  "state_name": "rule_folder_dialog",
+  "classification": "CONFIRMED",
+  "scope": "native",
+  "unique_surface_group": "folder_dialog",
+  "package_name": "com.samruston.buzzkill",
+  "activity": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity",
+  "entry_conditions": [
+    "Saved disabled test rule"
+  ],
+  "navigation_path": [
+    "Rules > Test rule > More > Set folder"
+  ],
+  "evidence": {
+    "screenshot": "evidence/screenshots/068_rule_folder_dialog-20260801-135107.png",
+    "ui_xml": "evidence/ui-xml/068_rule_folder_dialog-20260801-135107.xml",
+    "activity_dump": "evidence/activity/068_rule_folder_dialog-20260801-135107.txt",
+    "recording": ""
+  },
+  "display": {
+    "width_px": 1080,
+    "height_px": 2400,
+    "density_dpi": 420,
+    "width_dp": 411.4,
+    "height_dp": 914.3,
+    "orientation": "portrait",
+    "edge_to_edge": true
+  },
+  "system_bars": {
+    "status_bar_background": "transparent/dark on native dark-theme surfaces",
+    "navigation_mode": "gestural",
+    "navigation_bar": "system-controlled gesture area"
+  },
+  "layout_regions": [],
+  "elements": [
+    {
+      "element_id": "inputEditText",
+      "visible_label": "Start typing…",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/inputEditText",
+      "element_type": "AutoCompleteTextView",
+      "bounds_px": {
+        "left": 154,
+        "top": 690,
+        "right": 926,
+        "bottom": 837,
+        "width": 772,
+        "height": 147
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 262.9,
+        "right": 352.8,
+        "bottom": 318.9,
+        "width": 294.1,
+        "height": 56.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": true,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/068_rule_folder_dialog-20260801-135107.xml"
+    },
+    {
+      "element_id": "done",
+      "visible_label": "Done",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/done",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 154,
+        "top": 869,
+        "right": 926,
+        "bottom": 995,
+        "width": 772,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 331.0,
+        "right": 352.8,
+        "bottom": 379.0,
+        "width": 294.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/068_rule_folder_dialog-20260801-135107.xml"
+    },
+    {
+      "element_id": "cancel",
+      "visible_label": "CANCEL",
+      "accessibility_label": null,
+      "resource_id": "com.samruston.buzzkill:id/cancel",
+      "element_type": "Button",
+      "bounds_px": {
+        "left": 154,
+        "top": 1000,
+        "right": 926,
+        "bottom": 1126,
+        "width": 772,
+        "height": 126
+      },
+      "bounds_dp": {
+        "left": 58.7,
+        "top": 381.0,
+        "right": 352.8,
+        "bottom": 429.0,
+        "width": 294.1,
+        "height": 48.0
+      },
+      "enabled": true,
+      "selected": false,
+      "checked": null,
+      "clickable": true,
+      "long_clickable": false,
+      "scrollable": false,
+      "safe_to_test": true,
+      "tap_behavior": "See interaction-test-matrix.csv and behavior specification.",
+      "destination_screen": "",
+      "evidence": "evidence/ui-xml/068_rule_folder_dialog-20260801-135107.xml"
+    }
+  ],
+  "visible_text": [
+    "Pick folder",
+    "Start typing…",
+    "Done",
+    "CANCEL"
+  ],
+  "interactions": [],
+  "states": [],
+  "transitions": [],
+  "validation": [],
+  "loading_behavior": [],
+  "error_behavior": [],
+  "persistence_behavior": [],
+  "accessibility": {
+    "uiautomator_nodes_available": true,
+    "interactive_element_count": 3,
+    "custom_span_limitation": false
+  },
+  "design_measurements": {
+    "px_to_dp_formula": "dp = px * 160 / 420",
+    "measurement_confidence": "HIGH for XML bounds; MEDIUM for screenshot-only visual values"
+  },
+  "inferences": [],
+  "unknowns": [],
+  "notes": ""
+}
