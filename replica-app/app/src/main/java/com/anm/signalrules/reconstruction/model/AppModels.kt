@@ -94,7 +94,7 @@ data class RuleStore(
     val rules: List<SignalRule> = emptyList(),
 )
 
-const val CURRENT_RULE_STORE_VERSION = 1
+const val CURRENT_RULE_STORE_VERSION = 2
 
 data class HistoryRecord(
     val id: Long = 1L,

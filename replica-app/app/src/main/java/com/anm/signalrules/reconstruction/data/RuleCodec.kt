@@ -32,5 +32,28 @@ fun decodeRules(encoded: String?): List<SignalRule>? {
         return null
     }
     if (store.version > CURRENT_RULE_STORE_VERSION) return null
-    return store.rules.distinctBy { it.id }
+    return migrateRules(store.version, store.rules)
 }
+
+/**
+ * Migrates the v1 file shape into the current normalized form. V1 already contained the
+ * authoring fields, but did not define normalization for blank values or duplicate IDs.
+ * Duplicate IDs intentionally keep the first entry, preserving file order and making all later
+ * addressing deterministic.
+ */
+private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule> =
+    when (version) {
+        1 -> rules
+            .map { rule ->
+                rule.copy(
+                    name = rule.name.ifBlank { "Imported rule" },
+                    app = rule.app.ifBlank { "any app" },
+                    phrase = rule.phrase.ifBlank { "anything" },
+                    extras = rule.extras.distinct(),
+                    enabledFor = rule.enabledFor?.ifBlank { null },
+                )
+            }
+            .distinctBy { it.id }
+        CURRENT_RULE_STORE_VERSION -> rules.distinctBy { it.id }
+        else -> emptyList()
+    }

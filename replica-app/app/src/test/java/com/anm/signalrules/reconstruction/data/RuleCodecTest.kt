@@ -65,4 +65,18 @@ class RuleCodecTest {
         assertEquals(1, decoded?.size)
         assertEquals("A", decoded?.first()?.name)
     }
+
+    @Test
+    fun `v1 store migrates blanks and duplicate ids into the v2 shape`() {
+        val decoded = decodeRules(
+            """{"version":1,"rules":[{"id":3,"name":"","app":"","phrase":"","extras":["Image","Image"],"enabledFor":""},{"id":3,"name":"discarded"}]}"""
+        )
+
+        assertEquals(1, decoded?.size)
+        assertEquals("Imported rule", decoded?.first()?.name)
+        assertEquals("any app", decoded?.first()?.app)
+        assertEquals("anything", decoded?.first()?.phrase)
+        assertEquals(listOf("Image"), decoded?.first()?.extras)
+        assertEquals(null, decoded?.first()?.enabledFor)
+    }
 }
