@@ -217,8 +217,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
         }.getOrDefault(false)
 
-        if (listenerGranted) {
-            // Cheap and idempotent; recovers a listener the platform unbound while we were away.
+        if (listenerGranted && ListenerHealth.connection.value == ListenerHealth.Connection.DISCONNECTED) {
+            // The platform documents requestRebind for the disconnected window only.
             SignalNotificationListener.requestRebindIfPossible(app)
         } else {
             ListenerHealth.onAccessRevoked()

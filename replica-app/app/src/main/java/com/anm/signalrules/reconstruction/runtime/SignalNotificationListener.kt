@@ -14,6 +14,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Least-privilege reconstruction surface. It records only sanitized counters and package names;
@@ -28,11 +29,14 @@ import kotlinx.coroutines.launch
 class SignalNotificationListener : NotificationListenerService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val acceptingCallbacks = AtomicBoolean(false)
+    private val shutdownStarted = AtomicBoolean(false)
     private lateinit var database: SignalDatabase
     private lateinit var ingestor: NotificationIngestor<SanitizedNotification>
 
     override fun onCreate() {
         super.onCreate()
+        acceptingCallbacks.set(true)
         database = SignalDatabase.create(applicationContext)
         ingestor = NotificationIngestor(serviceScope) { notification ->
             database.notificationDao().insertAndPrune(
@@ -78,6 +82,7 @@ class SignalNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        if (!acceptingCallbacks.get()) return
         val notification = sbn ?: return
         if (notification.packageName == packageName) return
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
@@ -95,10 +100,22 @@ class SignalNotificationListener : NotificationListenerService() {
     }
 
     override fun onDestroy() {
-        if (::ingestor.isInitialized && ::database.isInitialized) serviceScope.launch {
-            ingestor.close()
-            database.close()
-            serviceScope.cancel()
+        acceptingCallbacks.set(false)
+        if (shutdownStarted.compareAndSet(false, true)) {
+            if (::ingestor.isInitialized && ::database.isInitialized) {
+                serviceScope.launch {
+                    try {
+                        // The worker drains the closed queue before Room is closed, so no write can
+                        // race the database shutdown. A second onDestroy cannot enqueue another close.
+                        ingestor.close()
+                    } finally {
+                        database.close()
+                        serviceScope.cancel()
+                    }
+                }
+            } else {
+                serviceScope.cancel()
+            }
         }
         super.onDestroy()
     }
@@ -108,10 +125,11 @@ class SignalNotificationListener : NotificationListenerService() {
             ComponentName(context.applicationContext, SignalNotificationListener::class.java)
 
         /**
-         * Asks the platform to rebind the listener. Safe at any time, and a no-op when access
-         * was never granted. Available since API 24, which is this app's minimum.
+         * Asks the platform to rebind the listener after a disconnected callback. Available since
+         * API 24, which is this app's minimum.
          */
         fun requestRebindIfPossible(context: Context) {
+            if (ListenerHealth.connection.value != ListenerHealth.Connection.DISCONNECTED) return
             runCatching { requestRebind(componentName(context)) }
         }
     }

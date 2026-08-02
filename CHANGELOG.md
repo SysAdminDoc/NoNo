@@ -40,6 +40,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Listener queue counters and failure timestamps now persist as redacted Room diagnostics and
   restore into the health surface after restart. The warning banner requests a safe rebind while
   directing the user to notification-access settings for recovery.
+- Listener shutdown now fences new callbacks, drains the bounded worker before closing Room, and
+  makes teardown idempotent. Rebind requests are limited to the platform’s disconnected window.
 
 ## [1.1.0] - 2026-08-01
 
