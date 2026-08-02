@@ -5,3 +5,53 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
+
+tasks.register('verifyBuildPolicy') {
+    group = 'verification'
+    description = 'Checks repository, wrapper, catalog, and dependency-verification policy.'
+
+    doLast {
+        def settingsText = file('settings.gradle').getText('UTF-8')
+        def wrapperText = file('gradle/wrapper/gradle-wrapper.properties').getText('UTF-8')
+        def catalogText = file('gradle/libs.versions.toml').getText('UTF-8')
+        def verificationText = file('gradle/verification-metadata.xml').getText('UTF-8')
+        def failures = []
+
+        if (!settingsText.contains('repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)')) {
+            failures << 'dependency repositories must use FAIL_ON_PROJECT_REPOS'
+        }
+        def repositories = (settingsText =~ /(?m)^\s*(google|mavenCentral|gradlePluginPortal)\(\)\s*$/).collect { it[1] }
+        if (repositories.toSet() != ['google', 'mavenCentral', 'gradlePluginPortal'] as Set) {
+            failures << "unexpected repository policy: ${repositories}"
+        }
+
+        if (!(wrapperText =~ /(?m)^distributionUrl=https\\:\/\/services\.gradle\.org\/distributions\/gradle-8\.11\.1-bin\.zip$/).find()) {
+            failures << 'Gradle wrapper must remain pinned to the checked-in 8.11.1 binary distribution'
+        }
+        if (!wrapperText.contains('validateDistributionUrl=true')) {
+            failures << 'Gradle wrapper URL validation is disabled'
+        }
+
+        def dynamicVersion = (catalogText =~ /(?m)^\s*[A-Za-z0-9_.-]+\s*=\s*"[^"]*(SNAPSHOT|latest|\\+)[^"]*"/)
+        if (dynamicVersion.find()) {
+            failures << 'version catalog contains a dynamic or snapshot version'
+        }
+
+        if (!verificationText.contains('<verify-metadata>true</verify-metadata>')) {
+            failures << 'Gradle dependency metadata verification is disabled'
+        }
+        if (!verificationText.contains('<verify-signatures>false</verify-signatures>')) {
+            failures << 'owner-gated PGP signature policy changed; review it explicitly before enabling signatures'
+        }
+        def artifactCount = (verificationText =~ /<artifact\s+name=/).count
+        def hashCount = (verificationText =~ /<sha256\s+value=/).count
+        if (artifactCount == 0 || artifactCount != hashCount) {
+            failures << "dependency verification hash coverage is incomplete (${hashCount}/${artifactCount})"
+        }
+
+        if (!failures.isEmpty()) {
+            throw new GradleException('Build policy failed:\n - ' + failures.join('\n - '))
+        }
+        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=8.11.1 verifiedArtifacts=${hashCount} advisoryGate=CI"
+    }
+}

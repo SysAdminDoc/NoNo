@@ -44,6 +44,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   makes teardown idempotent. Rebind requests are limited to the platform’s disconnected window.
 - History metadata now includes nullable channel IDs and supports package, channel, group,
   content-provenance, and group-summary filters through bounded Room queries and migrated schema.
+- Added a deterministic build-policy task and CI gates for pinned repositories, wrapper/catalog
+  versions, dependency hash coverage, strict verification, and high-severity dependency advisories.
 
 ## [1.1.0] - 2026-08-01
 

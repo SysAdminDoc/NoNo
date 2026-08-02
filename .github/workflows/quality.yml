@@ -1,0 +1,41 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Verify build policy
+        working-directory: replica-app
+        run: ./gradlew verifyBuildPolicy
+      - name: Verify, test, lint, and build
+        working-directory: replica-app
+        run: ./gradlew --dependency-verification=strict :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Review dependency advisories
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
