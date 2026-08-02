@@ -9,7 +9,8 @@ Signal Rules is an independent clean-room Android reconstruction of the native i
 - Debug package: `com.anm.signalrules.reconstruction.debug`
 - Android support: API 24 and newer; target SDK 36; compiled with SDK 36
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
-- Backend: none. Audited data-dependent behavior is local and deterministic.
+- Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
+  The current Room history schema is version 4; the DataStore rule payload is version 3.
 
 ## Requirements
 
@@ -51,7 +52,9 @@ The visual command intentionally returns a nonzero result while any configured t
 Gradle dependency verification is enabled through `gradle\verification-metadata.xml`, which
 records SHA-256 hashes for the resolved artifacts. Refresh it only after reviewing the dependency
 diff with `gradlew --write-verification-metadata sha256 help`; PGP key verification is not enabled
-until the project owner reviews and approves the required signer keys.
+until the project owner reviews and approves the required signer keys. Run
+`.\gradlew.bat verifyBuildPolicy` from `replica-app` to validate repository, wrapper, catalog,
+and hash-coverage policy locally; the same policy and strict verification run in CI.
 
 ## Reproducing audited states
 
@@ -69,25 +72,31 @@ The complete 76-state mapping is in `test-data\states\audit-state-map.csv`. Rele
 
 ## What this build does not do
 
-The reconstruction reproduces the audited interface. It is not a working notification manager,
-and the UI now says so at each control rather than leaving the reader to infer it:
+The reconstruction reproduces the audited interface while providing a safe local metadata
+runtime. It is not a live notification action manager, and the UI states the boundary at each
+control rather than leaving the reader to infer it:
 
-- **There is no rule engine.** The notification listener records nothing but a package name, a
-  timestamp, and a counter. No rule is ever evaluated and no notification is ever changed.
-- **No action is executed.** Every entry in the action catalog can be selected and saved; none
-  of them do anything.
+- **Live evaluation and actions are absent.** The app includes a pure, redaction-aware dry-run
+  evaluator for history activity and rule explanations; it never changes a notification, sound,
+  setting, or `PendingIntent`.
+- **No notification content is stored.** The listener records package identity, notification key,
+  posted time, channel/group/summary metadata, content provenance, bounded ingestion counters, and
+  failure timestamps. Titles and bodies are never persisted.
 - **Backup, import, export, and launcher shortcuts are not implemented.** No file format has
-  been defined, so those rows are marked unavailable instead of opening a picker that discards
-  its result.
+  been exposed through the UI yet, so those rows are marked unavailable rather than opening a
+  picker that discards its result. The local rule-transfer core is covered separately and does
+  not include notification history.
 - **Only the dark theme exists**, and the app ships no translated resources, so the Theme and
   Language rows are marked unavailable.
-- **History is populated only with package/key/time metadata** by the listener; debug captures
-  remain available for deterministic audit states, and notification content is never persisted.
+- **History is bounded and queryable.** Search and package/channel/group/content-provenance and
+  summary filters are backed by Room migrations and explicit loading/error/retry states. Debug
+  captures remain available for deterministic audit states.
 
-The runtime boundary now records only package/key/time metadata in a bounded Room queue. Android
-15 sensitive-notification redaction is treated as provenance (`content hidden by system`) and is
-never matchable as real text. Companion-device listener exemptions are intentionally out of scope
-for this local reconstruction; no special permission or companion association is requested.
+The runtime boundary records metadata in a bounded Room queue. Android 15 sensitive-notification
+redaction is treated as provenance (`content hidden by system`) and is never matchable as real
+text. Preferences and history live under the no-backup boundary; listener diagnostics restore
+after process restart. Companion-device listener exemptions are intentionally out of scope for
+this local reconstruction; no special permission or companion association is requested.
 
 Settings that would depend on the absent action engine are shown disabled with the reason
 inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is

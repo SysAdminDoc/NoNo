@@ -11,6 +11,11 @@ This repository contains two strictly separated deliverables:
 
 The reconstructed app uses the independent package identity `com.anm.signalrules.reconstruction` (`.debug` for the supplied APK). It does not contain the audited app's source, package identity, branding, proprietary illustrations, signing material, or extracted APK assets.
 
-**Signal Rules reproduces the audited interface; it is not a working notification manager.** There is no rule engine, no filter evaluation, and no action execution — the notification listener records only a package name, a timestamp, and a counter. Controls that cannot function in this build are shown disabled with the reason stated inline. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do) for the specifics.
+**Signal Rules is a local, metadata-only notification reconstruction.** The listener persists
+bounded package, channel, grouping, timestamp, and content-provenance metadata; a pure dry-run
+evaluator explains how saved rules would treat a selected history record. Live notification
+mutation and action execution remain intentionally absent, and unavailable controls are shown
+disabled with their reason inline. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do)
+for the privacy and capability boundary.
 
 Start with [`replica-app/README.md`](replica-app/README.md). Build the APK with `replica-app/scripts/build-debug.ps1`; the binary is not tracked in git. The expected SHA-256 digest of the frozen deliverable is recorded in [`replica-app/dist/SHA256SUMS.txt`](replica-app/dist/SHA256SUMS.txt).

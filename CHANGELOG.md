@@ -46,6 +46,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   content-provenance, and group-summary filters through bounded Room queries and migrated schema.
 - Added a deterministic build-policy task and CI gates for pinned repositories, wrapper/catalog
   versions, dependency hash coverage, strict verification, and high-severity dependency advisories.
+- Reconciled the root and app READMEs with the metadata-only Room runtime, redaction-aware dry-run
+  evaluator, schema versions, bounded history filters, and intentionally disabled live actions.
 
 ## [1.1.0] - 2026-08-01
 
