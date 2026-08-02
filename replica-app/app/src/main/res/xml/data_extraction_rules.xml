@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Applies to Android 12 (API 31) and newer.
+
+    This app reads other apps' notifications, so anything it stores is derived from that
+    content. None of it leaves the device through an automatic transfer: cloud backup and
+    device-to-device transfer both exclude the preference store and the listener's own
+    scratch state. Rules move between devices only through an explicit, user-initiated
+    export.
+
+    The preference store additionally lives under noBackupFilesDir, so these rules are the
+    second line of defence rather than the only one.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore" />
+        <exclude domain="sharedpref" path="runtime_history.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore" />
+        <exclude domain="sharedpref" path="runtime_history.xml" />
+    </device-transfer>
+</data-extraction-rules>

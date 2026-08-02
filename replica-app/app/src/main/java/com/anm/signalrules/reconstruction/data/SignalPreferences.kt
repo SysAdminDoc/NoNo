@@ -20,6 +20,36 @@ object SignalPreferences {
 
     const val STORE_NAME = "signal_rules"
 
+    private const val STORE_FILE = "$STORE_NAME.preferences_pb"
+    private const val STORE_DIRECTORY = "datastore"
+
+    /**
+     * Resolves the store under `noBackupFilesDir`.
+     *
+     * Everything this app persists is derived from other apps' notification content, so it
+     * must not ride along in an automatic cloud backup or device transfer. Placing the file
+     * outside the backed-up tree enforces that independently of the manifest backup rules,
+     * which older platform versions and OEM backup agents honour inconsistently.
+     *
+     * @param legacyFile the previous location inside `filesDir`, moved across on first run.
+     */
+    fun resolveStoreFile(noBackupFilesDir: File, legacyFile: File): File {
+        val directory = File(noBackupFilesDir, STORE_DIRECTORY)
+        val target = File(directory, STORE_FILE)
+        if (!target.exists() && legacyFile.exists()) {
+            directory.mkdirs()
+            // renameTo can fail across filesystems; a failed migration must not be fatal,
+            // it just means the user starts from defaults.
+            if (!legacyFile.renameTo(target)) {
+                runCatching {
+                    legacyFile.copyTo(target, overwrite = true)
+                    legacyFile.delete()
+                }
+            }
+        }
+        return target
+    }
+
     /**
      * Builds a preference store that recovers from an unreadable backing file.
      *

@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Notification-derived data is excluded from automatic backup and device transfer. The app
+  declared `allowBackup="true"` with neither `dataExtractionRules` nor `fullBackupContent`, so
+  its preference store was eligible for upload to the user's Google Drive. Both rule sets are
+  now declared, and the store itself moved under `noBackupFilesDir` so the exclusion does not
+  depend on backup rules that older platforms and OEM agents honour inconsistently. An
+  existing store is migrated across on first run.
 - Notification history search and the phrase/extras/group condition selector work in release
   builds. Both were gated on audit-capture id strings that only the debug-only QA override
   could set, so the search icon and the condition chooser were inert in a shipping build

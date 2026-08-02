@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Applies to Android 11 (API 30) and older, which ignore data_extraction_rules.xml.
+    Same intent: nothing derived from notification content is eligible for auto backup.
+-->
+<full-backup-content>
+    <exclude domain="file" path="datastore" />
+    <exclude domain="sharedpref" path="runtime_history.xml" />
+</full-backup-content>

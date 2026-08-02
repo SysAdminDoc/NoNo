@@ -56,7 +56,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dataStore: DataStore<Preferences> = SignalPreferences.create(
         scope = viewModelScope,
-        produceFile = { application.preferencesDataStoreFile(SignalPreferences.STORE_NAME) },
+        produceFile = {
+            SignalPreferences.resolveStoreFile(
+                noBackupFilesDir = application.noBackupFilesDir,
+                legacyFile = application.preferencesDataStoreFile(SignalPreferences.STORE_NAME),
+            )
+        },
         onCorruption = { recoveredFromCorruption = true },
     )
 
