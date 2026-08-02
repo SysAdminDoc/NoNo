@@ -27,6 +27,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   implementation instead of the API-26-only Java encoder.
 - Rules now persist stable Android package IDs separately from display labels, migrate known
   legacy app selections, and pass package identity through the dry-run matcher.
+- Restricted notification-listener binding to the system, declared explicit listener filter
+  defaults, removed unused notification/Doze permissions, and clarified the local redaction-only
+  capability during onboarding.
 
 ## [1.1.0] - 2026-08-01
 

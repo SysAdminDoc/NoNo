@@ -1,11 +1,6 @@
 package com.anm.signalrules.reconstruction
 
 import android.app.Application
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.PowerManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
@@ -169,19 +164,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(listenerAccessGranted = listenerGranted)
 
         if (auditOverride != null || _state.value.route != Route.ONBOARDING) return
-        val notificationsGranted = Build.VERSION.SDK_INT < 33 ||
-            app.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        val batteryGranted = runCatching {
-            (app.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(app.packageName)
-        }.getOrDefault(false)
-        val step = when {
-            !notificationsGranted -> 0
-            !batteryGranted -> 1
-            !listenerGranted -> 2
-            else -> 3
-        }
+        // Notification-listener access is the only capability this build actually consumes.
+        // It does not post notifications, execute actions, or require an exemption from Doze.
+        val step = if (listenerGranted) 1 else 0
         _state.value = _state.value.copy(onboardingStep = step)
-        if (step == 3) completeOnboarding()
+        if (step == 1) completeOnboarding()
     }
 
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }

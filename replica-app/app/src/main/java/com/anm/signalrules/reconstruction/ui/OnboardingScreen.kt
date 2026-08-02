@@ -1,13 +1,7 @@
 package com.anm.signalrules.reconstruction.ui
 
-import android.Manifest
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.UserManager
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,10 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BatterySaver
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,9 +40,6 @@ import com.anm.signalrules.reconstruction.model.UiState
 @Composable
 fun OnboardingScreen(state: UiState, model: MainViewModel) {
     val context = LocalContext.current
-    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        model.refreshCapabilities()
-    }
     val lowRam = (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager)?.isLowRamDevice == true
     val managedProfile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         (context.getSystemService(UserManager::class.java))?.isManagedProfile == true
@@ -85,32 +74,9 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
 
         CapabilityCard(
             step = 1,
-            title = "Allow notifications",
-            description = "This allows Signal Rules to send or update notifications.",
+            title = "Enable notification access",
+            description = "This allows Signal Rules to receive redacted notification metadata locally. Content is not stored and no action is executed.",
             complete = state.onboardingStep >= 1,
-        ) {
-            if (Build.VERSION.SDK_INT >= 33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-            else model.refreshCapabilities()
-        }
-        Spacer(Modifier.height(12.dp))
-        CapabilityCard(
-            step = 2,
-            title = "Allow Signal Rules to run in background",
-            description = "This allows automated rules to run when the app isn't open.",
-            complete = state.onboardingStep >= 2,
-        ) {
-            runCatching {
-                context.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                })
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        CapabilityCard(
-            step = 3,
-            title = "Enable Signal Rules",
-            description = "This allows Signal Rules to react to notifications you receive.",
-            complete = state.onboardingStep >= 3,
         ) {
             openListenerSettings(context)
         }
