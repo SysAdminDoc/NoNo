@@ -113,7 +113,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 MenuItem("Open notification", Icons.Rounded.ChevronRight) { model.dismissOverlay() },
                 MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) },
                 MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() },
-                MenuItem("Create rule", Icons.Rounded.Add) { model.newRule() },
+                MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() },
                 MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() },
             ), model::dismissOverlay,
         )

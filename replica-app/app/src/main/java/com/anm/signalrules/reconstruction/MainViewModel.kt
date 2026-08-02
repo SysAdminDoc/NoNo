@@ -24,6 +24,7 @@ import com.anm.signalrules.reconstruction.data.toHistoryRecord
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
 import com.anm.signalrules.reconstruction.model.HistoryRecord
+import com.anm.signalrules.reconstruction.model.deriveRuleDraft
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.RootTab
 import com.anm.signalrules.reconstruction.model.Route
@@ -202,6 +203,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun hidePhraseInput() { _state.value = _state.value.copy(phraseInputVisible = false) }
     fun setHistoryFilter(filter: String) { _state.value = _state.value.copy(historyFilter = filter) }
     fun setHistoryActivityTab(tab: String) { _state.value = _state.value.copy(historyActivityTab = tab) }
+    fun showHistoryOverlay(historyId: Long) {
+        _state.value = _state.value.copy(selectedHistoryId = historyId, overlay = Overlay.HISTORY_ITEM)
+    }
     fun setRenameDraft(text: String) { _state.value = _state.value.copy(renameDraft = text) }
     fun setFolderDraft(text: String) { _state.value = _state.value.copy(folderDraft = text) }
 
@@ -211,6 +215,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             overlay = Overlay.NONE,
             draft = SignalRule(id = UNSAVED_RULE_ID, name = "New rule"),
             validationError = null,
+        )
+    }
+
+    fun createRuleFromSelectedHistory() {
+        val record = _state.value.history.firstOrNull { it.id == _state.value.selectedHistoryId }
+        if (record == null) {
+            newRule()
+            _state.value = _state.value.copy(transientMessage = "That history entry is no longer available.")
+            return
+        }
+        val derived = deriveRuleDraft(record)
+        _state.value = _state.value.copy(
+            route = Route.RULE_BUILDER,
+            overlay = Overlay.NONE,
+            selectedHistoryId = null,
+            draft = SignalRule(
+                id = UNSAVED_RULE_ID,
+                name = "Rule from ${record.app}",
+                app = record.app,
+                phrase = derived.phrase,
+            ),
+            phraseDraft = if (derived.phrase == "anything") "" else derived.phrase,
+            validationError = null,
+            transientMessage = derived.provenanceMessage,
         )
     }
 

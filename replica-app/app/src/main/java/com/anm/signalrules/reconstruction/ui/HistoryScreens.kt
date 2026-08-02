@@ -130,7 +130,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
         } else {
             filterHistory(state.history, state.historySearch, state.historyFilter).forEach { item ->
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 22.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).clickable { model.showOverlay(Overlay.HISTORY_ITEM) }.padding(16.dp),
+                    Modifier.fillMaxWidth().padding(top = 22.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).clickable { model.showHistoryOverlay(item.id) }.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.size(46.dp).background(SignalColors.RuleBlue, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) {
@@ -141,7 +141,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                         Text(item.title, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                         Text(item.body, color = SignalColors.Secondary, fontSize = 14.sp)
                     }
-                    IconButton(onClick = { model.showOverlay(Overlay.HISTORY_ITEM) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
+                    IconButton(onClick = { model.showHistoryOverlay(item.id) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
                 }
             }
             Spacer(Modifier.weight(1f))

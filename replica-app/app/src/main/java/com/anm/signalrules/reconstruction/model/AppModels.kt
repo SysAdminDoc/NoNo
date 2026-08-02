@@ -137,6 +137,7 @@ data class UiState(
     val historySearchActive: Boolean = false,
     val historyFilter: String = "All",
     val historyActivityTab: String = "Rules",
+    val selectedHistoryId: Long? = null,
     val draft: SignalRule = SignalRule(name = "New rule"),
     val selectedRuleId: Long? = null,
     val phraseDraft: String = "",

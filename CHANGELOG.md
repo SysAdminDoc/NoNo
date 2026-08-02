@@ -16,6 +16,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `SOURCE_DATE_EPOCH`, and compares the unsigned release APK hashes outside the repository.
 - Added a pure dry-run rule evaluator with redaction-aware condition traces, deterministic
   specificity and priority conflict resolution, and an explicit not-executed action result.
+- The history “Create rule” action now selects the tapped record, pre-fills app and safely
+  derivable phrase fields, and explains when redaction or metadata-only storage prevents copying
+  notification content.
 
 ## [1.1.0] - 2026-08-01
 
