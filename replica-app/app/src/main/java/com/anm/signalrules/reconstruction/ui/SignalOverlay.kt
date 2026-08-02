@@ -53,7 +53,10 @@ import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.model.enableForCatalog
 import com.anm.signalrules.reconstruction.model.extraFilterCatalog
+import com.anm.signalrules.reconstruction.model.filterOperatorCatalog
+import com.anm.signalrules.reconstruction.model.matchTypeCatalog
 import kotlinx.coroutines.delay
 
 @Composable
@@ -61,23 +64,23 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
     when (state.overlay) {
         Overlay.CONDITION_TYPE -> ChoiceDialog(
             "Notification match type",
-            listOf("Contains any of", "Contains all of", "Doesn't contain any of", "Doesn't contain all of"),
-            "Contains any of",
+            matchTypeCatalog,
+            state.draft.matchType,
             onDismiss = model::dismissOverlay,
-            onChoice = { model.dismissOverlay() },
+            onChoice = model::setMatchType,
         )
         Overlay.CONDITION_EXTRAS -> CatalogDialog(
             "Extra notification properties",
             extraFilterCatalog,
             when { state.auditState.startsWith("038_") -> 7; state.auditState.startsWith("037_") -> 4; else -> 0 },
             model::dismissOverlay,
-        ) { model.dismissOverlay() }
+        ) { model.toggleExtraFilter(it) }
         Overlay.FILTER_OPERATOR -> ChoiceDialog(
             "Filter operator",
-            listOf("Contains any", "Contains all", "Doesn't contain any", "Doesn't contain all"),
-            "Contains any",
+            filterOperatorCatalog,
+            state.draft.filterOperator,
             model::dismissOverlay,
-        ) { model.dismissOverlay() }
+        ) { model.setFilterOperator(it) }
         Overlay.ADD_FILTER -> MenuDialog(
             "Add a filter",
             listOf(
@@ -100,9 +103,10 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         )
         Overlay.ENABLE_FOR -> ChoiceDialog(
             "Enable for…",
-            listOf("10 mins", "30 mins", "1 hour", "6 hours", "8 hours", "12 hours", "1 day", "7 days"),
-            null, model::dismissOverlay,
-        ) { model.dismissOverlay() }
+            enableForCatalog,
+            state.rules.firstOrNull { it.id == state.selectedRuleId }?.enabledFor,
+            model::dismissOverlay,
+        ) { model.setEnabledFor(it) }
         Overlay.PRIORITY -> ChoiceDialog("Rule priority", listOf("Highest", "High", "Normal", "Low", "Lowest"), state.rules.firstOrNull { it.id == state.selectedRuleId }?.priority, model::dismissOverlay) { model.setRulePriority(it) }
         Overlay.FOLDER -> TextEntryDialog("Pick folder", state.folderDraft, model::setFolderDraft, model::dismissOverlay) { model.setRuleFolder(state.folderDraft) }
         Overlay.RENAME -> RenameDialog(state, model)

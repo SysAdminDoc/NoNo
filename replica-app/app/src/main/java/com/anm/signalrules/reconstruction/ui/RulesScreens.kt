@@ -148,6 +148,9 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel) {
             Modifier.fillMaxWidth().background(SignalColors.Background, RoundedCornerShape(16.dp)).clickable { model.editRule(rule) }.padding(20.dp)
         ) {
             Text(rule.name, color = SignalColors.Secondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            rule.enabledFor?.let { duration ->
+                Text("Enabled for $duration", color = SignalColors.Yellow, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
             Text(
                 renderRuleCardSentence(rule),
                 color = SignalColors.White,
@@ -175,7 +178,10 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                     Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
                 }
                 Spacer(Modifier.weight(1f))
-                if (state.rules.isNotEmpty()) IconButton(onClick = { model.showOverlay(Overlay.RULE_MORE) }) { Icon(Icons.Rounded.MoreVert, "More") }
+                val editingId = state.draft.id
+                if (state.rules.any { it.id == editingId }) {
+                    IconButton(onClick = { model.showRuleOverlay(Overlay.RULE_MORE, editingId) }) { Icon(Icons.Rounded.MoreVert, "More") }
+                }
             }
             Text("When I get a notification", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -184,7 +190,7 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("that ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                TokenButton("contains") { model.showOverlay(Overlay.CONDITION_TYPE) }
+                TokenButton(state.draft.matchType) { model.showOverlay(Overlay.CONDITION_TYPE) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TokenButton(state.draft.phrase) { model.setPhraseDraft(if (state.draft.phrase == "anything") "" else state.draft.phrase); model.navigate(Route.PHRASE_EDITOR) }
@@ -196,6 +202,15 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                     Icon(Icons.Rounded.Add, contentDescription = null, tint = SignalColors.Background)
                     Text("Filter", color = SignalColors.Background, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
+            }
+            if (state.draft.extras.isNotEmpty()) {
+                Text(
+                    "with " + state.draft.extras.joinToString(", "),
+                    color = SignalColors.Secondary,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("then ", fontSize = 25.sp, fontWeight = FontWeight.Bold)

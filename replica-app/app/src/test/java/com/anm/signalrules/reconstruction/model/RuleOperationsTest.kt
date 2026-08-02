@@ -104,6 +104,37 @@ class RuleOperationsTest {
     }
 
     @Test
+    fun `dialog selections survive on the rule they were applied to`() {
+        val configured = applyToRule(rules, 2L) {
+            it.copy(
+                matchType = "doesn't contain any of",
+                extras = listOf("Image", "Emoji"),
+                filterOperator = "Contains all",
+                enabledFor = "30 mins",
+            )
+        }
+
+        val target = configured.first { it.id == 2L }
+        assertEquals("doesn't contain any of", target.matchType)
+        assertEquals(listOf("Image", "Emoji"), target.extras)
+        assertEquals("Contains all", target.filterOperator)
+        assertEquals("30 mins", target.enabledFor)
+
+        // Untouched rules keep the audited defaults.
+        val other = configured.first { it.id == 1L }
+        assertEquals(DEFAULT_MATCH_TYPE, other.matchType)
+        assertEquals(DEFAULT_FILTER_OPERATOR, other.filterOperator)
+        assertEquals(emptyList<String>(), other.extras)
+        assertNull(other.enabledFor)
+    }
+
+    @Test
+    fun `the default sentence token is the audited bare verb`() {
+        assertEquals("contains", DEFAULT_MATCH_TYPE)
+        assertTrue(renderRuleSentence(SignalRule()).contains("that contains anything"))
+    }
+
+    @Test
     fun `validation reports the audited copy for a missing action`() {
         assertEquals(MISSING_FIELD_MESSAGE, validateRule(SignalRule(action = "nothing")))
         assertNull(validateRule(SignalRule(action = "Mute")))

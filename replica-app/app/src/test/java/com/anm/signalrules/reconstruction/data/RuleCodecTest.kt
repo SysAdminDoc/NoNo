@@ -18,6 +18,15 @@ class RuleCodecTest {
     }
 
     @Test
+    fun `round trips the dialog-driven fields`() {
+        val configured = listOf(
+            SignalRule(id = 5L, matchType = "doesn't contain all of", extras = listOf("Image", "Category"), filterOperator = "Contains all", enabledFor = "6 hours"),
+        )
+
+        assertEquals(configured, decodeRules(encodeRules(configured)))
+    }
+
+    @Test
     fun `round trips an empty store`() {
         assertEquals(emptyList<SignalRule>(), decodeRules(encodeRules(emptyList())))
     }

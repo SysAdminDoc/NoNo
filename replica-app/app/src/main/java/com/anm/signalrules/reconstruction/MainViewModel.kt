@@ -269,6 +269,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(overlay = Overlay.NONE)
     }
 
+    fun setMatchType(matchType: String) {
+        _state.value = _state.value.copy(draft = _state.value.draft.copy(matchType = matchType), overlay = Overlay.NONE)
+    }
+
+    fun setFilterOperator(operator: String) {
+        _state.value = _state.value.copy(draft = _state.value.draft.copy(filterOperator = operator), overlay = Overlay.NONE)
+    }
+
+    /** Extras are a set in practice; selecting an already-chosen one removes it. */
+    fun toggleExtraFilter(extra: String) {
+        val current = _state.value.draft.extras
+        val updated = if (current.contains(extra)) current - extra else current + extra
+        _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = updated), overlay = Overlay.NONE)
+    }
+
+    fun setEnabledFor(duration: String) {
+        mutateRule(_state.value.selectedRuleId) { it.copy(enabledFor = duration, enabled = true) }
+        _state.value = _state.value.copy(
+            overlay = Overlay.NONE,
+            transientMessage = "Rule enabled for $duration",
+        )
+    }
+
     fun setRuleFolder(folder: String) {
         mutateRule(_state.value.selectedRuleId) { it.copy(folder = folder.ifBlank { "No folder" }) }
         _state.value = _state.value.copy(overlay = Overlay.NONE)

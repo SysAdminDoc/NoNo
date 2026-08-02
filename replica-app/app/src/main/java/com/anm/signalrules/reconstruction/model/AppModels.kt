@@ -51,6 +51,37 @@ data class SignalRule(
     val enabled: Boolean = true,
     val priority: String = "Normal",
     val folder: String = "No folder",
+    val matchType: String = DEFAULT_MATCH_TYPE,
+    val extras: List<String> = emptyList(),
+    val filterOperator: String = DEFAULT_FILTER_OPERATOR,
+    val enabledFor: String? = null,
+)
+
+/**
+ * Operators recorded in the audit for the content filter and for nested filter groups.
+ *
+ * The default sentence token is the bare verb "contains", exactly as captured; the four
+ * explicit operators are what the match-type dialog offers once the user opens it.
+ */
+const val DEFAULT_MATCH_TYPE = "contains"
+const val DEFAULT_FILTER_OPERATOR = "Contains any"
+
+val matchTypeCatalog = listOf(
+    "contains any of",
+    "contains all of",
+    "doesn't contain any of",
+    "doesn't contain all of",
+)
+
+val filterOperatorCatalog = listOf(
+    "Contains any",
+    "Contains all",
+    "Doesn't contain any",
+    "Doesn't contain all",
+)
+
+val enableForCatalog = listOf(
+    "10 mins", "30 mins", "1 hour", "6 hours", "8 hours", "12 hours", "1 day", "7 days",
 )
 
 /**
@@ -131,12 +162,12 @@ val extraFilterCatalog = listOf(
 )
 
 fun renderRuleSentence(rule: SignalRule): String =
-    "When I get a notification from ${rule.app} that contains ${rule.phrase} then do ${rule.action}"
+    "When I get a notification from ${rule.app} that ${rule.matchType} ${rule.phrase} then do ${rule.action}"
 
 /** Wrapped form used on the rule card, which lays the sentence out over four lines. */
 fun renderRuleCardSentence(rule: SignalRule): String = buildString {
     appendLine("When I get a notification")
-    appendLine("from ${rule.app} that contains")
+    appendLine("from ${rule.app} that ${rule.matchType}")
     appendLine("\"${rule.phrase}\"")
     append("then ${rule.action.lowercase()}")
 }

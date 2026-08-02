@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- The rule dialogs no longer discard the user's choice. Match type, extra properties, filter
+  operator, "Enable for", priority, and folder all dismissed without applying anything, and the
+  folder dialog wrote into the rename dialog's field before throwing it away. Each selection is
+  now applied to the addressed rule or draft, persisted, and reflected in the rule builder and
+  on the rule card. Evaluation semantics are still absent - the audit records rule precedence
+  and folder behaviour as UNKNOWN - so these are stored and displayed, not acted on.
+- The rule-builder overflow menu addresses the rule being edited rather than whichever rule
+  happened to be first.
 - Bottom-anchored controls on full-screen editors no longer render underneath the navigation
   bar. Only the root route has a bottom bar, and only that bar applied the navigation-bar
   inset, so "Pick all apps" and "Apply filter" sat under the system navigation.
