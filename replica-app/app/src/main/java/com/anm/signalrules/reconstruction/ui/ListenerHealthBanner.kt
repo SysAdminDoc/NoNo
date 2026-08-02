@@ -56,7 +56,7 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     } else {
         val age = lastEventAt?.let { describeAge(SystemClock.elapsedRealtime() - it) }
         val seen = if (age == null) "No notifications seen yet." else "Last notification seen $age."
-        "The listener is disconnected. $seen Tap to review notification access."
+        "The listener is disconnected. $seen ${vendorGuidance()} Tap to review notification access."
     }
 
     Row(
@@ -80,6 +80,16 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
             Text(detail, color = SignalColors.Secondary, fontSize = 14.sp, lineHeight = 19.sp)
         }
     }
+}
+
+private fun vendorGuidance(): String = when (Build.MANUFACTURER.lowercase()) {
+    "samsung" -> "On Samsung, allow unrestricted battery use for Signal Rules."
+    "xiaomi", "redmi", "poco" -> "On Xiaomi, enable Autostart and remove battery restrictions."
+    "oneplus" -> "On OnePlus, allow background activity and disable battery optimization."
+    "oppo" -> "On Oppo, allow auto-launch and background activity."
+    "vivo" -> "On Vivo, allow auto-start and high background power use."
+    "huawei" -> "On Huawei, set Signal Rules to Protected in battery settings."
+    else -> "Review the manufacturer's battery settings if this repeats."
 }
 
 private fun describeAge(millis: Long): String = when {

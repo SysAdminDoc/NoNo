@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.UserManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,6 +51,8 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         model.refreshCapabilities()
     }
+    val lowRam = (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager)?.isLowRamDevice == true
+    val managedProfile = (context.getSystemService(UserManager::class.java))?.isManagedProfile == true
 
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
         Spacer(Modifier.height(44.dp))
@@ -66,6 +69,15 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
             "Your data is kept locally. Signal Rules has no ads, no tracking, and no in-app purchases.",
             color = Color(0xFFD5D5E0), fontSize = 16.sp, lineHeight = 25.sp, modifier = Modifier.padding(top = 18.dp, bottom = 24.dp)
         )
+        if (managedProfile || (lowRam && Build.VERSION.SDK_INT <= 29)) {
+            Text(
+                if (managedProfile) "Android work profiles may not deliver notification-listener events." else "Android 10 and earlier low-RAM devices may not support notification access.",
+                color = SignalColors.Error,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+        }
 
         CapabilityCard(
             step = 1,
