@@ -93,7 +93,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 MenuItem("Enable for…", Icons.Rounded.MoreTime) { model.showOverlay(Overlay.ENABLE_FOR) },
                 MenuItem("Set priority", Icons.Rounded.Tune) { model.showOverlay(Overlay.PRIORITY) },
                 MenuItem("Set folder", Icons.Rounded.Folder) { model.showOverlay(Overlay.FOLDER) },
-                MenuItem("Rename", Icons.Rounded.DriveFileRenameOutline) { model.setRenameDraft(state.rules.firstOrNull()?.name.orEmpty()); model.showOverlay(Overlay.RENAME) },
+                MenuItem("Rename", Icons.Rounded.DriveFileRenameOutline) { model.setRenameDraft(state.rules.firstOrNull { it.id == state.selectedRuleId }?.name.orEmpty()); model.showOverlay(Overlay.RENAME) },
                 MenuItem("Duplicate", Icons.Rounded.Add) { model.duplicateRule() },
                 MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.deleteRule() },
             ), model::dismissOverlay,
@@ -103,8 +103,8 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             listOf("10 mins", "30 mins", "1 hour", "6 hours", "8 hours", "12 hours", "1 day", "7 days"),
             null, model::dismissOverlay,
         ) { model.dismissOverlay() }
-        Overlay.PRIORITY -> ChoiceDialog("Rule priority", listOf("Highest", "High", "Normal", "Low", "Lowest"), "Normal", model::dismissOverlay) { model.dismissOverlay() }
-        Overlay.FOLDER -> TextEntryDialog("Pick folder", state.renameDraft, model::setRenameDraft, model::dismissOverlay) { model.dismissOverlay() }
+        Overlay.PRIORITY -> ChoiceDialog("Rule priority", listOf("Highest", "High", "Normal", "Low", "Lowest"), state.rules.firstOrNull { it.id == state.selectedRuleId }?.priority, model::dismissOverlay) { model.setRulePriority(it) }
+        Overlay.FOLDER -> TextEntryDialog("Pick folder", state.folderDraft, model::setFolderDraft, model::dismissOverlay) { model.setRuleFolder(state.folderDraft) }
         Overlay.RENAME -> RenameDialog(state, model)
         Overlay.HISTORY_ITEM -> MenuDialog(
             "Notification actions",

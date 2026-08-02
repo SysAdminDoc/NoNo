@@ -1,5 +1,7 @@
 package com.anm.signalrules.reconstruction.model
 
+import kotlinx.serialization.Serializable
+
 enum class RootTab(val label: String) {
     RULES("Rules"), HISTORY("History"), EXPLORE("Explore"), SETTINGS("Settings")
 }
@@ -36,6 +38,10 @@ enum class Overlay {
     LANGUAGE
 }
 
+/** Sentinel id for a rule that has never been saved. */
+const val UNSAVED_RULE_ID = 0L
+
+@Serializable
 data class SignalRule(
     val id: Long = 1L,
     val name: String = "Test rule",
@@ -46,6 +52,18 @@ data class SignalRule(
     val priority: String = "Normal",
     val folder: String = "No folder",
 )
+
+/**
+ * Versioned persisted form of the rule list. The version field exists so a store written
+ * by an older build can be recognised rather than parsed into nonsense.
+ */
+@Serializable
+data class RuleStore(
+    val version: Int = CURRENT_RULE_STORE_VERSION,
+    val rules: List<SignalRule> = emptyList(),
+)
+
+const val CURRENT_RULE_STORE_VERSION = 1
 
 data class HistoryRecord(
     val id: Long = 1L,
@@ -69,9 +87,11 @@ data class UiState(
     val historyFilter: String = "All",
     val historyActivityTab: String = "Rules",
     val draft: SignalRule = SignalRule(name = "New rule"),
+    val selectedRuleId: Long? = null,
     val phraseDraft: String = "",
     val appSearch: String = "",
     val renameDraft: String = "",
+    val folderDraft: String = "",
     val settings: Map<String, String> = defaultSettings,
     val transientMessage: String? = null,
 )
@@ -109,10 +129,13 @@ val extraFilterCatalog = listOf(
 fun renderRuleSentence(rule: SignalRule): String =
     "When I get a notification from ${rule.app} that contains ${rule.phrase} then do ${rule.action}"
 
+/** Verbatim validation copy recorded in the audit (V001). */
+const val MISSING_FIELD_MESSAGE = "You have a missing field. Please tap to fill it in to complete the rule."
+
 fun validateRule(rule: SignalRule): String? = when {
     rule.app.isBlank() -> "Choose an app."
     rule.phrase.isBlank() -> "Choose notification content to match."
-    rule.action.isBlank() || rule.action == "nothing" -> "You have a missing field. Please tap to fill it in to complete the rule."
+    rule.action.isBlank() || rule.action == "nothing" -> MISSING_FIELD_MESSAGE
     else -> null
 }
 

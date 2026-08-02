@@ -43,6 +43,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -104,7 +105,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
                 color = SignalColors.Secondary, fontSize = 17.sp, lineHeight = 23.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = 20.dp, vertical = 12.dp)
             )
-            state.rules.forEach { rule -> RuleCard(rule, model) }
+            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model) } }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), horizontalArrangement = Arrangement.End) { CreateRuleButton(model::newRule) }
         }
@@ -129,19 +130,19 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel) {
         Modifier.fillMaxWidth().padding(top = 20.dp).background(accent, RoundedCornerShape(18.dp)).padding(5.dp)
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { model.showOverlay(Overlay.RULE_MORE) }, modifier = Modifier.size(48.dp)) {
+            IconButton(onClick = { model.showRuleOverlay(Overlay.RULE_MORE, rule.id) }, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Rounded.MoreVert, contentDescription = "Rule options", tint = SignalColors.Background)
             }
             Spacer(Modifier.weight(1f))
             Text(if (rule.enabled) "Enabled" else "Disabled", color = SignalColors.Background, fontWeight = FontWeight.Bold)
             Switch(
                 checked = rule.enabled,
-                onCheckedChange = { model.toggleRule() },
+                onCheckedChange = { model.toggleRule(rule.id) },
                 colors = SwitchDefaults.colors(checkedTrackColor = SignalColors.Background, checkedThumbColor = SignalColors.White, uncheckedTrackColor = SignalColors.Background, uncheckedThumbColor = SignalColors.Secondary),
             )
         }
         Column(
-            Modifier.fillMaxWidth().background(SignalColors.Background, RoundedCornerShape(16.dp)).clickable { model.updateDraft { rule }; model.navigate(Route.RULE_BUILDER) }.padding(20.dp)
+            Modifier.fillMaxWidth().background(SignalColors.Background, RoundedCornerShape(16.dp)).clickable { model.editRule(rule) }.padding(20.dp)
         ) {
             Text(rule.name, color = SignalColors.Secondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Text(
