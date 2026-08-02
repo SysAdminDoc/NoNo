@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.NotificationContentState
 import com.anm.signalrules.reconstruction.runtime.SanitizedNotification
+import com.anm.signalrules.reconstruction.runtime.IngestionMetrics
 
 @Entity(
     tableName = "notification_history",
@@ -31,6 +32,23 @@ data class NotificationEntity(
     val contentState: String,
     val groupKey: String? = null,
     val isGroupSummary: Boolean = false,
+)
+
+@Entity(tableName = "ingestion_diagnostics")
+data class IngestionDiagnosticsEntity(
+    @PrimaryKey val singletonId: Int = 1,
+    val persisted: Long = 0L,
+    val dropped: Long = 0L,
+    val failed: Long = 0L,
+    val lastFailureAtEpochMillis: Long? = null,
+    val updatedAtEpochMillis: Long = 0L,
+)
+
+fun IngestionDiagnosticsEntity.toMetrics(): IngestionMetrics = IngestionMetrics(
+    persisted = persisted,
+    dropped = dropped,
+    failed = failed,
+    lastFailureAtEpochMillis = lastFailureAtEpochMillis,
 )
 
 fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
@@ -102,6 +120,35 @@ interface NotificationDao {
         limit: Int = 100,
     ): Flow<List<NotificationEntity>>
 
+    @Query("SELECT * FROM ingestion_diagnostics WHERE singletonId = 1 LIMIT 1")
+    fun observeIngestionDiagnostics(): Flow<IngestionDiagnosticsEntity?>
+
+    @Query("SELECT * FROM ingestion_diagnostics WHERE singletonId = 1 LIMIT 1")
+    suspend fun readIngestionDiagnostics(): IngestionDiagnosticsEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveIngestionDiagnostics(diagnostics: IngestionDiagnosticsEntity)
+
+    @Transaction
+    suspend fun mergeIngestionMetrics(
+        persistedDelta: Long,
+        droppedDelta: Long,
+        failedDelta: Long,
+        failureAtEpochMillis: Long?,
+        nowEpochMillis: Long,
+    ) {
+        val current = readIngestionDiagnostics() ?: IngestionDiagnosticsEntity()
+        saveIngestionDiagnostics(
+            current.copy(
+                persisted = current.persisted + persistedDelta.coerceAtLeast(0L),
+                dropped = current.dropped + droppedDelta.coerceAtLeast(0L),
+                failed = current.failed + failedDelta.coerceAtLeast(0L),
+                lastFailureAtEpochMillis = failureAtEpochMillis ?: current.lastFailureAtEpochMillis,
+                updatedAtEpochMillis = nowEpochMillis,
+            ),
+        )
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(notification: NotificationEntity)
 
@@ -118,7 +165,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class], version = 2, exportSchema = false)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 3, exportSchema = false)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -131,11 +178,29 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS ingestion_diagnostics (
+                        singletonId INTEGER NOT NULL,
+                        persisted INTEGER NOT NULL,
+                        dropped INTEGER NOT NULL,
+                        failed INTEGER NOT NULL,
+                        lastFailureAtEpochMillis INTEGER,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(singletonId)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         /** Stores notification-derived metadata in the no-backup tree by default. */
         fun create(context: Context): SignalDatabase = Room.databaseBuilder(
             context.applicationContext,
             SignalDatabase::class.java,
             context.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
     }
 }

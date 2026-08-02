@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.anm.signalrules.reconstruction.audit.auditStateFor
 import com.anm.signalrules.reconstruction.data.SignalPreferences
 import com.anm.signalrules.reconstruction.data.SignalDatabase
+import com.anm.signalrules.reconstruction.data.toMetrics
 import com.anm.signalrules.reconstruction.data.toHistoryRecord
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
@@ -126,6 +127,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 transientMessage = if (recoveredFromCorruption) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
+        }
+        viewModelScope.launch {
+            historyDatabase.notificationDao().observeIngestionDiagnostics().collect { diagnostics ->
+                ListenerHealth.restoreDurableIngestionMetrics(diagnostics?.toMetrics() ?: com.anm.signalrules.reconstruction.runtime.IngestionMetrics())
+            }
         }
         viewModelScope.launch {
             combine(

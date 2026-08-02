@@ -37,6 +37,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Notification activity now shows a pure dry-run explanation for selected metadata records,
   including content provenance, unmet conditions, conflict winners, priority overrides, and an
   explicit `NOT_EXECUTED` result.
+- Listener queue counters and failure timestamps now persist as redacted Room diagnostics and
+  restore into the health surface after restart. The warning banner requests a safe rebind while
+  directing the user to notification-access settings for recovery.
 
 ## [1.1.0] - 2026-08-01
 

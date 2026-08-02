@@ -11,6 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
@@ -42,7 +44,23 @@ class SignalNotificationListener : NotificationListenerService() {
             )
         }
         serviceScope.launch {
-            ingestor.metrics.collect(ListenerHealth::updateIngestionMetrics)
+            var previous = IngestionMetrics()
+            ingestor.metrics.drop(1).collect { current ->
+                ListenerHealth.updateIngestionMetrics(current)
+                val persistedDelta = current.persisted - previous.persisted
+                val droppedDelta = current.dropped - previous.dropped
+                val failedDelta = current.failed - previous.failed
+                runCatching {
+                    database.notificationDao().mergeIngestionMetrics(
+                        persistedDelta = persistedDelta,
+                        droppedDelta = droppedDelta,
+                        failedDelta = failedDelta,
+                        failureAtEpochMillis = if (failedDelta > 0L) System.currentTimeMillis() else null,
+                        nowEpochMillis = System.currentTimeMillis(),
+                    )
+                }
+                previous = current
+            }
         }
     }
 

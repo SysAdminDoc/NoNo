@@ -48,18 +48,22 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     val connection by ListenerHealth.connection.collectAsState()
     val lastEventAt by ListenerHealth.lastEventAt.collectAsState()
     val ingestionMetrics by ListenerHealth.ingestionMetrics.collectAsState()
+    val durableMetrics by ListenerHealth.durableIngestionMetrics.collectAsState()
+    val dropped = maxOf(ingestionMetrics.dropped, durableMetrics.dropped)
+    val failed = maxOf(ingestionMetrics.failed, durableMetrics.failed)
 
     val problem = !state.listenerAccessGranted ||
         connection == ListenerHealth.Connection.DISCONNECTED ||
-        ingestionMetrics.dropped > 0L ||
-        ingestionMetrics.failed > 0L
+        dropped > 0L ||
+        failed > 0L
     if (!problem) return
 
     val detail = if (!state.listenerAccessGranted) {
         "Notification access is off, so no rule can run. Tap to turn it back on."
-    } else if (ingestionMetrics.dropped > 0L || ingestionMetrics.failed > 0L) {
-        "Listener queue diagnostics: ${ingestionMetrics.dropped} dropped, ${ingestionMetrics.failed} failed. " +
-            "Recent metadata may be incomplete; tap to review notification access."
+    } else if (dropped > 0L || failed > 0L) {
+        val failure = durableMetrics.lastFailureAtEpochMillis?.let { " Last failure: ${describeWallClock(it)}." }.orEmpty()
+        "Listener queue diagnostics: $dropped dropped, $failed failed.$failure " +
+            "Tap to request a safe rebind and review notification access."
     } else {
         val age = lastEventAt?.let { describeAge(SystemClock.elapsedRealtime() - it) }
         val seen = if (age == null) "No notifications seen yet." else "Last notification seen $age."
@@ -71,7 +75,10 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(SignalColors.Surface, RoundedCornerShape(16.dp))
-            .clickable(role = Role.Button) { openListenerSettings(context) }
+            .clickable(role = Role.Button) {
+                SignalNotificationListener.requestRebindIfPossible(context)
+                openListenerSettings(context)
+            }
             .padding(16.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
@@ -105,6 +112,10 @@ private fun describeAge(millis: Long): String = when {
     millis < 86_400_000L -> "${millis / 3_600_000L} h ago"
     else -> "${millis / 86_400_000L} days ago"
 }
+
+private fun describeWallClock(epochMillis: Long): String =
+    java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
+        .format(java.util.Date(epochMillis))
 
 /**
  * Opens notification-access settings, preferring the per-app screen added in API 30.

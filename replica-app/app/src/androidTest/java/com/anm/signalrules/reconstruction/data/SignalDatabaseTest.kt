@@ -99,4 +99,31 @@ class SignalDatabaseTest {
         assertEquals(listOf("chat-hidden"), filtered.map { it.notificationKey })
         assertEquals(emptyList<NotificationEntity>(), dao.observeHistory("", "Rule-triggered").first())
     }
+
+    @Test
+    fun `ingestion diagnostics accumulate counters without payload data`() = runBlocking {
+        val dao = database.notificationDao()
+        dao.mergeIngestionMetrics(
+            persistedDelta = 4L,
+            droppedDelta = 1L,
+            failedDelta = 0L,
+            failureAtEpochMillis = null,
+            nowEpochMillis = 10_000L,
+        )
+        dao.mergeIngestionMetrics(
+            persistedDelta = 2L,
+            droppedDelta = 0L,
+            failedDelta = 1L,
+            failureAtEpochMillis = 11_000L,
+            nowEpochMillis = 11_000L,
+        )
+
+        val diagnostics = dao.observeIngestionDiagnostics().first()
+        requireNotNull(diagnostics)
+        assertEquals(6L, diagnostics.persisted)
+        assertEquals(1L, diagnostics.dropped)
+        assertEquals(1L, diagnostics.failed)
+        assertEquals(11_000L, diagnostics.lastFailureAtEpochMillis)
+        assertEquals(11_000L, diagnostics.updatedAtEpochMillis)
+    }
 }

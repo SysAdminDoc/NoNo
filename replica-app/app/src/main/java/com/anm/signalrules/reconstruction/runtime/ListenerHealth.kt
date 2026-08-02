@@ -30,6 +30,9 @@ object ListenerHealth {
     private val _ingestionMetrics = MutableStateFlow(IngestionMetrics())
     val ingestionMetrics: StateFlow<IngestionMetrics> = _ingestionMetrics.asStateFlow()
 
+    private val _durableIngestionMetrics = MutableStateFlow(IngestionMetrics())
+    val durableIngestionMetrics: StateFlow<IngestionMetrics> = _durableIngestionMetrics.asStateFlow()
+
     fun onConnected() {
         _connection.value = Connection.CONNECTED
         SignalObservability.emit(SignalEvent(SignalEventType.LISTENER_CONNECTED))
@@ -59,6 +62,11 @@ object ListenerHealth {
         )
     }
 
+    /** Restores redacted counters from Room after the process starts. */
+    fun restoreDurableIngestionMetrics(metrics: IngestionMetrics) {
+        _durableIngestionMetrics.value = metrics
+    }
+
     /** Called when the OS reports access was revoked while the app was not running. */
     fun onAccessRevoked() {
         _connection.value = Connection.DISCONNECTED
@@ -70,5 +78,6 @@ object ListenerHealth {
         _lastEventAt.value = null
         _eventCount.value = 0L
         _ingestionMetrics.value = IngestionMetrics()
+        _durableIngestionMetrics.value = IngestionMetrics()
     }
 }

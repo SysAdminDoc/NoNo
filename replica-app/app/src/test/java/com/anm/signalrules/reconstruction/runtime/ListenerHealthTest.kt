@@ -60,6 +60,22 @@ class ListenerHealthTest {
     }
 
     @Test
+    fun `durable ingestion diagnostics can be restored after process restart`() {
+        val restored = IngestionMetrics(
+            persisted = 12L,
+            dropped = 3L,
+            failed = 2L,
+            lastFailureAtEpochMillis = 9_000L,
+        )
+
+        ListenerHealth.restoreDurableIngestionMetrics(restored)
+
+        assertEquals(restored, ListenerHealth.durableIngestionMetrics.value)
+        ListenerHealth.reset()
+        assertEquals(IngestionMetrics(), ListenerHealth.durableIngestionMetrics.value)
+    }
+
+    @Test
     fun `health events contain operational fields but no payload fields`() {
         val events = mutableListOf<SignalEvent>()
         val sink = SignalEventSink { events += it }

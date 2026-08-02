@@ -13,6 +13,7 @@ data class IngestionMetrics(
     val persisted: Long = 0L,
     val dropped: Long = 0L,
     val failed: Long = 0L,
+    val lastFailureAtEpochMillis: Long? = null,
 )
 
 /**
