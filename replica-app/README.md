@@ -7,7 +7,7 @@ Signal Rules is an independent clean-room Android reconstruction of the native i
 - Display name: **Signal Rules**
 - Application ID: `com.anm.signalrules.reconstruction`
 - Debug package: `com.anm.signalrules.reconstruction.debug`
-- Android support: API 24 and newer; target SDK 35; compiled with SDK 36
+- Android support: API 24 and newer; target SDK 36; compiled with SDK 36
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Audited data-dependent behavior is local and deterministic.
 

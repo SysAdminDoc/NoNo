@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Added bounded listener ingestion, Room-backed metadata history, transactional retention pruning,
   drop/failure diagnostics, and 30-day/3-month/6-month boundary tests. Companion-device listener
   exemptions remain intentionally out of scope for this reconstruction.
+- Added a reproducible-release gate that builds two clean checkouts with a pinned JDK, honors
+  `SOURCE_DATE_EPOCH`, and compares the unsigned release APK hashes outside the repository.
 
 ## [1.1.0] - 2026-08-01
 
