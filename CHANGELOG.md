@@ -19,6 +19,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The history “Create rule” action now selects the tapped record, pre-fills app and safely
   derivable phrase fields, and explains when redaction or metadata-only storage prevents copying
   notification content.
+- Corrected the DataStore test fixture to start with an absent backing file, matching DataStore's
+  create-on-first-write contract and removing false corruption/race failures from the local suite.
+- Preserved Android notification group keys and summary provenance in metadata history, added a
+  Room migration, and made group summaries ineligible for future duplicate rule evaluation.
 
 ## [1.1.0] - 2026-08-01
 

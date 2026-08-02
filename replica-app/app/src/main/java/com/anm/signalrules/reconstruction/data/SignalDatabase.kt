@@ -12,6 +12,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.NotificationContentState
@@ -27,6 +29,8 @@ data class NotificationEntity(
     val packageName: String,
     val postedAtEpochMillis: Long,
     val contentState: String,
+    val groupKey: String? = null,
+    val isGroupSummary: Boolean = false,
 )
 
 fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
@@ -34,6 +38,8 @@ fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
     packageName = packageName,
     postedAtEpochMillis = postedAtEpochMillis,
     contentState = contentState.name,
+    groupKey = groupKey,
+    isGroupSummary = isGroupSummary,
 )
 
 fun NotificationEntity.toHistoryRecord(): HistoryRecord {
@@ -55,6 +61,8 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         contentState = state,
         postedAtEpochMillis = postedAtEpochMillis,
         notificationKey = notificationKey,
+        groupKey = groupKey,
+        isGroupSummary = isGroupSummary,
     )
 }
 
@@ -79,18 +87,24 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class], version = 1, exportSchema = false)
+@Database(entities = [NotificationEntity::class], version = 2, exportSchema = false)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
     companion object {
         private const val DATABASE_NAME = "signal_rules_history.db"
+        val MIGRATION_1_2: Migration = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE notification_history ADD COLUMN groupKey TEXT")
+                database.execSQL("ALTER TABLE notification_history ADD COLUMN isGroupSummary INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         /** Stores notification-derived metadata in the no-backup tree by default. */
         fun create(context: Context): SignalDatabase = Room.databaseBuilder(
             context.applicationContext,
             SignalDatabase::class.java,
             context.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
 }

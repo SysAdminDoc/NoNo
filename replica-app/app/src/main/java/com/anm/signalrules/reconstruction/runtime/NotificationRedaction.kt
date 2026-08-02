@@ -23,6 +23,8 @@ data class SanitizedNotification(
     val packageName: String,
     val postedAtEpochMillis: Long,
     val contentState: NotificationContentState,
+    val groupKey: String? = null,
+    val isGroupSummary: Boolean = false,
 )
 
 private const val ANDROID_SENSITIVE_CONTENT_EXTRA = "key_sensitive_content"
@@ -76,6 +78,8 @@ fun sanitizeNotification(sbn: StatusBarNotification): SanitizedNotification {
         packageName = sbn.packageName,
         postedAtEpochMillis = sbn.postTime,
         contentState = classifyNotificationContent(payload),
+        groupKey = notification.group,
+        isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
     )
 }
 

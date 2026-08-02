@@ -51,4 +51,20 @@ class NotificationRedactionTest {
         assertEquals(NotificationContentState.NOT_AVAILABLE, classifyNotificationContent(payload, 35))
         assertTrue(matchableNotificationText(payload, 35) == null)
     }
+
+    @Test
+    fun `sanitized records retain grouping metadata without retaining content`() {
+        val notification = SanitizedNotification(
+            notificationKey = "key",
+            packageName = "com.example.messages",
+            postedAtEpochMillis = 10L,
+            contentState = NotificationContentState.NOT_STORED,
+            groupKey = "conversation",
+            isGroupSummary = true,
+        )
+
+        assertEquals("conversation", groupingFor(notification).groupKey)
+        assertTrue(groupingFor(notification).isGroupSummary)
+        assertTrue(!groupingFor(notification).shouldEvaluate)
+    }
 }

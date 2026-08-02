@@ -107,6 +107,8 @@ data class HistoryRecord(
     val contentState: NotificationContentState = NotificationContentState.NOT_STORED,
     val postedAtEpochMillis: Long = 0L,
     val notificationKey: String = "",
+    val groupKey: String? = null,
+    val isGroupSummary: Boolean = false,
 )
 
 /** Provenance of notification content exposed to the app. */
