@@ -30,6 +30,7 @@ data class NotificationEntity(
     val packageName: String,
     val postedAtEpochMillis: Long,
     val contentState: String,
+    val channelId: String? = null,
     val groupKey: String? = null,
     val isGroupSummary: Boolean = false,
 )
@@ -56,6 +57,7 @@ fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
     packageName = packageName,
     postedAtEpochMillis = postedAtEpochMillis,
     contentState = contentState.name,
+    channelId = channelId,
     groupKey = groupKey,
     isGroupSummary = isGroupSummary,
 )
@@ -80,6 +82,7 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         contentState = state,
         postedAtEpochMillis = postedAtEpochMillis,
         notificationKey = notificationKey,
+        channelId = channelId,
         groupKey = groupKey,
         isGroupSummary = isGroupSummary,
     )
@@ -100,11 +103,14 @@ interface NotificationDao {
         WHERE (:query = '' OR packageName LIKE '%' || :query || '%' OR
             notificationKey LIKE '%' || :query || '%' OR
             contentState LIKE '%' || :query || '%' OR
+            COALESCE(channelId, '') LIKE '%' || :query || '%' OR
             COALESCE(groupKey, '') LIKE '%' || :query || '%')
           AND (:filter = 'All')
           AND (:packageName IS NULL OR packageName = :packageName)
+          AND (:channelId IS NULL OR channelId = :channelId)
           AND (:contentState IS NULL OR contentState = :contentState)
           AND (:groupKey IS NULL OR groupKey = :groupKey)
+          AND (:groupSummary IS NULL OR isGroupSummary = :groupSummary)
           AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
         ORDER BY postedAtEpochMillis DESC, id DESC
         LIMIT :limit
@@ -114,8 +120,10 @@ interface NotificationDao {
         query: String,
         filter: String,
         packageName: String? = null,
+        channelId: String? = null,
         contentState: String? = null,
         groupKey: String? = null,
+        groupSummary: Boolean? = null,
         fromEpochMillis: Long? = null,
         limit: Int = 100,
     ): Flow<List<NotificationEntity>>
@@ -165,7 +173,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 3, exportSchema = false)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 4, exportSchema = false)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -196,11 +204,17 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN channelId TEXT")
+            }
+        }
+
         /** Stores notification-derived metadata in the no-backup tree by default. */
         fun create(context: Context): SignalDatabase = Room.databaseBuilder(
             context.applicationContext,
             SignalDatabase::class.java,
             context.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
     }
 }

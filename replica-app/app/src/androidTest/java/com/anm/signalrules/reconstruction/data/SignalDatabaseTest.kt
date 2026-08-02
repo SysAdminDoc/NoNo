@@ -65,7 +65,9 @@ class SignalDatabaseTest {
                 packageName = "com.example.chat",
                 postedAtEpochMillis = 1_000L,
                 contentState = NotificationContentState.HIDDEN_BY_SYSTEM.name,
+                channelId = "messages",
                 groupKey = "conversation",
+                isGroupSummary = true,
             ),
         )
         dao.insert(
@@ -97,6 +99,15 @@ class SignalDatabaseTest {
         ).first()
 
         assertEquals(listOf("chat-hidden"), filtered.map { it.notificationKey })
+        assertEquals(
+            listOf("chat-hidden"),
+            dao.observeHistory(
+                query = "",
+                filter = "All",
+                channelId = "messages",
+                groupSummary = true,
+            ).first().map { it.notificationKey },
+        )
         assertEquals(emptyList<NotificationEntity>(), dao.observeHistory("", "Rule-triggered").first())
     }
 

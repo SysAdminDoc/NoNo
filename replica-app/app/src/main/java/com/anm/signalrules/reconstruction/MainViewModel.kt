@@ -22,6 +22,7 @@ import com.anm.signalrules.reconstruction.data.encodeRules
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.HistoryLoadState
 import com.anm.signalrules.reconstruction.model.HistoryQuery
+import com.anm.signalrules.reconstruction.model.NotificationContentState
 import com.anm.signalrules.reconstruction.model.deriveRuleDraft
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.RootTab
@@ -136,7 +137,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             combine(
                 _state
-                    .map { HistoryQuery(search = it.historySearch, filter = it.historyFilter) }
+                    .map {
+                        HistoryQuery(
+                            search = it.historySearch,
+                            filter = it.historyFilter,
+                            packageName = it.historyPackageFilter,
+                            channelId = it.historyChannelFilter,
+                            contentState = it.historyContentStateFilter,
+                            groupKey = it.historyGroupFilter,
+                            groupSummary = it.historyGroupSummaryOnly.takeIf { only -> only },
+                        )
+                    }
                     .distinctUntilChanged(),
                 historyRetry,
             ) { query, _ -> query }
@@ -145,8 +156,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         query = query.search,
                         filter = query.filter,
                         packageName = query.packageName,
+                        channelId = query.channelId,
                         contentState = query.contentState?.name,
                         groupKey = query.groupKey,
+                        groupSummary = query.groupSummary,
                         fromEpochMillis = query.fromEpochMillis,
                         limit = query.limit,
                     ).map { records ->
@@ -251,6 +264,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showPhraseInput() { _state.value = _state.value.copy(phraseInputVisible = true) }
     fun hidePhraseInput() { _state.value = _state.value.copy(phraseInputVisible = false) }
     fun setHistoryFilter(filter: String) { _state.value = _state.value.copy(historyFilter = filter) }
+    fun clearHistoryMetadataFilters() {
+        _state.value = _state.value.copy(
+            historyPackageFilter = null,
+            historyChannelFilter = null,
+            historyGroupFilter = null,
+            historyContentStateFilter = null,
+            historyGroupSummaryOnly = false,
+            overlay = Overlay.NONE,
+        )
+    }
+    fun setHistoryPackageFilter(value: String?) {
+        _state.value = _state.value.copy(historyPackageFilter = value, overlay = Overlay.NONE)
+    }
+    fun setHistoryChannelFilter(value: String?) {
+        _state.value = _state.value.copy(historyChannelFilter = value, overlay = Overlay.NONE)
+    }
+    fun setHistoryGroupFilter(value: String?) {
+        _state.value = _state.value.copy(historyGroupFilter = value, overlay = Overlay.NONE)
+    }
+    fun setHistoryContentStateFilter(value: NotificationContentState?) {
+        _state.value = _state.value.copy(historyContentStateFilter = value, overlay = Overlay.NONE)
+    }
+    fun setHistoryGroupSummaryOnly(enabled: Boolean) {
+        _state.value = _state.value.copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
+    }
     fun retryHistory() { historyRetry.value += 1 }
     fun setHistoryActivityTab(tab: String) { _state.value = _state.value.copy(historyActivityTab = tab) }
     fun showHistoryOverlay(historyId: Long) {

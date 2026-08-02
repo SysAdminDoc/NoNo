@@ -42,6 +42,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   directing the user to notification-access settings for recovery.
 - Listener shutdown now fences new callbacks, drains the bounded worker before closing Room, and
   makes teardown idempotent. Rebind requests are limited to the platform’s disconnected window.
+- History metadata now includes nullable channel IDs and supports package, channel, group,
+  content-provenance, and group-summary filters through bounded Room queries and migrated schema.
 
 ## [1.1.0] - 2026-08-01
 

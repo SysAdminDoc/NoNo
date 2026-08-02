@@ -49,6 +49,7 @@ import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.model.NotificationContentState
 import com.anm.signalrules.reconstruction.model.enableForCatalog
 import com.anm.signalrules.reconstruction.model.extraFilterCatalog
 import com.anm.signalrules.reconstruction.model.filterOperatorCatalog
@@ -117,6 +118,28 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() },
             ), model::dismissOverlay,
         )
+        Overlay.HISTORY_FILTERS -> {
+            val packages = state.history.map { it.appPackageName ?: it.app }.distinct().sorted()
+            val channels = state.history.mapNotNull { it.channelId }.distinct().sorted()
+            val groups = state.history.mapNotNull { it.groupKey }.distinct().sorted()
+            val items = buildList {
+                add(MenuItem("Clear metadata filters", Icons.Rounded.FilterAlt) { model.clearHistoryMetadataFilters() })
+                add(MenuItem("Group summaries only", Icons.Rounded.Tune) { model.setHistoryGroupSummaryOnly(true) })
+                packages.forEach { value ->
+                    add(MenuItem("Package: $value", Icons.Rounded.FilterAlt) { model.setHistoryPackageFilter(value) })
+                }
+                channels.forEach { value ->
+                    add(MenuItem("Channel: $value", Icons.Rounded.FilterAlt) { model.setHistoryChannelFilter(value) })
+                }
+                groups.forEach { value ->
+                    add(MenuItem("Group: $value", Icons.Rounded.FilterAlt) { model.setHistoryGroupFilter(value) })
+                }
+                NotificationContentState.values().forEach { value ->
+                    add(MenuItem("Content: ${value.name}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })
+                }
+            }
+            MenuDialog("History metadata filters", items, model::dismissOverlay)
+        }
         Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", listOf("Default", "Mute all sounds", "Aggressive"), state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
         Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
         Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", listOf("All notifications", "Store notification content", "Metadata only", "Off"), state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notifications
@@ -91,6 +92,9 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
             IconButton(onClick = model::openHistorySearch) {
                 Icon(Icons.Rounded.Search, contentDescription = "Search history", tint = SignalColors.Secondary)
             }
+            IconButton(onClick = { model.showOverlay(Overlay.HISTORY_FILTERS) }) {
+                Icon(Icons.Rounded.FilterAlt, contentDescription = "Filter history metadata", tint = SignalColors.Secondary)
+            }
         }
         Text(state.history.size.toString(), style = MaterialTheme.typography.displayLarge)
         Row(verticalAlignment = Alignment.Bottom) {
@@ -116,6 +120,21 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
             HistoryFilterButton(if (state.historyFilter == "Dismissed") "Dismissed" else "Sent at", state.historyFilter != "Dismissed", Modifier.weight(1f)) {
                 model.setHistoryFilter(if (state.historyFilter == "Dismissed") "All" else "Dismissed")
             }
+        }
+        val metadataFilterSummary = listOfNotNull(
+            state.historyPackageFilter?.let { "package=$it" },
+            state.historyChannelFilter?.let { "channel=$it" },
+            state.historyGroupFilter?.let { "group=$it" },
+            state.historyContentStateFilter?.let { "content=${it.name}" },
+            "summaries".takeIf { state.historyGroupSummaryOnly },
+        ).joinToString(" · ")
+        if (metadataFilterSummary.isNotBlank()) {
+            Text(
+                "Metadata filters: $metadataFilterSummary",
+                color = SignalColors.Secondary,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(top = 12.dp),
+            )
         }
         HistoryResults(state, model, Modifier.weight(1f))
     }
@@ -148,7 +167,10 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
             )
         }
         HistoryLoadState.READY -> if (state.history.isEmpty()) {
-            val narrowed = state.historySearch.isNotBlank() || state.historyFilter != "All"
+            val narrowed = state.historySearch.isNotBlank() || state.historyFilter != "All" ||
+                state.historyPackageFilter != null || state.historyChannelFilter != null ||
+                state.historyGroupFilter != null || state.historyContentStateFilter != null ||
+                state.historyGroupSummaryOnly
             Column(
                 modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -192,6 +214,14 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
                             Text(item.app, color = SignalColors.Secondary, fontSize = 14.sp)
                             Text(item.title, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                             Text(item.body, color = SignalColors.Secondary, fontSize = 14.sp)
+                            val metadata = listOfNotNull(
+                                item.channelId?.let { "channel=$it" },
+                                item.groupKey?.let { "group=$it" },
+                                "summary".takeIf { item.isGroupSummary },
+                            ).joinToString(" · ")
+                            if (metadata.isNotBlank()) {
+                                Text(metadata, color = SignalColors.Secondary, fontSize = 12.sp)
+                            }
                         }
                         IconButton(onClick = { model.showHistoryOverlay(item.id) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
                     }
