@@ -32,10 +32,12 @@ object ListenerHealth {
 
     fun onConnected() {
         _connection.value = Connection.CONNECTED
+        SignalObservability.emit(SignalEvent(SignalEventType.LISTENER_CONNECTED))
     }
 
     fun onDisconnected() {
         _connection.value = Connection.DISCONNECTED
+        SignalObservability.emit(SignalEvent(SignalEventType.LISTENER_DISCONNECTED))
     }
 
     /** Records that a notification arrived. Cheap enough to call on the callback thread. */
@@ -46,11 +48,21 @@ object ListenerHealth {
 
     fun updateIngestionMetrics(metrics: IngestionMetrics) {
         _ingestionMetrics.value = metrics
+        SignalObservability.emit(
+            SignalEvent(
+                type = SignalEventType.QUEUE_METRICS,
+                queued = metrics.queued,
+                persisted = metrics.persisted,
+                dropped = metrics.dropped,
+                failed = metrics.failed,
+            ),
+        )
     }
 
     /** Called when the OS reports access was revoked while the app was not running. */
     fun onAccessRevoked() {
         _connection.value = Connection.DISCONNECTED
+        SignalObservability.emit(SignalEvent(SignalEventType.ACCESS_REVOKED))
     }
 
     fun reset() {

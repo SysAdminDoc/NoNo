@@ -11,6 +11,7 @@ class ListenerHealthTest {
     @Before
     fun reset() {
         ListenerHealth.reset()
+        SignalObservability.clearForTests()
     }
 
     @Test
@@ -56,5 +57,19 @@ class ListenerHealthTest {
 
         ListenerHealth.reset()
         assertEquals(IngestionMetrics(), ListenerHealth.ingestionMetrics.value)
+    }
+
+    @Test
+    fun `health events contain operational fields but no payload fields`() {
+        val events = mutableListOf<SignalEvent>()
+        val sink = SignalEventSink { events += it }
+        SignalObservability.register(sink)
+
+        ListenerHealth.onConnected()
+        ListenerHealth.updateIngestionMetrics(IngestionMetrics(queued = 1, dropped = 2))
+
+        assertEquals(listOf(SignalEventType.LISTENER_CONNECTED, SignalEventType.QUEUE_METRICS), events.map { it.type })
+        assertEquals("type=QUEUE_METRICS at=${events[1].atEpochMillis} queued=1 persisted=0 dropped=2 failed=0", events[1].toSafeLogLine())
+        SignalObservability.unregister(sink)
     }
 }

@@ -64,7 +64,15 @@ class SignalNotificationListener : NotificationListenerService() {
         if (notification.packageName == packageName) return
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
         // all Room I/O is performed by the bounded worker.
-        ingestor.offer(sanitizeNotification(notification))
+        val sanitized = sanitizeNotification(notification)
+        ingestor.offer(sanitized)
+        SignalObservability.emit(
+            SignalEvent(
+                type = SignalEventType.NOTIFICATION_CAPTURED,
+                traceId = newTraceId(),
+                contentState = sanitized.contentState,
+            ),
+        )
         ListenerHealth.recordEvent(SystemClock.elapsedRealtime())
     }
 
