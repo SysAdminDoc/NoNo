@@ -34,6 +34,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   explicit loading/empty/error/retry states, and immediate pruning when the retention setting
   changes. The metadata-only build no longer claims to show only “today” or invent rule-action
   history states.
+- Notification activity now shows a pure dry-run explanation for selected metadata records,
+  including content provenance, unmet conditions, conflict winners, priority overrides, and an
+  explicit `NOT_EXECUTED` result.
 
 ## [1.1.0] - 2026-08-01
 

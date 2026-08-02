@@ -17,6 +17,8 @@ data class NotificationPayload(
     val appLabel: CharSequence?,
     val systemMarkedSensitive: Boolean = false,
     val packageName: String? = null,
+    /** Used by metadata-only previews to preserve provenance without supplying content. */
+    val contentStateOverride: NotificationContentState? = null,
 )
 
 data class SanitizedNotification(
@@ -39,6 +41,7 @@ fun classifyNotificationContent(
     payload: NotificationPayload,
     sdkInt: Int = Build.VERSION.SDK_INT,
 ): NotificationContentState {
+    payload.contentStateOverride?.let { return it }
     if (payload.systemMarkedSensitive ||
         (sdkInt >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
             (isSystemRedactionMarker(payload.title) || isSystemRedactionMarker(payload.text)))

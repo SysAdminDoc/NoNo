@@ -1,5 +1,7 @@
 package com.anm.signalrules.reconstruction.runtime
 
+import android.os.Build
+import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.NotificationContentState
 import com.anm.signalrules.reconstruction.model.SignalRule
 
@@ -87,6 +89,28 @@ fun evaluateRules(
         priorityOverrides = overrides,
     )
 }
+
+/**
+ * Builds a dry-run payload from a metadata-only history row. No title/body is reconstructed;
+ * the stored content provenance is passed directly to the classifier.
+ */
+fun evaluateHistoryRecord(
+    rules: List<SignalRule>,
+    record: HistoryRecord,
+    sdkInt: Int = Build.VERSION.SDK_INT,
+): RuleEvaluationTrace = evaluateRules(
+    rules = rules,
+    payload = NotificationPayload(
+        title = null,
+        text = null,
+        appLabel = record.app,
+        packageName = record.appPackageName ?: record.app.takeIf { it.contains('.') },
+        contentStateOverride = record.contentState,
+        systemMarkedSensitive = record.contentState == NotificationContentState.HIDDEN_BY_SYSTEM,
+    ),
+    sdkInt = sdkInt,
+    traceId = "history-${record.id}",
+)
 
 private fun evaluateRule(
     rule: SignalRule,

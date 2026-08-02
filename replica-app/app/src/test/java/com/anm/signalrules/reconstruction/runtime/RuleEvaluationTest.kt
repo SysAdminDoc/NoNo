@@ -1,6 +1,7 @@
 package com.anm.signalrules.reconstruction.runtime
 
 import com.anm.signalrules.reconstruction.model.NotificationContentState
+import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.SignalRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -92,5 +93,33 @@ class RuleEvaluationTest {
         assertEquals(listOf(EvaluationReason.DISABLED), trace.conditions[0].reasons)
         assertTrue(EvaluationReason.EXTRA_FILTER_UNSUPPORTED in trace.conditions[1].reasons)
         assertEquals(null, trace.matchedRuleId)
+    }
+
+    @Test
+    fun `metadata history preview preserves provenance and never executes`() {
+        val trace = evaluateHistoryRecord(
+            rules = listOf(
+                SignalRule(
+                    id = 11,
+                    app = "Messages",
+                    appPackageName = "com.google.android.apps.messaging",
+                    phrase = "verification",
+                    action = "Copy verification code",
+                ),
+            ),
+            record = HistoryRecord(
+                id = 42,
+                app = "Messages",
+                appPackageName = "com.google.android.apps.messaging",
+                contentState = NotificationContentState.NOT_STORED,
+            ),
+            sdkInt = 35,
+        )
+
+        assertEquals("history-42", trace.traceId)
+        assertEquals(NotificationContentState.NOT_STORED, trace.contentState)
+        assertTrue(EvaluationReason.CONTENT_NOT_AVAILABLE in trace.conditions.single().reasons)
+        assertEquals(null, trace.matchedRuleId)
+        assertEquals(DryRunActionResult.NOT_EXECUTED, trace.actionResult)
     }
 }

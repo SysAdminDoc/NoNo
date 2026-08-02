@@ -14,9 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
@@ -48,6 +48,9 @@ import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.HistoryLoadState
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.runtime.EvaluationReason
+import com.anm.signalrules.reconstruction.runtime.RuleEvaluationTrace
+import com.anm.signalrules.reconstruction.runtime.evaluateHistoryRecord
 import kotlinx.coroutines.delay
 
 @Composable
@@ -215,6 +218,8 @@ private fun HistoryFilterButton(label: String, selected: Boolean, modifier: Modi
 
 @Composable
 fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
+    val selected = state.history.firstOrNull { it.id == state.selectedHistoryId }
+    val trace = selected?.let { evaluateHistoryRecord(state.rules, it) }
     Column(Modifier.fillMaxSize()) {
         SignalTopBar("Notification activity", onBack = { model.selectRoot(com.anm.signalrules.reconstruction.model.RootTab.HISTORY) })
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -226,13 +231,58 @@ fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
                 ) { Text(tab, color = if (state.historyActivityTab == tab) SignalColors.Background else SignalColors.White, fontWeight = FontWeight.Bold) }
             }
         }
-        if (state.historyActivityTab == "Rules") {
-            ActivityRow("No rule was triggered", "The test notification did not match an enabled rule.")
+        if (trace == null) {
+            ActivityRow("History entry unavailable", "The selected metadata record is no longer in the bounded history query.")
+        } else if (state.historyActivityTab == "Rules") {
+            LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp)) {
+                item {
+                    ActivityRow(
+                        "Metadata preview",
+                        "${selected.app} · ${contentStateLabel(trace)}. No notification content was reconstructed.",
+                    )
+                }
+                if (trace.matchedRuleId == null) {
+                    item { ActivityRow("No rule matched", "Every enabled rule has at least one unmet condition.") }
+                } else {
+                    item { ActivityRow("Rule ${trace.matchedRuleId} would match", "The highest-priority matching rule is selected for preview only.") }
+                }
+                items(trace.conditions, key = { it.ruleId }) { condition ->
+                    val reason = if (condition.matched) "All represented conditions matched." else condition.reasons.joinToString { it.displayName() }
+                    ActivityRow("Rule ${condition.ruleId}", reason)
+                }
+                if (trace.conflictPairs.isNotEmpty()) {
+                    item {
+                        ActivityRow(
+                            "Conflict resolution",
+                            trace.conflictPairs.joinToString { "${it.leftRuleId}/${it.rightRuleId} → ${it.winningRuleId}" },
+                        )
+                    }
+                }
+                if (trace.priorityOverrides.isNotEmpty()) {
+                    item { ActivityRow("Priority overrides", trace.priorityOverrides.joinToString { "Rule ${it.ruleId}: ${it.priority}" }) }
+                }
+            }
         } else {
             ActivityRow("Notification posted", "Captured locally without storing private payloads.")
-            ActivityRow("No changes made", "This reconstruction simulates potentially destructive actions.")
+            ActivityRow("Action preview only", "${trace.actionResult}: no notification, sound, setting, or PendingIntent was changed.")
         }
     }
+}
+
+private fun contentStateLabel(trace: RuleEvaluationTrace): String = when (trace.contentState) {
+    com.anm.signalrules.reconstruction.model.NotificationContentState.AVAILABLE -> "content available to matcher"
+    com.anm.signalrules.reconstruction.model.NotificationContentState.HIDDEN_BY_SYSTEM -> "content hidden by Android"
+    com.anm.signalrules.reconstruction.model.NotificationContentState.NOT_AVAILABLE -> "content unavailable"
+    com.anm.signalrules.reconstruction.model.NotificationContentState.NOT_STORED -> "content not stored"
+}
+
+private fun EvaluationReason.displayName(): String = when (this) {
+    EvaluationReason.DISABLED -> "disabled"
+    EvaluationReason.APP_MISMATCH -> "app mismatch"
+    EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM -> "content hidden by system"
+    EvaluationReason.CONTENT_NOT_AVAILABLE -> "content unavailable"
+    EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
+    EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
 }
 
 @Composable
