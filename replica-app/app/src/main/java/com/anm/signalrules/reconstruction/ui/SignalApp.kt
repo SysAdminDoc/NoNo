@@ -69,7 +69,10 @@ fun SignalApp(model: MainViewModel) {
                 }
             },
         ) { padding ->
-            Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+            // Only the ROOT route gets a bottom bar, so every other route must apply the
+            // navigation-bar inset itself or its bottom-anchored controls render underneath it.
+            val bottomInset = if (state.route == Route.ROOT) Modifier else Modifier.navigationBarsPadding()
+            Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).then(bottomInset)) {
                 when (state.route) {
                     Route.ONBOARDING -> OnboardingScreen(state, model)
                     Route.ROOT -> when (state.rootTab) {

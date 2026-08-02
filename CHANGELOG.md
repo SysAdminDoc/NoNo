@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Bottom-anchored controls on full-screen editors no longer render underneath the navigation
+  bar. Only the root route has a bottom bar, and only that bar applied the navigation-bar
+  inset, so "Pick all apps" and "Apply filter" sat under the system navigation.
+- The history list honours its search field and segmented filter. Both were wired to state
+  that the list never read, so typing a query or switching to Rule-triggered changed nothing.
+- The rule card renders each rule's own action instead of a hardcoded mute glyph, and uses the
+  unit-tested sentence renderer rather than a second, divergent copy of the same string.
 - The notification listener now recovers from being unbound. It had no
   `onListenerConnected`/`onListenerDisconnected` overrides and never called `requestRebind`,
   so a routine platform unbind - an app update, a service crash, an OEM background kill -
@@ -67,12 +74,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The 19.7 MB debug APK is no longer tracked in git. `dist/SHA256SUMS.txt` stays tracked so a
+  downloaded artifact can still be verified.
+
 - The audit-state capture harness moved into variant source sets. `app/src/debug` holds the
   state table and the intent-extra reader; `app/src/release` links a no-op twin. The release
   DEX no longer contains the `replica_state` extra or any capture id, so production behaviour
   cannot depend on QA scaffolding.
 
 ### Added
+
+- MIT `LICENSE` at the repository root.
 
 - A listener health banner on the Rules screen states when rules are not running, why, and how
   long since the last notification was seen, and links straight to notification access. It is

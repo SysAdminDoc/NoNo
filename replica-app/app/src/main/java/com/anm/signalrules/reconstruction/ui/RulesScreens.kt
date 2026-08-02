@@ -68,6 +68,7 @@ import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.SignalRule
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.actionCatalog
+import com.anm.signalrules.reconstruction.model.renderRuleCardSentence
 import kotlinx.coroutines.delay
 
 @Composable
@@ -148,7 +149,7 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel) {
         ) {
             Text(rule.name, color = SignalColors.Secondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Text(
-                "When I get a notification\nfrom ${rule.app} that contains\n\"${rule.phrase}\"\nthen 🔇 ${rule.action.lowercase()}",
+                renderRuleCardSentence(rule),
                 color = SignalColors.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 19.sp,

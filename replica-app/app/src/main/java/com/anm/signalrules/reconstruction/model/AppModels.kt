@@ -133,6 +133,14 @@ val extraFilterCatalog = listOf(
 fun renderRuleSentence(rule: SignalRule): String =
     "When I get a notification from ${rule.app} that contains ${rule.phrase} then do ${rule.action}"
 
+/** Wrapped form used on the rule card, which lays the sentence out over four lines. */
+fun renderRuleCardSentence(rule: SignalRule): String = buildString {
+    appendLine("When I get a notification")
+    appendLine("from ${rule.app} that contains")
+    appendLine("\"${rule.phrase}\"")
+    append("then ${rule.action.lowercase()}")
+}
+
 /** Verbatim validation copy recorded in the audit (V001). */
 const val MISSING_FIELD_MESSAGE = "You have a missing field. Please tap to fill it in to complete the rule."
 

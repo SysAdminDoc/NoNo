@@ -45,6 +45,7 @@ import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.model.filterHistory
 import kotlinx.coroutines.delay
 
 @Composable
@@ -131,7 +132,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
             )
             Spacer(Modifier.weight(1.1f))
         } else {
-            state.history.forEach { item ->
+            filterHistory(state.history, state.historySearch, state.historyFilter).forEach { item ->
                 Row(
                     Modifier.fillMaxWidth().padding(top = 22.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).clickable { model.showOverlay(Overlay.HISTORY_ITEM) }.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,

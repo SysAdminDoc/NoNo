@@ -79,6 +79,31 @@ class RuleOperationsTest {
     }
 
     @Test
+    fun `the card sentence names the rule's own action rather than a fixed glyph`() {
+        val flashlight = SignalRule(app = "Messages", phrase = "urgent", action = "Flashlight")
+        val rendered = renderRuleCardSentence(flashlight)
+
+        assertTrue(rendered.contains("then flashlight"))
+        assertTrue(rendered.contains("from Messages that contains"))
+        assertTrue(rendered.contains("\"urgent\""))
+        assertEquals(4, rendered.lines().size)
+    }
+
+    @Test
+    fun `history filtering honours both the query and the segmented filter`() {
+        val records = listOf(
+            HistoryRecord(id = 1L, app = "Messages", title = "Code 123", body = "verification", triggeredRule = true),
+            HistoryRecord(id = 2L, app = "Calendar", title = "Standup", body = "meeting", dismissed = true),
+        )
+
+        assertEquals(2, filterHistory(records, "", "All").size)
+        assertEquals(listOf(1L), filterHistory(records, "verification", "All").map { it.id })
+        assertEquals(listOf(1L), filterHistory(records, "", "Rule-triggered").map { it.id })
+        assertEquals(listOf(2L), filterHistory(records, "", "Dismissed").map { it.id })
+        assertEquals(emptyList<Long>(), filterHistory(records, "nothing here", "All").map { it.id })
+    }
+
+    @Test
     fun `validation reports the audited copy for a missing action`() {
         assertEquals(MISSING_FIELD_MESSAGE, validateRule(SignalRule(action = "nothing")))
         assertNull(validateRule(SignalRule(action = "Mute")))

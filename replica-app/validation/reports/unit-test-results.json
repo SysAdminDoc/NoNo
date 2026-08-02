@@ -1,8 +1,8 @@
 {
     "suite":  "unit",
     "source":  "C:\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
-    "generated_at":  "2026-08-01T20:41:33-04:00",
-    "tests":  35,
+    "generated_at":  "2026-08-01T20:46:05-04:00",
+    "tests":  37,
     "failures":  0,
     "errors":  0,
     "skipped":  0,
