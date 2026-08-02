@@ -1,0 +1,11 @@
+{
+    "suite":  "unit",
+    "source":  "C:\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
+    "generated_at":  "2026-08-01T20:09:26-04:00",
+    "tests":  4,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "suite_files":  1,
+    "status":  "PASS"
+}

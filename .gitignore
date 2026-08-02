@@ -9,4 +9,15 @@ local.properties
 .DS_Store
 Thumbs.db
 *.swp
+.kotlin/
+
+# Working notes and agent scaffolding. README.md and CHANGELOG.md are tracked;
+# every other markdown file at the root is local-only.
+/CLAUDE.md
+/AGENTS.md
+/RESEARCH.md
+/ROADMAP.md
+/Roadmap_Blocked.md
+/CODEX_CHANGELOG.md
+.claude/
 

@@ -56,3 +56,67 @@ function Ensure-Directory {
     param([Parameter(Mandatory = $true)][string]$Path)
     if (-not (Test-Path -LiteralPath $Path)) { New-Item -ItemType Directory -Path $Path -Force | Out-Null }
 }
+
+# --- Machine-readable test evidence -----------------------------------------
+# Traceability status must be derived from recorded results, never asserted.
+# Runner scripts convert JUnit XML into a durable summary under
+# validation\reports; finalize-documentation.ps1 reads only those summaries.
+
+function Get-JUnitSummary {
+    param(
+        [Parameter(Mandatory = $true)][string]$ResultsDirectory,
+        [Parameter(Mandatory = $true)][string]$Suite
+    )
+    $summary = [ordered]@{
+        suite         = $Suite
+        source        = $ResultsDirectory
+        generated_at  = (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssK')
+        tests         = 0
+        failures      = 0
+        errors        = 0
+        skipped       = 0
+        suite_files   = 0
+        status        = 'NOT_RUN'
+    }
+    if (-not (Test-Path -LiteralPath $ResultsDirectory)) { return $summary }
+    $files = @(Get-ChildItem -LiteralPath $ResultsDirectory -Filter 'TEST-*.xml' -Recurse -ErrorAction SilentlyContinue)
+    if ($files.Count -eq 0) { return $summary }
+    foreach ($file in $files) {
+        $xml = [xml](Get-Content -LiteralPath $file.FullName -Raw)
+        foreach ($node in @($xml.SelectNodes('//testsuite'))) {
+            $summary.tests += [int]$node.tests
+            $summary.failures += [int]$node.failures
+            $summary.errors += [int]$node.errors
+            if ($node.HasAttribute('skipped')) { $summary.skipped += [int]$node.skipped }
+        }
+    }
+    $summary.suite_files = $files.Count
+    if ($summary.tests -eq 0) { $summary.status = 'NOT_RUN' }
+    elseif (($summary.failures + $summary.errors) -gt 0) { $summary.status = 'FAIL' }
+    else { $summary.status = 'PASS' }
+    return $summary
+}
+
+function Save-TestSummary {
+    param(
+        [Parameter(Mandatory = $true)]$Summary,
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+    Ensure-Directory (Split-Path -Parent $Path)
+    $json = $Summary | ConvertTo-Json -Depth 4
+    [System.IO.File]::WriteAllText($Path, $json, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host "Recorded $($Summary.suite) evidence: $($Summary.status) ($($Summary.tests) tests) -> $Path"
+}
+
+function Get-TestSummaryStatus {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return 'NOT_RUN' }
+    try {
+        $summary = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    } catch {
+        return 'NOT_RUN'
+    }
+    if ($null -eq $summary -or -not ($summary.PSObject.Properties.Name -contains 'status')) { return 'NOT_RUN' }
+    if ([string]::IsNullOrWhiteSpace([string]$summary.status)) { return 'NOT_RUN' }
+    return [string]$summary.status
+}
