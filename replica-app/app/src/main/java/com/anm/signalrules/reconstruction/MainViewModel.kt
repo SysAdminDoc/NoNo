@@ -41,6 +41,7 @@ import com.anm.signalrules.reconstruction.model.UNSAVED_RULE_ID
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.defaultSettings
 import com.anm.signalrules.reconstruction.runtime.ListenerHealth
+import com.anm.signalrules.reconstruction.runtime.CaptureGate
 import com.anm.signalrules.reconstruction.runtime.HistoryRetentionSettings
 import com.anm.signalrules.reconstruction.runtime.retentionCutoffEpochMillis
 import com.anm.signalrules.reconstruction.runtime.SignalNotificationListener
@@ -137,6 +138,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 transientMessage = if (recoveredFromCorruption) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
+        }
+        viewModelScope.launch {
+            CaptureGate.load(application)
+            CaptureGate.paused.collect { paused ->
+                _state.value = _state.value.copy(capturePaused = paused)
+            }
         }
         viewModelScope.launch {
             historyDatabase.notificationDao().observeIngestionDiagnostics().collect { diagnostics ->
@@ -297,6 +304,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setHistoryGroupSummaryOnly(enabled: Boolean) {
         _state.value = _state.value.copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
+    }
+    fun setCapturePaused(paused: Boolean) {
+        CaptureGate.setPaused(getApplication(), paused)
     }
     fun beginExport() {
         _state.value = _state.value.copy(overlay = Overlay.TRANSFER_EXPORT_PASSPHRASE, transientMessage = null)

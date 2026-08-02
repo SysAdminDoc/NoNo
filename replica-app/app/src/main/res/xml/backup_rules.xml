@@ -7,4 +7,5 @@
     <exclude domain="file" path="datastore" />
     <exclude domain="database" path="signal_rules_history.db" />
     <exclude domain="sharedpref" path="runtime_history.xml" />
+    <exclude domain="sharedpref" path="capture_gate.xml" />
 </full-backup-content>

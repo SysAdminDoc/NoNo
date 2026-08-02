@@ -37,6 +37,7 @@ class SignalNotificationListener : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         acceptingCallbacks.set(true)
+        CaptureGate.load(applicationContext)
         database = SignalDatabase.create(applicationContext)
         ingestor = NotificationIngestor(serviceScope) { notification ->
             database.notificationDao().insertAndPrune(
@@ -85,6 +86,7 @@ class SignalNotificationListener : NotificationListenerService() {
         if (!acceptingCallbacks.get()) return
         val notification = sbn ?: return
         if (notification.packageName == packageName) return
+        if (CaptureGate.isPaused()) return
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
         // all Room I/O is performed by the bounded worker.
         val sanitized = sanitizeNotification(notification)

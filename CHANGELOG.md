@@ -55,6 +55,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Connected encrypted rule transfer to Android's Storage Access Framework with passphrase prompts,
   import preview, keep-or-replace conflict resolution, cancellation/error recovery, and explicit
   exclusion of notification history.
+- Added a Quick Settings tile and in-app status for pausing metadata capture without revoking
+  listener access; the persisted gate ignores callbacks before sanitization and restores on restart.
 
 ## [1.1.0] - 2026-08-01
 

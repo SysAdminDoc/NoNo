@@ -198,6 +198,7 @@ data class UiState(
     val transferExportRequest: Int = 0,
     val transferAdditions: Int = 0,
     val transferConflicts: Int = 0,
+    val capturePaused: Boolean = false,
     val historyActivityTab: String = "Rules",
     val selectedHistoryId: Long? = null,
     val draft: SignalRule = SignalRule(name = "New rule"),

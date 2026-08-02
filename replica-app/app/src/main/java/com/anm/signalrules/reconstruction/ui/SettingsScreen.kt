@@ -74,6 +74,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { PersistentSwitchRow(state, model, "Adjust silent ringer mode for calls", "Temporarily change the ringer when an unsilence rule runs.", unavailable = NO_ACTION_ENGINE) }
 
         item { SectionLabel("History") }
+        item { PreferenceRow("Notification capture", "Keep listener access enabled but ignore incoming notifications while paused.", if (state.capturePaused) "Paused" else "Active", onClick = { model.setCapturePaused(!state.capturePaused) }) }
         item { PreferenceRow("Notification history", "Choose what content is retained locally.", state.settings["Notification history"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) }) }
         item { PreferenceRow("Keep history for", "Older entries are removed automatically.", state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_RETENTION) }) }
 
