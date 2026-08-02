@@ -94,9 +94,9 @@ abstract class SignalDatabase : RoomDatabase() {
     companion object {
         private const val DATABASE_NAME = "signal_rules_history.db"
         val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE notification_history ADD COLUMN groupKey TEXT")
-                database.execSQL("ALTER TABLE notification_history ADD COLUMN isGroupSummary INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN groupKey TEXT")
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN isGroupSummary INTEGER NOT NULL DEFAULT 0")
             }
         }
 

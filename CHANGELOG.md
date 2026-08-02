@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.2.0] - 2026-08-02
 
 ### Added
 
@@ -23,6 +23,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   create-on-first-write contract and removing false corruption/race failures from the local suite.
 - Preserved Android notification group keys and summary provenance in metadata history, added a
   Room migration, and made group summaries ineligible for future duplicate rule evaluation.
+- Made portable transfer encoding API-24-safe by using Kotlin's platform-independent Base64
+  implementation instead of the API-26-only Java encoder.
 
 ## [1.1.0] - 2026-08-01
 

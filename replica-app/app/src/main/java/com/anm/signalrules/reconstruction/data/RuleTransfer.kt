@@ -3,7 +3,8 @@ package com.anm.signalrules.reconstruction.data
 import com.anm.signalrules.reconstruction.model.SignalRule
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
-import java.util.Base64
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
@@ -60,7 +61,7 @@ object RuleTransfer {
     fun exportRules(rules: List<SignalRule>, passphrase: CharArray? = null): String {
         val rulePayload = encodeRules(rules).toByteArray(StandardCharsets.UTF_8)
         val file = if (passphrase == null) {
-            PortableRuleFile(encrypted = false, payload = Base64.getEncoder().encodeToString(rulePayload))
+            PortableRuleFile(encrypted = false, payload = encodeBase64(rulePayload))
         } else {
             require(passphrase.isNotEmpty()) { "passphrase must not be empty" }
             val salt = ByteArray(SALT_BYTES).also(secureRandom::nextBytes)
@@ -72,9 +73,9 @@ object RuleTransfer {
                 .getOrThrow()
             PortableRuleFile(
                 encrypted = true,
-                payload = Base64.getEncoder().encodeToString(encrypted),
-                salt = Base64.getEncoder().encodeToString(salt),
-                iv = Base64.getEncoder().encodeToString(iv),
+                payload = encodeBase64(encrypted),
+                salt = encodeBase64(salt),
+                iv = encodeBase64(iv),
             )
         }
         return transferJson.encodeToString(PortableRuleFile.serializer(), file)
@@ -93,10 +94,10 @@ object RuleTransfer {
         if (file.encrypted && passphrase == null) return RuleImportResult.NeedsPassphrase
 
         val bytes = runCatching {
-            val payload = Base64.getDecoder().decode(file.payload)
+            val payload = decodeBase64(file.payload)
             if (!file.encrypted) return@runCatching payload
-            val salt = Base64.getDecoder().decode(file.salt ?: return@runCatching null)
-            val iv = Base64.getDecoder().decode(file.iv ?: return@runCatching null)
+            val salt = decodeBase64(file.salt ?: return@runCatching null)
+            val iv = decodeBase64(file.iv ?: return@runCatching null)
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, deriveKey(passphrase!!, salt), GCMParameterSpec(128, iv))
             cipher.doFinal(payload)
@@ -149,3 +150,9 @@ object RuleTransfer {
         }
     }
 }
+
+@OptIn(ExperimentalEncodingApi::class)
+private fun encodeBase64(bytes: ByteArray): String = Base64.Default.encode(bytes)
+
+@OptIn(ExperimentalEncodingApi::class)
+private fun decodeBase64(value: String): ByteArray = Base64.Default.decode(value)
