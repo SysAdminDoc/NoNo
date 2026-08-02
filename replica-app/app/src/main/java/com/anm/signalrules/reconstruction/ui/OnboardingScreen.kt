@@ -52,7 +52,11 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
         model.refreshCapabilities()
     }
     val lowRam = (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager)?.isLowRamDevice == true
-    val managedProfile = (context.getSystemService(UserManager::class.java))?.isManagedProfile == true
+    val managedProfile = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        (context.getSystemService(UserManager::class.java))?.isManagedProfile == true
+    } else {
+        false
+    }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
         Spacer(Modifier.height(44.dp))

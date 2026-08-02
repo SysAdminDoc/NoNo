@@ -104,7 +104,25 @@ data class HistoryRecord(
     val time: String = "Now",
     val dismissed: Boolean = false,
     val triggeredRule: Boolean = false,
+    val contentState: NotificationContentState = NotificationContentState.NOT_STORED,
+    val postedAtEpochMillis: Long = 0L,
+    val notificationKey: String = "",
 )
+
+/** Provenance of notification content exposed to the app. */
+enum class NotificationContentState {
+    /** The platform supplied content, but this build intentionally does not persist it. */
+    AVAILABLE,
+
+    /** Android or the device OEM replaced sensitive content before it reached the listener. */
+    HIDDEN_BY_SYSTEM,
+
+    /** No content was supplied, without enough evidence to attribute that to Android redaction. */
+    NOT_AVAILABLE,
+
+    /** A metadata-only record created by this build after safe ingestion. */
+    NOT_STORED,
+}
 
 data class UiState(
     val route: Route = Route.ONBOARDING,
@@ -134,7 +152,7 @@ data class UiState(
 val defaultSettings = mapOf(
     "Mute mode" to "Mute all sounds",
     "Mute importance" to "All notifications",
-    "Notification history" to "Store notification content",
+    "Notification history" to "Store notification metadata",
     "History retention" to "30 days",
     "Theme" to "Dark",
     "Language" to "System default",

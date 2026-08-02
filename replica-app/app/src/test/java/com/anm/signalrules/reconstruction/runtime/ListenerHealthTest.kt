@@ -46,4 +46,15 @@ class ListenerHealthTest {
         assertEquals(2_500L, ListenerHealth.lastEventAt.value)
         assertEquals(2L, ListenerHealth.eventCount.value)
     }
+
+    @Test
+    fun `ingestion diagnostics are published and reset`() {
+        ListenerHealth.updateIngestionMetrics(IngestionMetrics(queued = 2, persisted = 4, dropped = 1, failed = 1))
+
+        assertEquals(1L, ListenerHealth.ingestionMetrics.value.dropped)
+        assertEquals(1L, ListenerHealth.ingestionMetrics.value.failed)
+
+        ListenerHealth.reset()
+        assertEquals(IngestionMetrics(), ListenerHealth.ingestionMetrics.value)
+    }
 }

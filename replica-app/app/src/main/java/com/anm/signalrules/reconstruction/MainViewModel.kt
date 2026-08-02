@@ -19,6 +19,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.anm.signalrules.reconstruction.audit.auditStateFor
 import com.anm.signalrules.reconstruction.data.SignalPreferences
+import com.anm.signalrules.reconstruction.data.SignalDatabase
+import com.anm.signalrules.reconstruction.data.toHistoryRecord
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
 import com.anm.signalrules.reconstruction.model.HistoryRecord
@@ -35,12 +37,14 @@ import com.anm.signalrules.reconstruction.model.UNSAVED_RULE_ID
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.defaultSettings
 import com.anm.signalrules.reconstruction.runtime.ListenerHealth
+import com.anm.signalrules.reconstruction.runtime.HistoryRetentionSettings
 import com.anm.signalrules.reconstruction.runtime.SignalNotificationListener
 import com.anm.signalrules.reconstruction.model.validateRule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -66,6 +70,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         },
         onCorruption = { recoveredFromCorruption = true },
     )
+    private val historyDatabase = SignalDatabase.create(application)
 
     private object Keys {
         val Onboarding = booleanPreferencesKey("onboarding_complete")
@@ -105,6 +110,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             val rule = decodeRules(values[Keys.Rules]) ?: listOfNotNull(legacyRule)
             val settings = defaultSettings.mapValues { (label, default) -> values[settingKey(label)] ?: default }
+            HistoryRetentionSettings.set(settings["History retention"])
             _state.value = _state.value.copy(
                 route = if (values[Keys.Onboarding] == true) Route.ROOT else Route.ONBOARDING,
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
@@ -113,6 +119,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 transientMessage = if (recoveredFromCorruption) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
+        }
+        viewModelScope.launch {
+            historyDatabase.notificationDao().observeRecent().collect { records ->
+                _state.value = _state.value.copy(history = records.map { it.toHistoryRecord() })
+            }
         }
     }
 
@@ -341,6 +352,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setSetting(label: String, value: String) {
+        if (label == "History retention") HistoryRetentionSettings.set(value)
         _state.value = _state.value.copy(settings = _state.value.settings + (label to value), overlay = Overlay.NONE)
         editPreferences { it[settingKey(label)] = value }
     }
@@ -374,5 +386,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val resolved = auditStateFor(base, id) ?: return
         auditOverride = id
         _state.value = resolved
+    }
+
+    override fun onCleared() {
+        historyDatabase.close()
+        super.onCleared()
     }
 }

@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added Android 15 sensitive-notification provenance, preventing system redaction placeholders
+  from entering future rule matching and marking history as content hidden by the system.
+- Added bounded listener ingestion, Room-backed metadata history, transactional retention pruning,
+  drop/failure diagnostics, and 30-day/3-month/6-month boundary tests. Companion-device listener
+  exemptions remain intentionally out of scope for this reconstruction.
+
 ## [1.1.0] - 2026-08-01
 
 ### Fixed

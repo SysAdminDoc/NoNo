@@ -47,12 +47,19 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val connection by ListenerHealth.connection.collectAsState()
     val lastEventAt by ListenerHealth.lastEventAt.collectAsState()
+    val ingestionMetrics by ListenerHealth.ingestionMetrics.collectAsState()
 
-    val problem = !state.listenerAccessGranted || connection == ListenerHealth.Connection.DISCONNECTED
+    val problem = !state.listenerAccessGranted ||
+        connection == ListenerHealth.Connection.DISCONNECTED ||
+        ingestionMetrics.dropped > 0L ||
+        ingestionMetrics.failed > 0L
     if (!problem) return
 
     val detail = if (!state.listenerAccessGranted) {
         "Notification access is off, so no rule can run. Tap to turn it back on."
+    } else if (ingestionMetrics.dropped > 0L || ingestionMetrics.failed > 0L) {
+        "Listener queue diagnostics: ${ingestionMetrics.dropped} dropped, ${ingestionMetrics.failed} failed. " +
+            "Recent metadata may be incomplete; tap to review notification access."
     } else {
         val age = lastEventAt?.let { describeAge(SystemClock.elapsedRealtime() - it) }
         val seen = if (age == null) "No notifications seen yet." else "Last notification seen $age."

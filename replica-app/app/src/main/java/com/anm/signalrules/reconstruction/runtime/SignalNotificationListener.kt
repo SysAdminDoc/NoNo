@@ -5,6 +5,13 @@ import android.content.Context
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.anm.signalrules.reconstruction.data.SignalDatabase
+import com.anm.signalrules.reconstruction.data.toEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Least-privilege reconstruction surface. It records only sanitized counters and package names;
@@ -17,6 +24,27 @@ import android.service.notification.StatusBarNotification
  * outside the connected window, so it is the recovery path used here.
  */
 class SignalNotificationListener : NotificationListenerService() {
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private lateinit var database: SignalDatabase
+    private lateinit var ingestor: NotificationIngestor<SanitizedNotification>
+
+    override fun onCreate() {
+        super.onCreate()
+        database = SignalDatabase.create(applicationContext)
+        ingestor = NotificationIngestor(serviceScope) { notification ->
+            database.notificationDao().insertAndPrune(
+                notification.toEntity(),
+                retentionCutoffEpochMillis(
+                    HistoryRetentionSettings.get(),
+                    System.currentTimeMillis(),
+                ),
+            )
+        }
+        serviceScope.launch {
+            ingestor.metrics.collect(ListenerHealth::updateIngestionMetrics)
+        }
+    }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
@@ -34,10 +62,19 @@ class SignalNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         val notification = sbn ?: return
         if (notification.packageName == packageName) return
-        // In-memory only. This callback runs on the main thread from API 24 onward, so the
-        // previous synchronous SharedPreferences write ran twice per notification from every
-        // app on the device, into a file nothing ever read.
+        // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
+        // all Room I/O is performed by the bounded worker.
+        ingestor.offer(sanitizeNotification(notification))
         ListenerHealth.recordEvent(SystemClock.elapsedRealtime())
+    }
+
+    override fun onDestroy() {
+        if (::ingestor.isInitialized && ::database.isInitialized) serviceScope.launch {
+            ingestor.close()
+            database.close()
+            serviceScope.cancel()
+        }
+        super.onDestroy()
     }
 
     companion object {

@@ -27,6 +27,9 @@ object ListenerHealth {
     private val _eventCount = MutableStateFlow(0L)
     val eventCount: StateFlow<Long> = _eventCount.asStateFlow()
 
+    private val _ingestionMetrics = MutableStateFlow(IngestionMetrics())
+    val ingestionMetrics: StateFlow<IngestionMetrics> = _ingestionMetrics.asStateFlow()
+
     fun onConnected() {
         _connection.value = Connection.CONNECTED
     }
@@ -41,6 +44,10 @@ object ListenerHealth {
         _eventCount.value = _eventCount.value + 1
     }
 
+    fun updateIngestionMetrics(metrics: IngestionMetrics) {
+        _ingestionMetrics.value = metrics
+    }
+
     /** Called when the OS reports access was revoked while the app was not running. */
     fun onAccessRevoked() {
         _connection.value = Connection.DISCONNECTED
@@ -50,5 +57,6 @@ object ListenerHealth {
         _connection.value = Connection.UNKNOWN
         _lastEventAt.value = null
         _eventCount.value = 0L
+        _ingestionMetrics.value = IngestionMetrics()
     }
 }

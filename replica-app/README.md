@@ -76,7 +76,13 @@ and the UI now says so at each control rather than leaving the reader to infer i
   its result.
 - **Only the dark theme exists**, and the app ships no translated resources, so the Theme and
   Language rows are marked unavailable.
-- **History is never populated** outside the debug capture harness, because nothing writes to it.
+- **History is populated only with package/key/time metadata** by the listener; debug captures
+  remain available for deterministic audit states, and notification content is never persisted.
+
+The runtime boundary now records only package/key/time metadata in a bounded Room queue. Android
+15 sensitive-notification redaction is treated as provenance (`content hidden by system`) and is
+never matchable as real text. Companion-device listener exemptions are intentionally out of scope
+for this local reconstruction; no special permission or companion association is requested.
 
 Settings that would depend on the absent action engine are shown disabled with the reason
 inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is
