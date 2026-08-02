@@ -25,6 +25,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Room migration, and made group summaries ineligible for future duplicate rule evaluation.
 - Made portable transfer encoding API-24-safe by using Kotlin's platform-independent Base64
   implementation instead of the API-26-only Java encoder.
+- Rules now persist stable Android package IDs separately from display labels, migrate known
+  legacy app selections, and pass package identity through the dry-run matcher.
 
 ## [1.1.0] - 2026-08-01
 

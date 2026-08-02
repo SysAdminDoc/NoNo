@@ -16,6 +16,7 @@ data class NotificationPayload(
     val text: CharSequence?,
     val appLabel: CharSequence?,
     val systemMarkedSensitive: Boolean = false,
+    val packageName: String? = null,
 )
 
 data class SanitizedNotification(
@@ -99,10 +100,15 @@ private val REDACTION_MARKERS = setOf(
 )
 
 /** Testable bridge for a synthetic Android Bundle without exposing platform placeholder text. */
-fun notificationPayloadFromExtras(extras: Bundle, appLabel: CharSequence? = null): NotificationPayload =
+fun notificationPayloadFromExtras(
+    extras: Bundle,
+    appLabel: CharSequence? = null,
+    packageName: String? = null,
+): NotificationPayload =
     NotificationPayload(
         title = extras.getCharSequence(Notification.EXTRA_TITLE),
         text = extras.getCharSequence(Notification.EXTRA_TEXT),
         appLabel = appLabel,
         systemMarkedSensitive = extras.getBoolean(ANDROID_SENSITIVE_CONTENT_EXTRA, false),
+        packageName = packageName,
     )

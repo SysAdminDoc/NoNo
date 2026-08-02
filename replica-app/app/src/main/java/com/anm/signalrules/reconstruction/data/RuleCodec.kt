@@ -3,6 +3,8 @@ package com.anm.signalrules.reconstruction.data
 import com.anm.signalrules.reconstruction.model.CURRENT_RULE_STORE_VERSION
 import com.anm.signalrules.reconstruction.model.RuleStore
 import com.anm.signalrules.reconstruction.model.SignalRule
+import com.anm.signalrules.reconstruction.model.ANY_APP_LABEL
+import com.anm.signalrules.reconstruction.model.appOptionForLabel
 import kotlinx.serialization.json.Json
 
 /**
@@ -18,7 +20,7 @@ val ruleJson: Json = Json {
 }
 
 fun encodeRules(rules: List<SignalRule>): String =
-    ruleJson.encodeToString(RuleStore.serializer(), RuleStore(rules = rules))
+    ruleJson.encodeToString(RuleStore.serializer(), RuleStore(rules = normalizeRules(rules)))
 
 /**
  * @return the stored rules, or null when there is nothing readable to restore.
@@ -44,16 +46,29 @@ fun decodeRules(encoded: String?): List<SignalRule>? {
 private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule> =
     when (version) {
         1 -> rules
-            .map { rule ->
-                rule.copy(
-                    name = rule.name.ifBlank { "Imported rule" },
-                    app = rule.app.ifBlank { "any app" },
-                    phrase = rule.phrase.ifBlank { "anything" },
-                    extras = rule.extras.distinct(),
-                    enabledFor = rule.enabledFor?.ifBlank { null },
-                )
-            }
+            .map(::normalizeRule)
             .distinctBy { it.id }
-        CURRENT_RULE_STORE_VERSION -> rules.distinctBy { it.id }
+        2, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
         else -> emptyList()
     }
+
+private fun normalizeRules(rules: List<SignalRule>): List<SignalRule> =
+    rules.map(::normalizeRule).distinctBy { it.id }
+
+/** Adds package identity for labels emitted by the app selector without guessing unknown apps. */
+private fun normalizeRule(rule: SignalRule): SignalRule {
+    val normalizedApp = rule.app.ifBlank { ANY_APP_LABEL }
+    val packageName = when {
+        normalizedApp.equals(ANY_APP_LABEL, ignoreCase = true) -> null
+        !rule.appPackageName.isNullOrBlank() -> rule.appPackageName
+        else -> appOptionForLabel(normalizedApp)?.packageName
+    }
+    return rule.copy(
+        name = rule.name.ifBlank { "Imported rule" },
+        app = normalizedApp,
+        appPackageName = packageName,
+        phrase = rule.phrase.ifBlank { "anything" },
+        extras = rule.extras.distinct(),
+        enabledFor = rule.enabledFor?.ifBlank { null },
+    )
+}

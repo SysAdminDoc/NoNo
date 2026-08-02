@@ -234,6 +234,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 id = UNSAVED_RULE_ID,
                 name = "Rule from ${record.app}",
                 app = record.app,
+                appPackageName = derived.appPackageName,
                 phrase = derived.phrase,
             ),
             phraseDraft = if (derived.phrase == "anything") "" else derived.phrase,

@@ -8,7 +8,14 @@ import org.junit.Test
 class RuleCodecTest {
 
     private val rules = listOf(
-        SignalRule(id = 1L, name = "First", app = "Messages", phrase = "urgent", action = "Mute"),
+        SignalRule(
+            id = 1L,
+            name = "First",
+            app = "Messages",
+            appPackageName = "com.google.android.apps.messaging",
+            phrase = "urgent",
+            action = "Mute",
+        ),
         SignalRule(id = 2L, name = "Second", enabled = false, priority = "High", folder = "Work"),
     )
 
@@ -78,5 +85,25 @@ class RuleCodecTest {
         assertEquals("anything", decoded?.first()?.phrase)
         assertEquals(listOf("Image"), decoded?.first()?.extras)
         assertEquals(null, decoded?.first()?.enabledFor)
+    }
+
+    @Test
+    fun `v2 label selections migrate to stable package identity`() {
+        val decoded = decodeRules(
+            """{"version":2,"rules":[{"id":8,"app":"Messages","phrase":"urgent"}]}""",
+        )
+
+        assertEquals("Messages", decoded?.single()?.app)
+        assertEquals("com.google.android.apps.messaging", decoded?.single()?.appPackageName)
+    }
+
+    @Test
+    fun `unknown legacy labels remain readable and explicitly unresolved`() {
+        val decoded = decodeRules(
+            """{"version":2,"rules":[{"id":9,"app":"Unknown app"}]}""",
+        )
+
+        assertEquals("Unknown app", decoded?.single()?.app)
+        assertEquals(null, decoded?.single()?.appPackageName)
     }
 }

@@ -115,6 +115,11 @@ private fun evaluateRule(
 
 private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean {
     if (rule.app.isBlank() || rule.app.equals("any app", ignoreCase = true)) return true
+    rule.appPackageName?.takeIf(String::isNotBlank)?.let { packageName ->
+        return payload.packageName?.equals(packageName, ignoreCase = true) == true
+    }
+    // Legacy rules may have only a display label. Keep them readable and testable while the
+    // codec offers a repair path for known labels; real listener payloads should use packageName.
     return payload.appLabel?.toString()?.equals(rule.app, ignoreCase = true) == true
 }
 

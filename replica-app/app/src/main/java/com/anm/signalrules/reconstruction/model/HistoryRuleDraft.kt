@@ -4,6 +4,7 @@ data class HistoryRuleDraft(
     val app: String,
     val phrase: String,
     val provenanceMessage: String,
+    val appPackageName: String? = null,
 )
 
 /**
@@ -31,7 +32,12 @@ fun deriveRuleDraft(record: HistoryRecord): HistoryRuleDraft {
     } else {
         "Phrase copied from the captured notification title."
     }
-    return HistoryRuleDraft(app = record.app, phrase = phrase, provenanceMessage = provenance)
+    return HistoryRuleDraft(
+        app = record.app,
+        phrase = phrase,
+        provenanceMessage = provenance,
+        appPackageName = record.appPackageName ?: record.app.takeIf { it.contains('.') },
+    )
 }
 
 private fun String.isMeaningfulNotificationText(): Boolean =

@@ -48,6 +48,7 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
     return HistoryRecord(
         id = id,
         app = packageName,
+        appPackageName = packageName,
         title = when (state) {
             NotificationContentState.HIDDEN_BY_SYSTEM -> "Content hidden by system"
             else -> "Notification received"

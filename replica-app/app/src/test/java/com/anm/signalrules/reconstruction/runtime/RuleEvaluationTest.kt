@@ -12,6 +12,7 @@ class RuleEvaluationTest {
         title = "Build failed",
         text = "The main branch is red",
         appLabel = "CI",
+        packageName = "com.example.ci",
     )
 
     @Test
@@ -19,7 +20,13 @@ class RuleEvaluationTest {
         val trace = evaluateRules(
             rules = listOf(
                 SignalRule(id = 1, app = "any app", phrase = "anything", action = "Mute"),
-                SignalRule(id = 2, app = "CI", phrase = "main branch", action = "Alarm"),
+                SignalRule(
+                    id = 2,
+                    app = "CI",
+                    appPackageName = "com.example.ci",
+                    phrase = "main branch",
+                    action = "Alarm",
+                ),
             ),
             payload = payload,
             sdkInt = 35,
@@ -38,7 +45,14 @@ class RuleEvaluationTest {
     fun `explicit priority wins over specificity and is exposed`() {
         val trace = evaluateRules(
             rules = listOf(
-                SignalRule(id = 1, app = "CI", phrase = "main branch", priority = "Low", action = "Alarm"),
+                SignalRule(
+                    id = 1,
+                    app = "CI",
+                    appPackageName = "com.example.ci",
+                    phrase = "main branch",
+                    priority = "Low",
+                    action = "Alarm",
+                ),
                 SignalRule(id = 2, app = "any app", phrase = "anything", priority = "Highest", action = "Mute"),
             ),
             payload = payload,

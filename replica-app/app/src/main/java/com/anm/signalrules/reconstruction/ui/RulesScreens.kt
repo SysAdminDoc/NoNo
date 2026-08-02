@@ -68,6 +68,7 @@ import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.SignalRule
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.actionCatalog
+import com.anm.signalrules.reconstruction.model.appOptions
 import com.anm.signalrules.reconstruction.model.renderRuleCardSentence
 import kotlinx.coroutines.delay
 
@@ -309,8 +310,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
             ),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp).focusRequester(focusRequester),
         )
-        val apps = listOf("Signal Rules", "Messages", "Phone", "Calendar", "Email", "Android Auto", "Bluetooth", "System UI", "Clock", "Files")
-            .filter { it.contains(state.appSearch, ignoreCase = true) }
+        val apps = appOptions.filter { it.label.contains(state.appSearch, ignoreCase = true) }
         LazyColumn(Modifier.weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp)) {
             items((apps.size + 1) / 2) { rowIndex ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -320,7 +320,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
                         val app = apps[index]
                         Column(
                             Modifier.weight(1f).height(104.dp).padding(bottom = 10.dp).background(SignalColors.Surface, RoundedCornerShape(16.dp)).clickable {
-                                model.updateDraft { it.copy(app = app) }
+                                model.updateDraft { it.copy(app = app.label, appPackageName = app.packageName) }
                                 model.navigate(Route.RULE_BUILDER)
                             }.padding(14.dp),
                             verticalArrangement = Arrangement.SpaceBetween,
@@ -328,7 +328,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
                             Box(Modifier.size(30.dp).background(actionColor(index), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
                                 Icon(Icons.Rounded.Notifications, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(18.dp))
                             }
-                            Text(app, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                            Text(app.label, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
                     }
                 }
@@ -337,7 +337,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
         SignalPrimaryButton(
             "Pick all apps",
             {
-                model.updateDraft { it.copy(app = "any app") }
+                model.updateDraft { it.copy(app = "any app", appPackageName = null) }
                 model.navigate(Route.RULE_BUILDER)
             },
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp),

@@ -46,6 +46,8 @@ data class SignalRule(
     val id: Long = 1L,
     val name: String = "Test rule",
     val app: String = "any app",
+    /** Stable package identity used for matching; [app] remains the display label. */
+    val appPackageName: String? = null,
     val phrase: String = "anything",
     val action: String = "nothing",
     val enabled: Boolean = true,
@@ -65,6 +67,29 @@ data class SignalRule(
  */
 const val DEFAULT_MATCH_TYPE = "contains"
 const val DEFAULT_FILTER_OPERATOR = "Contains any"
+const val ANY_APP_LABEL = "any app"
+
+data class AppOption(
+    val label: String,
+    val packageName: String,
+)
+
+/** The deterministic app choices used by the reconstruction's app selector. */
+val appOptions = listOf(
+    AppOption("Signal Rules", "com.anm.signalrules.reconstruction"),
+    AppOption("Messages", "com.google.android.apps.messaging"),
+    AppOption("Phone", "com.google.android.dialer"),
+    AppOption("Calendar", "com.google.android.calendar"),
+    AppOption("Email", "com.google.android.gm"),
+    AppOption("Android Auto", "com.google.android.projection.gearhead"),
+    AppOption("Bluetooth", "com.android.bluetooth"),
+    AppOption("System UI", "com.android.systemui"),
+    AppOption("Clock", "com.google.android.deskclock"),
+    AppOption("Files", "com.google.android.documentsui"),
+)
+
+fun appOptionForLabel(label: String): AppOption? =
+    appOptions.firstOrNull { it.label.equals(label.trim(), ignoreCase = true) }
 
 val matchTypeCatalog = listOf(
     "contains any of",
@@ -94,11 +119,12 @@ data class RuleStore(
     val rules: List<SignalRule> = emptyList(),
 )
 
-const val CURRENT_RULE_STORE_VERSION = 2
+const val CURRENT_RULE_STORE_VERSION = 3
 
 data class HistoryRecord(
     val id: Long = 1L,
     val app: String = "Shell",
+    val appPackageName: String? = null,
     val title: String = "Audit test notification",
     val body: String = "Sanitized local test record",
     val time: String = "Now",

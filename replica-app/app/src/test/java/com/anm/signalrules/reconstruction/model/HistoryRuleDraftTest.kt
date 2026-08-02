@@ -10,6 +10,7 @@ class HistoryRuleDraftTest {
         val draft = deriveRuleDraft(
             HistoryRecord(
                 app = "Messages",
+                appPackageName = "com.google.android.apps.messaging",
                 title = "Build failed",
                 body = "Details",
                 contentState = NotificationContentState.AVAILABLE,
@@ -17,6 +18,7 @@ class HistoryRuleDraftTest {
         )
 
         assertEquals("Messages", draft.app)
+        assertEquals("com.google.android.apps.messaging", draft.appPackageName)
         assertEquals("Build failed", draft.phrase)
         assertEquals("Phrase copied from the captured notification title.", draft.provenanceMessage)
     }
