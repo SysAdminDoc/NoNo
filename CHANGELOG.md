@@ -14,6 +14,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   exemptions remain intentionally out of scope for this reconstruction.
 - Added a reproducible-release gate that builds two clean checkouts with a pinned JDK, honors
   `SOURCE_DATE_EPOCH`, and compares the unsigned release APK hashes outside the repository.
+- Added a pure dry-run rule evaluator with redaction-aware condition traces, deterministic
+  specificity and priority conflict resolution, and an explicit not-executed action result.
 
 ## [1.1.0] - 2026-08-01
 
