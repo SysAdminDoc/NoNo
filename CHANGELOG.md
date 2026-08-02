@@ -50,6 +50,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   evaluator, schema versions, bounded history filters, and intentionally disabled live actions.
 - Added API 24/35/36 redaction fixtures covering available, unavailable, explicit-sensitive,
   marker, package-identity, and metadata-only dry-run behavior without payload logging.
+- Added checked-in Room schema fixtures for versions 1–4, an instrumented all-version migration
+  test, and v1–v3 RuleCodec golden fixtures covering normalization and unsupported versions.
 
 ## [1.1.0] - 2026-08-01
 

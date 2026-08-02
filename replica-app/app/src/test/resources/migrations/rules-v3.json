@@ -1,0 +1,1 @@
+{"version":3,"rules":[{"id":12,"name":"Stable package rule","app":"Messages","appPackageName":"com.google.android.apps.messaging","phrase":"urgent","action":"Mute","contentState":"ignored-by-older-build"}]}

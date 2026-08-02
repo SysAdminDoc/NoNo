@@ -173,7 +173,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 4, exportSchema = false)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 4, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 

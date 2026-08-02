@@ -1,0 +1,44 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "schema-v3-metadata-history",
+    "entities": [
+      {
+        "tableName": "notification_history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `notificationKey` TEXT NOT NULL, `packageName` TEXT NOT NULL, `postedAtEpochMillis` INTEGER NOT NULL, `contentState` TEXT NOT NULL, `groupKey` TEXT, `isGroupSummary` INTEGER NOT NULL)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "notificationKey", "columnName": "notificationKey", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "packageName", "columnName": "packageName", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "postedAtEpochMillis", "columnName": "postedAtEpochMillis", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "contentState", "columnName": "contentState", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "groupKey", "columnName": "groupKey", "affinity": "TEXT" },
+          { "fieldPath": "isGroupSummary", "columnName": "isGroupSummary", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_notification_history_notificationKey", "unique": true, "columnNames": ["notificationKey"], "orders": [], "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_notification_history_notificationKey` ON `${TABLE_NAME}` (`notificationKey`)" },
+          { "name": "index_notification_history_postedAtEpochMillis", "unique": false, "columnNames": ["postedAtEpochMillis"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_notification_history_postedAtEpochMillis` ON `${TABLE_NAME}` (`postedAtEpochMillis`)" }
+        ]
+      },
+      {
+        "tableName": "ingestion_diagnostics",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`singletonId` INTEGER NOT NULL, `persisted` INTEGER NOT NULL, `dropped` INTEGER NOT NULL, `failed` INTEGER NOT NULL, `lastFailureAtEpochMillis` INTEGER, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`singletonId`))",
+        "fields": [
+          { "fieldPath": "singletonId", "columnName": "singletonId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "persisted", "columnName": "persisted", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "dropped", "columnName": "dropped", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "failed", "columnName": "failed", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "lastFailureAtEpochMillis", "columnName": "lastFailureAtEpochMillis", "affinity": "INTEGER" },
+          { "fieldPath": "updatedAtEpochMillis", "columnName": "updatedAtEpochMillis", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["singletonId"] }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'schema-v3-metadata-history')"
+    ]
+  }
+}
