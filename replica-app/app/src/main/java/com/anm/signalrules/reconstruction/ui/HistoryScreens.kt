@@ -49,11 +49,11 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun HistoryScreen(state: UiState, model: MainViewModel) {
-    val searching = state.auditState.startsWith("014_") || state.auditState.startsWith("015_")
+    val searching = state.historySearchActive
     if (searching) {
         val focusRequester = remember { FocusRequester() }
         val keyboard = LocalSoftwareKeyboardController.current
-        LaunchedEffect(state.auditState) {
+        LaunchedEffect(searching) {
             repeat(3) {
                 delay(200)
                 focusRequester.requestFocus()
@@ -67,7 +67,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                 placeholder = { Text("Search history…") },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = SignalColors.Yellow) },
                 trailingIcon = {
-                    IconButton(onClick = { model.applyAuditState("013_history_empty") }) {
+                    IconButton(onClick = model::closeHistorySearch) {
                         Text("×", color = SignalColors.Secondary, fontSize = 30.sp, fontWeight = FontWeight.Bold)
                     }
                 },
@@ -85,7 +85,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
     }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().height(64.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { model.applyAuditState("014_history_search_empty") }) {
+            IconButton(onClick = model::openHistorySearch) {
                 Icon(Icons.Rounded.Search, contentDescription = "Search history", tint = SignalColors.Secondary)
             }
         }

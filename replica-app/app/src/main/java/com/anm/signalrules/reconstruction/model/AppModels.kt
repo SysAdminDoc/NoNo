@@ -84,15 +84,18 @@ data class UiState(
     val rules: List<SignalRule> = emptyList(),
     val history: List<HistoryRecord> = emptyList(),
     val historySearch: String = "",
+    val historySearchActive: Boolean = false,
     val historyFilter: String = "All",
     val historyActivityTab: String = "Rules",
     val draft: SignalRule = SignalRule(name = "New rule"),
     val selectedRuleId: Long? = null,
     val phraseDraft: String = "",
+    val phraseInputVisible: Boolean = false,
     val appSearch: String = "",
     val renameDraft: String = "",
     val folderDraft: String = "",
     val settings: Map<String, String> = defaultSettings,
+    val validationError: String? = null,
     val transientMessage: String? = null,
 )
 

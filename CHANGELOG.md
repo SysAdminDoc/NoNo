@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Notification history search and the phrase/extras/group condition selector work in release
+  builds. Both were gated on audit-capture id strings that only the debug-only QA override
+  could set, so the search icon and the condition chooser were inert in a shipping build
+  while the UI still offered them. They are now driven by real UI state
+  (`historySearchActive`, `phraseInputVisible`), and rule-builder validation is carried by a
+  `validationError` field instead of being inferred from a capture id and a snackbar message.
 - Rules are addressed by id and persisted as a list. Saving replaced the entire collection
   with the single edited rule, and toggle/rename/delete all operated on `rules.first()`
   regardless of which card was touched, so duplicating a rule and then toggling the copy
@@ -32,6 +38,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `scripts/finalize-documentation.ps1` no longer crashes on screen ids whose numeric
   prefix is not exactly three digits, and validates its required inputs before writing.
 
+### Changed
+
+- The audit-state capture harness moved into variant source sets. `app/src/debug` holds the
+  state table and the intent-extra reader; `app/src/release` links a no-op twin. The release
+  DEX no longer contains the `replica_state` extra or any capture id, so production behaviour
+  cannot depend on QA scaffolding.
+
 ### Added
 
 - `scripts/run-unit-tests.ps1` and `scripts/run-ui-tests.ps1` parse their JUnit XML output
@@ -40,6 +53,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   result is not a pass. These summaries are the evidence the traceability matrix reads.
 - `Get-JUnitSummary`, `Save-TestSummary`, and `Get-TestSummaryStatus` helpers in
   `scripts/Common.ps1`.
+- `AuditStatesTest` pins the debug capture harness, including that 033 resolves to the
+  condition chooser and 034/041 to the text input, so the source-set split cannot silently
+  break state reproduction.
 - `model/RuleOperations.kt` holds the rule-list algebra as pure functions, and
   `data/RuleCodec.kt` encodes the versioned store; a payload from a newer build, malformed
   JSON, or duplicate ids all degrade to a safe fallback instead of throwing.

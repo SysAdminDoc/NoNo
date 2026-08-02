@@ -14,6 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.anm.signalrules.reconstruction.audit.readAuditState
 import com.anm.signalrules.reconstruction.ui.SignalApp
 import com.anm.signalrules.reconstruction.ui.SignalTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,7 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(10, 11, 13)),
         )
-        requestedAuditState.value = intent.getStringExtra(EXTRA_REPLICA_STATE).orEmpty()
+        requestedAuditState.value = readAuditState(intent)
         setContent {
             SignalTheme {
                 val model: MainViewModel = viewModel()
@@ -52,10 +53,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        requestedAuditState.value = intent.getStringExtra(EXTRA_REPLICA_STATE).orEmpty()
-    }
-
-    companion object {
-        const val EXTRA_REPLICA_STATE = "replica_state"
+        requestedAuditState.value = readAuditState(intent)
     }
 }

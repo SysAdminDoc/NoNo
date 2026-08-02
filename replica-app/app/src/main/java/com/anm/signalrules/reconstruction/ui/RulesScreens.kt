@@ -164,7 +164,7 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
         SuggestionRulePreview(model)
         return
     }
-    val missing = state.auditState.startsWith("059_") || state.transientMessage?.startsWith("You have a missing field") == true
+    val missing = state.validationError != null
     LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 4.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -335,9 +335,9 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
 fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
-    val conditionOnly = state.auditState.startsWith("033_") || state.auditState.startsWith("036_") || state.auditState.startsWith("037_") || state.auditState.startsWith("038_")
-    val requestKeyboard = state.auditState.startsWith("041_") || state.auditState.startsWith("046_") || state.auditState.startsWith("047_") || state.auditState.startsWith("048_")
-    if (requestKeyboard) LaunchedEffect(state.auditState) {
+    val showPhraseInput = state.phraseInputVisible
+    val requestKeyboard = showPhraseInput
+    if (requestKeyboard) LaunchedEffect(requestKeyboard) {
         repeat(3) {
             delay(200)
             focusRequester.requestFocus()
@@ -350,7 +350,7 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
         Text("When notification", color = Color(0xFFB4B4B6), fontSize = 27.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
         Text("contains any of", color = SignalColors.Yellow, fontSize = 27.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
         Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 46.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ConditionChoice("Phrase", "Filter with a name, word or phrase", true, Modifier.weight(1f)) { }
+            ConditionChoice("Phrase", "Filter with a name, word or phrase", true, Modifier.weight(1f)) { model.showPhraseInput() }
             ConditionChoice("Extras", "Filter by images and more", true, Modifier.weight(1f)) { model.showOverlay(Overlay.CONDITION_EXTRAS) }
             ConditionChoice("Group", "For more complex filters", false, Modifier.weight(1f)) { model.navigate(Route.FILTER_GROUP) }
         }
@@ -361,8 +361,8 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
         }
     }
 
-    if (!conditionOnly) {
-        Dialog(onDismissRequest = { keyboard?.hide(); model.navigate(Route.RULE_BUILDER) }) {
+    if (showPhraseInput) {
+        Dialog(onDismissRequest = { keyboard?.hide(); model.hidePhraseInput() }) {
             Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
                 Text("Notification contains", color = SignalColors.Yellow, fontSize = 23.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
