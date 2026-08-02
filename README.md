@@ -1,5 +1,9 @@
 # Android Notification Manager clean-room project
 
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
+
 This repository contains two strictly separated deliverables:
 
 - `app-audit/` — the preserved black-box audit, reconstruction specification, and captured evidence.

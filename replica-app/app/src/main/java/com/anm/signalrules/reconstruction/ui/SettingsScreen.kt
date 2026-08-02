@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.anm.signalrules.reconstruction.BuildConfig
 import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
@@ -88,7 +89,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { PersistentSwitchRow(state, model, "Android 15+ icon workaround", "Use a compatibility path for notification icons.", unavailable = NO_ACTION_ENGINE) }
         item { PersistentSwitchRow(state, model, "Notification grouping workaround", "Use a compatibility path for grouped notifications.", unavailable = NO_ACTION_ENGINE) }
         item { PreferenceRow("Delete all rules", "Removes every rule on this device. This cannot be undone.", destructive = true, onClick = model::deleteAllRules) }
-        item { Text("Signal Rules reconstruction 1.0", color = SignalColors.Secondary, modifier = Modifier.fillMaxWidth().padding(24.dp)) }
+        item { Text("Signal Rules reconstruction ${BuildConfig.VERSION_NAME}", color = SignalColors.Secondary, modifier = Modifier.fillMaxWidth().padding(24.dp)) }
     }
 }
 
