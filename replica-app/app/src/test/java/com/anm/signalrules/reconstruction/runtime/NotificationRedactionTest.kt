@@ -53,6 +53,57 @@ class NotificationRedactionTest {
     }
 
     @Test
+    fun `redaction matrix remains conservative across supported API levels`() {
+        listOf(24, 35, 36).forEach { sdkInt ->
+            val ordinary = NotificationPayload("Build", "Tests passed", "CI", packageName = "com.example.ci")
+            assertEquals(NotificationContentState.AVAILABLE, classifyNotificationContent(ordinary, sdkInt))
+            assertEquals("Build Tests passed", matchableNotificationText(ordinary, sdkInt))
+
+            val empty = ordinary.copy(title = null, text = null)
+            assertEquals(NotificationContentState.NOT_AVAILABLE, classifyNotificationContent(empty, sdkInt))
+            assertNull(matchableNotificationText(empty, sdkInt))
+
+            val explicit = ordinary.copy(systemMarkedSensitive = true)
+            assertEquals(NotificationContentState.HIDDEN_BY_SYSTEM, classifyNotificationContent(explicit, sdkInt))
+            assertNull(matchableNotificationText(explicit, sdkInt))
+
+            val marker = ordinary.copy(text = "Sensitive notification content hidden")
+            val markerState = if (sdkInt >= 35) {
+                NotificationContentState.HIDDEN_BY_SYSTEM
+            } else {
+                NotificationContentState.AVAILABLE
+            }
+            assertEquals(markerState, classifyNotificationContent(marker, sdkInt))
+        }
+    }
+
+    @Test
+    fun `package identity remains separate from display labels in redaction traces`() {
+        val rule = com.anm.signalrules.reconstruction.model.SignalRule(
+            id = 9L,
+            app = "Messages",
+            appPackageName = "com.example.messages",
+            phrase = "verification",
+            action = "Mute",
+        )
+        val trace = evaluateRules(
+            rules = listOf(rule),
+            payload = NotificationPayload(
+                title = "Messages",
+                text = "verification",
+                appLabel = "Messages",
+                packageName = "com.example.other",
+            ),
+            sdkInt = 36,
+            traceId = "redaction-package",
+        )
+
+        assertEquals(NotificationContentState.AVAILABLE, trace.contentState)
+        assertEquals(listOf(EvaluationReason.APP_MISMATCH), trace.conditions.single().reasons)
+        assertEquals(null, trace.matchedRuleId)
+    }
+
+    @Test
     fun `sanitized records retain grouping metadata without retaining content`() {
         val notification = SanitizedNotification(
             notificationKey = "key",

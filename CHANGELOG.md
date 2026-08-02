@@ -48,6 +48,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   versions, dependency hash coverage, strict verification, and high-severity dependency advisories.
 - Reconciled the root and app READMEs with the metadata-only Room runtime, redaction-aware dry-run
   evaluator, schema versions, bounded history filters, and intentionally disabled live actions.
+- Added API 24/35/36 redaction fixtures covering available, unavailable, explicit-sensitive,
+  marker, package-identity, and metadata-only dry-run behavior without payload logging.
 
 ## [1.1.0] - 2026-08-01
 
