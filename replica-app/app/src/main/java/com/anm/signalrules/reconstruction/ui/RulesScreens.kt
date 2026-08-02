@@ -23,7 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.FlashlightOn
@@ -32,8 +32,8 @@ import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.rounded.VolumeOff
-import androidx.compose.material3.Divider
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -97,7 +97,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             ListenerHealthBanner(state)
             Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                SignalIconButton(Icons.Rounded.Search, "Search rules", onClick = { model.showMessage("No rules to search") })
+                SignalIconButton(Icons.Rounded.Search, "Search rules", onClick = { model.showMessage("Rule search is not reconstructed.") })
             }
             Box(Modifier.size(48.dp).align(Alignment.CenterHorizontally).background(SignalColors.White, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
                 Icon(Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
@@ -175,7 +175,7 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { model.selectRoot(com.anm.signalrules.reconstruction.model.RootTab.RULES) }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                 }
                 Spacer(Modifier.weight(1f))
                 val editingId = state.draft.id
@@ -229,7 +229,7 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                 }
             }
             SignalPrimaryButton("Save rule", model::saveRule, modifier = Modifier.padding(top = if (missing) 0.dp else 18.dp))
-            Divider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 42.dp))
+            HorizontalDivider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 42.dp))
             Text("Recent matching notifications", style = MaterialTheme.typography.headlineMedium)
             Text(
                 "No recent notifications match this rule. This may be because the rule is very specific or the notifications arrived before Signal Rules was installed.",
@@ -268,7 +268,7 @@ private fun SuggestionRulePreview(model: MainViewModel) {
             Box(Modifier.size(36.dp).background(SignalColors.Yellow))
         }
         SignalPrimaryButton("Save rule", { model.updateDraft { it.copy(action = "Flashlight") }; model.saveRule() }, modifier = Modifier.padding(top = 24.dp))
-        Divider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 40.dp))
+        HorizontalDivider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 40.dp))
         Text("Recent matching notifications", style = MaterialTheme.typography.headlineMedium)
         Text("These recent notifications from your local history may have triggered this rule.", color = SignalColors.Secondary, fontWeight = FontWeight.Bold, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 24.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -287,11 +287,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
     val keyboard = LocalSoftwareKeyboardController.current
     val searching = state.auditState.startsWith("031_")
     if (searching) LaunchedEffect(state.auditState) {
-        repeat(3) {
-            delay(200)
-            focusRequester.requestFocus()
-            keyboard?.show()
-        }
+        requestKeyboardFocus(focusRequester, keyboard)
     }
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.height(46.dp))
@@ -356,11 +352,7 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
     val showPhraseInput = state.phraseInputVisible
     val requestKeyboard = showPhraseInput
     if (requestKeyboard) LaunchedEffect(requestKeyboard) {
-        repeat(3) {
-            delay(200)
-            focusRequester.requestFocus()
-            keyboard?.show()
-        }
+        requestKeyboardFocus(focusRequester, keyboard)
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -465,7 +457,7 @@ fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.size(46.dp).background(actionColor(index), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                        Icon(if (action == "Mute") Icons.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
+                        Icon(if (action == "Mute") Icons.AutoMirrored.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
                     }
                     Text(action, fontSize = 18.sp, modifier = Modifier.weight(1f).padding(start = 16.dp))
                     if (state.draft.action == action) Icon(Icons.Rounded.Check, contentDescription = "Selected", tint = SignalColors.Yellow)
@@ -499,7 +491,7 @@ private fun ActionFeatureCard(title: String, description: String, background: Co
         Modifier.fillMaxWidth().height(height).background(background, RoundedCornerShape(18.dp)).clickable(onClick = onClick).padding(24.dp)
     ) {
         Box(Modifier.size(42.dp).background(SignalColors.RuleBlue, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-            Icon(if (title == "Mute") Icons.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
+            Icon(if (title == "Mute") Icons.AutoMirrored.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
         }
         Text(title, color = foreground, fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 12.dp))
         Text(description, color = if (background == SignalColors.White) SignalColors.Background else SignalColors.Secondary, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 4.dp))

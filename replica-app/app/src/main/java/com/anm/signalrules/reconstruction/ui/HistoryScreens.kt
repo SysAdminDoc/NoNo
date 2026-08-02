@@ -55,11 +55,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
         val focusRequester = remember { FocusRequester() }
         val keyboard = LocalSoftwareKeyboardController.current
         LaunchedEffect(searching) {
-            repeat(3) {
-                delay(200)
-                focusRequester.requestFocus()
-                keyboard?.show()
-            }
+            requestKeyboardFocus(focusRequester, keyboard)
         }
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             OutlinedTextField(

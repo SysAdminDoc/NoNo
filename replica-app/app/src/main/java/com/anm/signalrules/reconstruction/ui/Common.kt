@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,6 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
 
 @Composable
 fun SignalTopBar(
@@ -51,7 +54,7 @@ fun SignalTopBar(
     ) {
         if (onBack != null) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
             }
         } else {
             Spacer(Modifier.size(12.dp))
@@ -157,4 +160,20 @@ fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit, destructive
 @Composable
 fun CloseButton(onClick: () -> Unit) {
     SignalIconButton(Icons.Rounded.Close, "Close", onClick)
+}
+
+/**
+ * Focuses [focusRequester] and raises the soft keyboard once the composition has settled.
+ *
+ * `requestFocus()` throws IllegalStateException when the requester is not attached to a node,
+ * which the previous three-attempt retry loop invited by firing before the subcomposition of a
+ * Dialog existed. One attempt, guarded, after a single frame.
+ */
+suspend fun requestKeyboardFocus(
+    focusRequester: FocusRequester,
+    keyboard: SoftwareKeyboardController?,
+) {
+    withFrameNanos { }
+    runCatching { focusRequester.requestFocus() }
+    keyboard?.show()
 }

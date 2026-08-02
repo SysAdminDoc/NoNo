@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Cleared the low-severity correctness defects: the Explore article accent no longer indexes a
+  fixed four-element list by article index (a fifth article threw
+  `IndexOutOfBoundsException`), back and volume icons use their `AutoMirrored` variants for RTL,
+  the deprecated `Divider` is now `HorizontalDivider`, the deprecated
+  `SOFT_INPUT_ADJUST_RESIZE` call was dropped since it is ignored under the edge-to-edge
+  enforcement targetSdk 36 makes mandatory, and the empty-state copy shown from the non-empty
+  rules branch was corrected.
+- Keyboard focus is requested once after a frame instead of three blind retries.
+  `FocusRequester.requestFocus()` throws when its node is not attached, which the retry loop
+  invited by firing before a Dialog's subcomposition existed. The four duplicated loops are now
+  one guarded helper. The debug and release builds compile with zero deprecation warnings.
 - The rule dialogs no longer discard the user's choice. Match type, extra properties, filter
   operator, "Enable for", priority, and folder all dismissed without applying anything, and the
   folder dialog wrote into the rename dialog's field before throwing it away. Each selection is

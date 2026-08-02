@@ -1,6 +1,5 @@
 package com.anm.signalrules.reconstruction.ui
 
-import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +32,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,13 +40,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogWindowProvider
 import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
@@ -197,17 +193,9 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) {
-        repeat(3) {
-            delay(200)
-            focusRequester.requestFocus()
-            keyboard?.show()
-        }
+        requestKeyboardFocus(focusRequester, keyboard)
     }
     Dialog(onDismissRequest = { keyboard?.hide(); onDismiss() }) {
-        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
-        SideEffect {
-            dialogWindow?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        }
         Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
             Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(

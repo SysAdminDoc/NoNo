@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Article
+import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.FlashlightOn
 import androidx.compose.material.icons.rounded.Inventory2
@@ -46,7 +46,7 @@ import com.anm.signalrules.reconstruction.model.UiState
 
 private data class ArticleItem(val title: String, val description: String, val icon: ImageVector)
 private val articles = listOf(
-    ArticleItem("How I stay focused and in the moment", "A practical guide to reducing distracting notifications and being present.", Icons.Rounded.Article),
+    ArticleItem("How I stay focused and in the moment", "A practical guide to reducing distracting notifications and being present.", Icons.AutoMirrored.Rounded.Article),
     ArticleItem("Quiet out-of-hours work notifications", "Keep work alerts available without letting them interrupt personal time.", Icons.Rounded.WorkOff),
     ArticleItem("Avoid missing package deliveries", "Surface delivery updates while cooling down repetitive status alerts.", Icons.Rounded.Inventory2),
     ArticleItem("Build a healthier bedtime routine", "Reduce late-night checking while allowing genuinely important alerts.", Icons.Rounded.Bedtime),
@@ -93,7 +93,7 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
                 title = "Batch repetitive updates",
                 description = "Collect frequent updates and show them together at a calmer time.",
                 color = SignalColors.SuggestionGreen,
-                icon = Icons.Rounded.Article,
+                icon = Icons.AutoMirrored.Rounded.Article,
             ) {
                 model.updateDraft { SignalRule(name = "Batch updates", app = "any app", phrase = "update", action = "Batch") }
                 model.navigate(Route.RULE_BUILDER)
@@ -109,7 +109,7 @@ private fun ArticleCard(article: ArticleItem, index: Int, onClick: () -> Unit) {
         Modifier.fillMaxWidth().border(5.dp, SignalColors.Border, RoundedCornerShape(20.dp)).clickable(role = Role.Button, onClick = onClick).padding(20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(54.dp).background(listOf(SignalColors.RuleBlue, SignalColors.SuggestionGreen, SignalColors.Yellow, SignalColors.SuggestionPurple)[index], RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(54.dp).background(articleAccent(index), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
             Icon(article.icon, contentDescription = null, tint = SignalColors.Background)
         }
         Column(Modifier.weight(1f).padding(start = 16.dp)) {
@@ -138,3 +138,16 @@ private fun SuggestionCard(title: String, description: String, color: Color, ico
         }
     }
 }
+
+/**
+ * Accent for an article card. Wraps rather than indexes, so adding an article cannot throw
+ * IndexOutOfBoundsException the way a fixed four-element lookup did.
+ */
+private fun articleAccent(index: Int) = ARTICLE_ACCENTS[index.mod(ARTICLE_ACCENTS.size)]
+
+private val ARTICLE_ACCENTS = listOf(
+    SignalColors.RuleBlue,
+    SignalColors.SuggestionGreen,
+    SignalColors.Yellow,
+    SignalColors.SuggestionPurple,
+)
