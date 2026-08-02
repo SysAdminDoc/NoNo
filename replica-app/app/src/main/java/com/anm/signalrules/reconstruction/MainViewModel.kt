@@ -281,6 +281,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         persistRules()
     }
 
+    fun deleteAllRules() {
+        if (_state.value.rules.isEmpty()) {
+            _state.value = _state.value.copy(transientMessage = "There are no rules to delete.")
+            return
+        }
+        val removed = _state.value.rules.size
+        _state.value = _state.value.copy(
+            rules = emptyList(),
+            selectedRuleId = null,
+            overlay = Overlay.NONE,
+            transientMessage = if (removed == 1) "Deleted 1 rule" else "Deleted $removed rules",
+        )
+        persistRules()
+    }
+
     fun setSetting(label: String, value: String) {
         _state.value = _state.value.copy(settings = _state.value.settings + (label to value), overlay = Overlay.NONE)
         editPreferences { it[settingKey(label)] = value }

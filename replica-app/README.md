@@ -59,7 +59,25 @@ The complete 76-state mapping is in `test-data\states\audit-state-map.csv`. Rele
 
 `authorized-assets` contains no third-party originals. The launcher art, product identity, onboarding visuals, Explore visuals, and editorial summaries are independently created replacements. AndroidX/platform icons and fonts are used under their respective dependency/platform terms. Audit screenshots exist only as validation evidence and are never packaged into the APK.
 
-The notification-changing action engine is a safe local simulation. Android permission/settings and file-picker surfaces are invoked through public intents. Backup serialization, scheduled backup, and launcher shortcut publication remain unimplemented because their formats/effects were not safely observable. See `docs\known-deviations.md` for the complete list.
+## What this build does not do
+
+The reconstruction reproduces the audited interface. It is not a working notification manager,
+and the UI now says so at each control rather than leaving the reader to infer it:
+
+- **There is no rule engine.** The notification listener records nothing but a package name, a
+  timestamp, and a counter. No rule is ever evaluated and no notification is ever changed.
+- **No action is executed.** Every entry in the action catalog can be selected and saved; none
+  of them do anything.
+- **Backup, import, export, and launcher shortcuts are not implemented.** No file format has
+  been defined, so those rows are marked unavailable instead of opening a picker that discards
+  its result.
+- **Only the dark theme exists**, and the app ships no translated resources, so the Theme and
+  Language rows are marked unavailable.
+- **History is never populated** outside the debug capture harness, because nothing writes to it.
+
+Settings that would depend on the absent action engine are shown disabled with the reason
+inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is
+planned.
 
 ## Documentation
 

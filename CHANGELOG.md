@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- The Settings screen no longer advertises behaviour the build does not have. Import, Export,
+  Automatic backups, Clear shortcuts, Restore batch, Translate, Contact support, Open
+  community, Theme, Language, and every switch that would depend on the absent action engine
+  are shown disabled with the reason stated inline. Import/Export previously opened a folder
+  picker whose result was discarded, and several rows only raised a toast.
+- `Delete all rules` is implemented instead of raising a toast that said it was disabled.
 - Notification-derived data is excluded from automatic backup and device transfer. The app
   declared `allowBackup="true"` with neither `dataExtractionRules` nor `fullBackupContent`, so
   its preference store was eligible for upload to the user's Google Drive. Both rule sets are
