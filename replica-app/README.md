@@ -99,6 +99,8 @@ after process restart. Companion-device listener exemptions are intentionally ou
 this local reconstruction; no special permission or companion association is requested.
 Notification capture can be paused from the Quick Settings tile or Settings without revoking
 listener access; paused callbacks are ignored before sanitization and the gate survives restart.
+The optional home-screen widget shows only the bounded metadata count, latest timestamp,
+content-provenance state, or paused state; it never renders notification content or package names.
 
 Settings that would depend on the absent action engine are shown disabled with the reason
 inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is

@@ -47,6 +47,7 @@ class SignalNotificationListener : NotificationListenerService() {
                     System.currentTimeMillis(),
                 ),
             )
+            SignalWidgetProvider.requestUpdate(applicationContext)
         }
         serviceScope.launch {
             var previous = IngestionMetrics()

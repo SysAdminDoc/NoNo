@@ -45,6 +45,11 @@ data class IngestionDiagnosticsEntity(
     val updatedAtEpochMillis: Long = 0L,
 )
 
+data class WidgetLatestRow(
+    val postedAtEpochMillis: Long,
+    val contentState: String,
+)
+
 fun IngestionDiagnosticsEntity.toMetrics(): IngestionMetrics = IngestionMetrics(
     persisted = persisted,
     dropped = dropped,
@@ -165,6 +170,12 @@ interface NotificationDao {
 
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
+
+    @Query("SELECT COUNT(*) FROM notification_history")
+    suspend fun readWidgetCount(): Int
+
+    @Query("SELECT postedAtEpochMillis, contentState FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC LIMIT 1")
+    suspend fun readWidgetLatest(): WidgetLatestRow?
 
     @Transaction
     suspend fun insertAndPrune(notification: NotificationEntity, cutoffEpochMillis: Long) {

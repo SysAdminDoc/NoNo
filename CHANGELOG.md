@@ -57,6 +57,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   exclusion of notification history.
 - Added a Quick Settings tile and in-app status for pausing metadata capture without revoking
   listener access; the persisted gate ignores callbacks before sanitization and restores on restart.
+- Added an adaptive home-screen metadata widget showing only bounded count, timestamp,
+  content-provenance, or paused state; listener writes request bounded widget refreshes.
 
 ## [1.1.0] - 2026-08-01
 
