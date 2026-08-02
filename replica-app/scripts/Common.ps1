@@ -24,6 +24,16 @@ function Resolve-JavaHome {
     throw 'A compatible JDK was not found. Set JAVA_HOME to JDK 17 or newer.'
 }
 
+# Prefers the Windows launcher, which is how Python is invoked on this workstation;
+# a bare python.exe is often absent or is a Store alias stub.
+function Resolve-Python {
+    $launcher = Get-Command py.exe -ErrorAction SilentlyContinue
+    if ($null -ne $launcher) { return $launcher.Source }
+    $direct = Get-Command python.exe -ErrorAction SilentlyContinue
+    if ($null -ne $direct) { return $direct.Source }
+    throw 'Python 3 was not found. Install it, or add the py launcher to PATH.'
+}
+
 function Get-TargetSerial {
     param([string]$Serial = '')
     $adb = Resolve-AdbPath

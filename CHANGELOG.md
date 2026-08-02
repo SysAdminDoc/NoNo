@@ -7,6 +7,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- `check-environment.ps1` asserts instead of narrating. It printed device properties and always
+  reported success, so a mismatched emulator silently invalidated every comparison that
+  followed. It now fails when API level, resolution, density, locale, or font scale differ from
+  the reference device, with `-AllowMismatch` to downgrade that to a warning.
+- The similarity threshold is no longer defaulted in two places to a value that disagreed with
+  the authoritative one. `compare_images.py` and `compare-screen.ps1` defaulted to 0.90 while
+  `validation/screen-validation-matrix.csv` specifies 0.85; both now require the caller to pass
+  it.
+- Screenshot comparison resolves Python through the `py` launcher before falling back to
+  `python.exe`, and `scripts/requirements.txt` pins Pillow and NumPy.
+- Removed `test-fixtures/` and `test-states/`, byte-identical duplicates of `test-data/`, and
+  repointed the state map's `fixture_source` column at the surviving copy.
+- Replaced the stale `Z:\` build path and the retired `D:	ools\jdk21` reference in
+  `replica-app/README.md`.
 - Cleared the low-severity correctness defects: the Explore article accent no longer indexes a
   fixed four-element list by article index (a fifth article threw
   `IndexOutOfBoundsException`), back and volume icons use their `AutoMirrored` variants for RTL,

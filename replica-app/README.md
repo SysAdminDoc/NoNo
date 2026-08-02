@@ -14,15 +14,18 @@ Signal Rules is an independent clean-room Android reconstruction of the native i
 ## Requirements
 
 - Windows PowerShell 5.1 or newer
-- JDK 17 or newer (`D:\tools\jdk21` is auto-detected on this workstation)
+- JDK 17 or newer. `JAVA_HOME` is honoured when set; Android Studio's bundled JBR works.
 - Android SDK platform tools and an authorized ADB device
-- Python 3 with Pillow and NumPy for screenshot comparison
+- Python 3 for screenshot comparison: `py -3 -m pip install -r scripts/requirements.txt`
 
 All device commands require an explicit serial when more than one device is connected.
+`check-environment.ps1` fails when the device does not match the reference environment
+recorded in `../app-audit/device/device-environment.json`, because baseline captures are
+only comparable against a matching device. Pass `-AllowMismatch` to downgrade to a warning.
 
 ## Build, install, and launch
 
-From `Z:\ANM-Android_Notification_Manager\replica-app`:
+From the `replica-app` directory of your clone:
 
 ```powershell
 .\scripts\check-environment.ps1 -Serial emulator-5554
@@ -31,7 +34,7 @@ From `Z:\ANM-Android_Notification_Manager\replica-app`:
 .\scripts\launch-replica.ps1 -Serial emulator-5554
 ```
 
-The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. The frozen deliverable is copied to `dist\SignalRules-debug.apk` with a SHA-256 checksum.
+The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. Copy it to `dist\SignalRules-debug.apk` when freezing a deliverable; the APK itself is not tracked in git, but `dist\SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
 
 ## Tests and validation
 

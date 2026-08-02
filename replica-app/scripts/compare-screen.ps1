@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ScreenId,
     [Parameter(Mandatory = $true)][string]$Baseline,
     [Parameter(Mandatory = $true)][string]$Current,
-    [double]$Threshold = 0.90,
+    [Parameter(Mandatory = $true)][double]$Threshold,
     [string]$Mask = '',
     [string]$OutputDirectory = ''
 )
@@ -13,10 +13,9 @@ if (-not (Test-Path -LiteralPath $Baseline -PathType Leaf)) { throw "Baseline sc
 if (-not (Test-Path -LiteralPath $Current -PathType Leaf)) { throw "Replica screenshot not found: $Current" }
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $OutputDirectory = Join-Path (Get-ProjectRoot) 'validation\diffs' }
 Ensure-Directory $OutputDirectory
-$python = (Get-Command python.exe -ErrorAction SilentlyContinue)
-if ($null -eq $python) { throw 'Python 3 with Pillow and NumPy is required for visual comparison.' }
-& $python.Source -c 'import PIL, numpy' 2>$null
-if ($LASTEXITCODE -ne 0) { throw 'Python packages Pillow and NumPy are required for visual comparison.' }
+$python = Resolve-Python
+& $python -c 'import PIL, numpy' 2>$null
+if ($LASTEXITCODE -ne 0) { throw "Pillow and NumPy are required. Install them with: $python -m pip install -r scripts/requirements.txt" }
 
 $args = @(
     (Join-Path $PSScriptRoot 'compare_images.py'),
@@ -30,7 +29,7 @@ if (-not [string]::IsNullOrWhiteSpace($Mask)) {
     if (-not (Test-Path -LiteralPath $Mask -PathType Leaf)) { throw "Mask file not found: $Mask" }
     $args += @('--mask', [System.IO.Path]::GetFullPath($Mask))
 }
-& $python.Source @args
+& $python @args
 $result = $LASTEXITCODE
 $overlaySource = Join-Path $OutputDirectory "$ScreenId-overlay-50.png"
 $overlayDirectory = Join-Path (Get-ProjectRoot) 'validation\overlays'

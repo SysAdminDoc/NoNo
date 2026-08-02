@@ -1,0 +1,4 @@
+# Visual comparison dependencies for compare_images.py.
+# Install with:  py -3 -m pip install -r scripts/requirements.txt
+pillow==11.3.0
+numpy==2.3.2

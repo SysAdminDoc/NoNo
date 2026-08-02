@@ -30,7 +30,10 @@ def main() -> int:
     parser.add_argument("--current", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--screen-id", required=True)
-    parser.add_argument("--threshold", type=float, default=0.90)
+    # No default: the authoritative value lives in validation/screen-validation-matrix.csv.
+    # A default here silently disagreed with it (0.90 vs 0.85) for anyone invoking the
+    # script directly.
+    parser.add_argument("--threshold", type=float, required=True)
     parser.add_argument("--mask", type=Path)
     args = parser.parse_args()
 
