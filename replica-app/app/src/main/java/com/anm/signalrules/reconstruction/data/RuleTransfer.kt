@@ -18,6 +18,9 @@ private const val KEY_BITS = 256
 private const val SALT_BYTES = 16
 private const val IV_BYTES = 12
 
+const val PORTABLE_TRANSFER_PRIVACY_WARNING =
+    "Portable rule files can reveal notification filters; store and share them carefully."
+
 @Serializable
 data class PortableRuleFile(
     val formatVersion: Int = TRANSFER_FORMAT_VERSION,
@@ -25,6 +28,7 @@ data class PortableRuleFile(
     val payload: String,
     val salt: String? = null,
     val iv: String? = null,
+    val privacyWarning: String = PORTABLE_TRANSFER_PRIVACY_WARNING,
 )
 
 sealed interface RuleImportResult {

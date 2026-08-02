@@ -19,6 +19,7 @@ class RuleTransferTest {
         val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
 
         assertTrue(encoded.contains("\"encrypted\":true"))
+        assertTrue(encoded.contains(PORTABLE_TRANSFER_PRIVACY_WARNING))
         assertTrue(!encoded.contains("Imported"))
         assertEquals(incoming, (RuleTransfer.importRules(encoded, "correct horse".toCharArray()) as RuleImportResult.Success).rules)
     }
