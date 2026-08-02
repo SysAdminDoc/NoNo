@@ -82,7 +82,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { PreferenceRow("Language", unavailable = "This build ships no translated resources, so it follows the system locale only.") }
         item { PreferenceRow("Translate", unavailable = NOT_RECONSTRUCTED) }
         item { PersistentSwitchRow(state, model, "Hide popups when muting", "Avoid heads-up popups for notifications matched by a mute rule.", unavailable = NO_ACTION_ENGINE) }
-        item { PreferenceRow("Open notification settings", "Review Android notification access and channels.", onClick = { context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }) }
+        item { PreferenceRow("Open notification settings", "Review Android notification access and channels.", onClick = { openListenerSettings(context) }) }
         item { PreferenceRow("Restore batch", unavailable = NO_ACTION_ENGINE) }
         item { PersistentSwitchRow(state, model, "Restore batches after reboot", "Rebuild scheduled local batches after device restart.", unavailable = NO_ACTION_ENGINE) }
         item { PersistentSwitchRow(state, model, "Android 15+ icon workaround", "Use a compatibility path for notification icons.", unavailable = NO_ACTION_ENGINE) }

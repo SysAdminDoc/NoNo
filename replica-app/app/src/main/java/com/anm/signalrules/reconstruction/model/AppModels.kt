@@ -81,6 +81,7 @@ data class UiState(
     val overlay: Overlay = Overlay.NONE,
     val auditState: String = "002_welcome_default",
     val onboardingStep: Int = 0,
+    val listenerAccessGranted: Boolean = true,
     val rules: List<SignalRule> = emptyList(),
     val history: List<HistoryRecord> = emptyList(),
     val historySearch: String = "",

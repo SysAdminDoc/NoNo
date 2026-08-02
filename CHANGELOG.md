@@ -7,6 +7,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- The notification listener now recovers from being unbound. It had no
+  `onListenerConnected`/`onListenerDisconnected` overrides and never called `requestRebind`,
+  so a routine platform unbind - an app update, a service crash, an OEM background kill -
+  silently ended all functionality until the user toggled notification access by hand.
+  Rebind is requested on disconnect and on every app resume.
+- Notification access is re-checked on every resume, not only during onboarding. Access
+  revoked after setup was previously invisible, leaving the app presenting a working rule list
+  while the listener was dead.
+- The listener no longer performs disk I/O on the main thread. `onNotificationPosted` ran two
+  `getSharedPreferences` calls and a read-modify-write for every notification from every app on
+  the device, into a file nothing read.
+- All notification-listener settings intents are guarded and route through one helper, which
+  prefers the per-app `ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS` screen on API 30+ and
+  falls back to the global list. Two call sites previously launched an unguarded intent that
+  throws `ActivityNotFoundException` on images lacking the activity or inside a work profile.
 - The Settings screen no longer advertises behaviour the build does not have. Import, Export,
   Automatic backups, Clear shortcuts, Restore batch, Translate, Contact support, Open
   community, Theme, Language, and every switch that would depend on the absent action engine
@@ -59,12 +74,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- A listener health banner on the Rules screen states when rules are not running, why, and how
+  long since the last notification was seen, and links straight to notification access. It is
+  announced as a polite live region.
+
 - `scripts/run-unit-tests.ps1` and `scripts/run-ui-tests.ps1` parse their JUnit XML output
   into `validation/reports/unit-test-results.json` and
   `validation/reports/instrumentation-test-results.json`, and fail when the recorded
   result is not a pass. These summaries are the evidence the traceability matrix reads.
 - `Get-JUnitSummary`, `Save-TestSummary`, and `Get-TestSummaryStatus` helpers in
-  `scripts/Common.ps1`.
+  `scripts/Common.ps1`. The runners force task execution and refuse to record evidence when
+  Gradle reports success without producing results, so an UP-TO-DATE task cannot be mistaken
+  for a suite that ran.
+- `ListenerHealthTest` covers the published connection state, including that it starts
+  `UNKNOWN` rather than claiming to be connected.
 - `AuditStatesTest` pins the debug capture harness, including that 033 resolves to the
   condition chooser and 034/041 to the text input, so the source-set split cannot silently
   break state reproduction.

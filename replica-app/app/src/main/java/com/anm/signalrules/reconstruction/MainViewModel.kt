@@ -34,6 +34,8 @@ import com.anm.signalrules.reconstruction.model.upsertRule
 import com.anm.signalrules.reconstruction.model.UNSAVED_RULE_ID
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.defaultSettings
+import com.anm.signalrules.reconstruction.runtime.ListenerHealth
+import com.anm.signalrules.reconstruction.runtime.SignalNotificationListener
 import com.anm.signalrules.reconstruction.model.validateRule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -133,14 +135,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         editPreferences { it[Keys.Onboarding] = true }
     }
 
-    fun refreshOnboardingCapabilities() {
-        if (auditOverride != null || _state.value.route != Route.ONBOARDING) return
+    /**
+     * Re-reads platform capability state.
+     *
+     * This runs on every resume regardless of route. The previous revision returned early
+     * unless onboarding was on screen, so notification access revoked after setup was
+     * invisible: the app kept presenting a working rule list while the listener was unbound.
+     */
+    fun refreshCapabilities() {
         val app = getApplication<Application>()
+        val listenerGranted = runCatching {
+            NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
+        }.getOrDefault(false)
+
+        if (listenerGranted) {
+            // Cheap and idempotent; recovers a listener the platform unbound while we were away.
+            SignalNotificationListener.requestRebindIfPossible(app)
+        } else {
+            ListenerHealth.onAccessRevoked()
+        }
+        _state.value = _state.value.copy(listenerAccessGranted = listenerGranted)
+
+        if (auditOverride != null || _state.value.route != Route.ONBOARDING) return
         val notificationsGranted = Build.VERSION.SDK_INT < 33 ||
             app.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        val batteryGranted = (app.getSystemService(Context.POWER_SERVICE) as PowerManager)
-            .isIgnoringBatteryOptimizations(app.packageName)
-        val listenerGranted = NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
+        val batteryGranted = runCatching {
+            (app.getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(app.packageName)
+        }.getOrDefault(false)
         val step = when {
             !notificationsGranted -> 0
             !batteryGranted -> 1

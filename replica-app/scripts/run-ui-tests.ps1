@@ -11,10 +11,14 @@ $summaryPath = Join-Path $root 'validation\reports\instrumentation-test-results.
 if (Test-Path -LiteralPath $summaryPath) { Remove-Item -LiteralPath $summaryPath -Force }
 Push-Location $root
 try {
-    & (Join-Path $root 'gradlew.bat') --no-daemon connectedDebugAndroidTest
+    # Force execution so the recorded evidence always describes this run.
+    & (Join-Path $root 'gradlew.bat') --no-daemon connectedDebugAndroidTest --rerun-tasks
     $exitCode = $LASTEXITCODE
 } finally { Pop-Location }
 $summary = Get-JUnitSummary -ResultsDirectory (Join-Path $root 'app\build\outputs\androidTest-results\connected') -Suite 'instrumentation'
+if ($exitCode -eq 0 -and $summary.tests -eq 0) {
+    throw 'Gradle reported success but produced no instrumentation results. Refusing to record evidence for a suite that did not run.'
+}
 $summary.source = "$($summary.source) (device $target)"
 Save-TestSummary -Summary $summary -Path $summaryPath
 if ($exitCode -ne 0) { throw "Instrumented UI tests failed with exit code $exitCode." }

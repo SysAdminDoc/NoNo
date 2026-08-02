@@ -39,10 +39,10 @@ class MainActivity : ComponentActivity() {
                 }
                 DisposableEffect(lifecycleOwner, model) {
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) model.refreshOnboardingCapabilities()
+                        if (event == Lifecycle.Event.ON_RESUME) model.refreshCapabilities()
                     }
                     lifecycleOwner.lifecycle.addObserver(observer)
-                    model.refreshOnboardingCapabilities()
+                    model.refreshCapabilities()
                     onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                 }
                 SignalApp(model)

@@ -48,7 +48,7 @@ import com.anm.signalrules.reconstruction.model.UiState
 fun OnboardingScreen(state: UiState, model: MainViewModel) {
     val context = LocalContext.current
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        model.refreshOnboardingCapabilities()
+        model.refreshCapabilities()
     }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
@@ -74,7 +74,7 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
             complete = state.onboardingStep >= 1,
         ) {
             if (Build.VERSION.SDK_INT >= 33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-            else model.refreshOnboardingCapabilities()
+            else model.refreshCapabilities()
         }
         Spacer(Modifier.height(12.dp))
         CapabilityCard(
@@ -96,16 +96,13 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
             description = "This allows Signal Rules to react to notifications you receive.",
             complete = state.onboardingStep >= 3,
         ) {
-            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            openListenerSettings(context)
         }
         Text(
-            "Contact support",
-            color = Color(0xFFD5D5E0),
-            fontSize = 16.sp,
-            modifier = Modifier.clickable {
-                runCatching { context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:support@example.invalid"))) }
-                    .onFailure { model.showMessage("No email app is available") }
-            }.padding(horizontal = 8.dp, vertical = 20.dp),
+            "This reconstruction has no support channel.",
+            color = SignalColors.Muted,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 20.dp),
         )
     }
 }

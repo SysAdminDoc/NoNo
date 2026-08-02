@@ -74,6 +74,7 @@ import kotlinx.coroutines.delay
 fun RulesHomeScreen(state: UiState, model: MainViewModel) {
     if (state.rules.isEmpty()) {
         Column(Modifier.fillMaxSize()) {
+            ListenerHealthBanner(state)
             Spacer(Modifier.weight(1f))
             Column(
                 Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).padding(26.dp)
@@ -93,6 +94,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         }
     } else {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            ListenerHealthBanner(state)
             Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
                 SignalIconButton(Icons.Rounded.Search, "Search rules", onClick = { model.showMessage("No rules to search") })
             }
