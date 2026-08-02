@@ -7,12 +7,17 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.NotificationManagerCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.anm.signalrules.reconstruction.data.SignalPreferences
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.RootTab
@@ -23,15 +28,27 @@ import com.anm.signalrules.reconstruction.model.defaultSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.IOException
 
-private val Application.signalDataStore by preferencesDataStore(name = "signal_rules")
+/** Shown once when an unreadable preferences file was replaced with defaults. */
+const val SETTINGS_RESET_MESSAGE = "Saved settings could not be read and were reset."
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var auditOverride: String? = null
+
+    @Volatile
+    private var recoveredFromCorruption = false
+
+    private val dataStore: DataStore<Preferences> = SignalPreferences.create(
+        scope = viewModelScope,
+        produceFile = { application.preferencesDataStoreFile(SignalPreferences.STORE_NAME) },
+        onCorruption = { recoveredFromCorruption = true },
+    )
 
     private object Keys {
         val Onboarding = booleanPreferencesKey("onboarding_complete")
@@ -49,7 +66,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            val values = getApplication<Application>().signalDataStore.data.first()
+            // An unreadable store must degrade to defaults, never propagate out of this
+            // coroutine: an uncaught throw here kills the process on every launch.
+            val values = dataStore.data
+                .catch { emit(emptyPreferences()) }
+                .first()
             val rule = if (values[Keys.HasRule] == true) listOf(
                 SignalRule(
                     name = values[Keys.RuleName] ?: "Test rule",
@@ -65,14 +86,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
                 rules = rule,
                 settings = settings,
+                transientMessage = if (recoveredFromCorruption) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
         }
     }
 
+    /**
+     * Persistence must never take the process down. A failed write costs the user one
+     * unsaved change; an uncaught IO error costs them the app.
+     */
+    private fun editPreferences(transform: (MutablePreferences) -> Unit) {
+        viewModelScope.launch {
+            try {
+                dataStore.edit(transform)
+            } catch (error: IOException) {
+                _state.value = _state.value.copy(transientMessage = "Could not save to storage.")
+            }
+        }
+    }
+
     fun completeOnboarding() {
         _state.value = _state.value.copy(route = Route.ROOT, rootTab = RootTab.RULES, overlay = Overlay.NONE, auditState = "010_home_empty")
-        viewModelScope.launch { getApplication<Application>().signalDataStore.edit { it[Keys.Onboarding] = true } }
+        editPreferences { it[Keys.Onboarding] = true }
     }
 
     fun refreshOnboardingCapabilities() {
@@ -148,14 +184,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteRule() {
         _state.value = _state.value.copy(rules = emptyList(), overlay = Overlay.NONE, auditState = "010_home_empty")
-        viewModelScope.launch { getApplication<Application>().signalDataStore.edit { it[Keys.HasRule] = false } }
+        editPreferences { it[Keys.HasRule] = false }
     }
 
     fun setSetting(label: String, value: String) {
         _state.value = _state.value.copy(settings = _state.value.settings + (label to value), overlay = Overlay.NONE)
-        viewModelScope.launch {
-            getApplication<Application>().signalDataStore.edit { it[settingKey(label)] = value }
-        }
+        editPreferences { it[settingKey(label)] = value }
     }
 
     fun addTestHistory() {
@@ -166,15 +200,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showMessage(message: String) { _state.value = _state.value.copy(transientMessage = message) }
 
     private fun persistRule(rule: SignalRule) {
-        viewModelScope.launch {
-            getApplication<Application>().signalDataStore.edit {
-                it[Keys.HasRule] = true
-                it[Keys.RuleEnabled] = rule.enabled
-                it[Keys.RuleName] = rule.name
-                it[Keys.RuleApp] = rule.app
-                it[Keys.RulePhrase] = rule.phrase
-                it[Keys.RuleAction] = rule.action
-            }
+        editPreferences {
+            it[Keys.HasRule] = true
+            it[Keys.RuleEnabled] = rule.enabled
+            it[Keys.RuleName] = rule.name
+            it[Keys.RuleApp] = rule.app
+            it[Keys.RulePhrase] = rule.phrase
+            it[Keys.RuleAction] = rule.action
         }
     }
 

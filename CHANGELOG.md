@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Preference storage now survives a corrupt or unreadable backing file. `MainViewModel`
+  built its DataStore with no `corruptionHandler` and read it with a bare
+  `viewModelScope.launch`, so a truncated `signal_rules.preferences_pb` threw
+  `CorruptionException` on every launch and — because the bad file persisted — bricked the
+  app permanently. Reads now fall back to defaults, the store is rebuilt via
+  `ReplaceFileCorruptionHandler`, the user is told their settings were reset, and every
+  write is guarded so an IO failure costs one unsaved change instead of the process.
 - Traceability status is now derived from recorded machine-readable evidence instead of
   being asserted. `scripts/finalize-documentation.ps1` previously wrote `test_status = PASS`
   unconditionally for every native row, so `docs/audit-traceability-matrix.csv` certified
@@ -27,3 +34,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   result is not a pass. These summaries are the evidence the traceability matrix reads.
 - `Get-JUnitSummary`, `Save-TestSummary`, and `Get-TestSummaryStatus` helpers in
   `scripts/Common.ps1`.
+- `data/SignalPreferences.kt` centralises preference-store construction, and
+  `SignalPreferencesTest` covers healthy round-trip, recovery from a deliberately corrupted
+  file, writability after recovery, and the view model's read guard.
