@@ -55,4 +55,48 @@ class SignalDatabaseTest {
         assertEquals(1, dao.count())
         assertEquals("keep", dao.observeRecent().first().single().notificationKey)
     }
+
+    @Test
+    fun `history query applies metadata selectors and a hard result limit`() = runBlocking {
+        val dao = database.notificationDao()
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "chat-hidden",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.HIDDEN_BY_SYSTEM.name,
+                groupKey = "conversation",
+            ),
+        )
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "chat-visible",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                groupKey = "conversation",
+            ),
+        )
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "mail",
+                packageName = "com.example.mail",
+                postedAtEpochMillis = 3_000L,
+                contentState = NotificationContentState.NOT_AVAILABLE.name,
+            ),
+        )
+
+        val filtered = dao.observeHistory(
+            query = "chat",
+            filter = "All",
+            packageName = "com.example.chat",
+            contentState = NotificationContentState.HIDDEN_BY_SYSTEM.name,
+            groupKey = "conversation",
+            fromEpochMillis = 500L,
+            limit = 1,
+        ).first()
+
+        assertEquals(listOf("chat-hidden"), filtered.map { it.notificationKey })
+        assertEquals(emptyList<NotificationEntity>(), dao.observeHistory("", "Rule-triggered").first())
+    }
 }

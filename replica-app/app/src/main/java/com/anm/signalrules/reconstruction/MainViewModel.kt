@@ -19,6 +19,8 @@ import com.anm.signalrules.reconstruction.data.toHistoryRecord
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
 import com.anm.signalrules.reconstruction.model.HistoryRecord
+import com.anm.signalrules.reconstruction.model.HistoryLoadState
+import com.anm.signalrules.reconstruction.model.HistoryQuery
 import com.anm.signalrules.reconstruction.model.deriveRuleDraft
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.RootTab
@@ -34,24 +36,33 @@ import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.defaultSettings
 import com.anm.signalrules.reconstruction.runtime.ListenerHealth
 import com.anm.signalrules.reconstruction.runtime.HistoryRetentionSettings
+import com.anm.signalrules.reconstruction.runtime.retentionCutoffEpochMillis
 import com.anm.signalrules.reconstruction.runtime.SignalNotificationListener
 import com.anm.signalrules.reconstruction.model.validateRule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.IOException
 
 /** Shown once when an unreadable preferences file was replaced with defaults. */
 const val SETTINGS_RESET_MESSAGE = "Saved settings could not be read and were reset."
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var auditOverride: String? = null
+    private val historyRetry = MutableStateFlow(0)
 
     @Volatile
     private var recoveredFromCorruption = false
@@ -117,9 +128,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             auditOverride?.let(::applyAuditState)
         }
         viewModelScope.launch {
-            historyDatabase.notificationDao().observeRecent().collect { records ->
-                _state.value = _state.value.copy(history = records.map { it.toHistoryRecord() })
-            }
+            combine(
+                _state
+                    .map { HistoryQuery(search = it.historySearch, filter = it.historyFilter) }
+                    .distinctUntilChanged(),
+                historyRetry,
+            ) { query, _ -> query }
+                .flatMapLatest { query ->
+                    historyDatabase.notificationDao().observeHistory(
+                        query = query.search,
+                        filter = query.filter,
+                        packageName = query.packageName,
+                        contentState = query.contentState?.name,
+                        groupKey = query.groupKey,
+                        fromEpochMillis = query.fromEpochMillis,
+                        limit = query.limit,
+                    ).map { records ->
+                        HistoryLoadResult(
+                            state = HistoryLoadState.READY,
+                            records = records.map { it.toHistoryRecord() },
+                        )
+                    }.onStart {
+                        emit(HistoryLoadResult(state = HistoryLoadState.LOADING))
+                    }.catch {
+                        emit(
+                            HistoryLoadResult(
+                                state = HistoryLoadState.ERROR,
+                                error = "Notification history could not be read.",
+                            ),
+                        )
+                    }
+                }
+                .collect { result ->
+                    _state.value = when (result.state) {
+                        HistoryLoadState.LOADING -> _state.value.copy(
+                            historyLoadState = HistoryLoadState.LOADING,
+                            historyError = null,
+                        )
+                        HistoryLoadState.READY -> _state.value.copy(
+                            history = result.records,
+                            historyLoadState = HistoryLoadState.READY,
+                            historyError = null,
+                        )
+                        HistoryLoadState.ERROR -> _state.value.copy(
+                            historyLoadState = HistoryLoadState.ERROR,
+                            historyError = result.error,
+                        )
+                    }
+                }
         }
     }
 
@@ -189,6 +245,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showPhraseInput() { _state.value = _state.value.copy(phraseInputVisible = true) }
     fun hidePhraseInput() { _state.value = _state.value.copy(phraseInputVisible = false) }
     fun setHistoryFilter(filter: String) { _state.value = _state.value.copy(historyFilter = filter) }
+    fun retryHistory() { historyRetry.value += 1 }
     fun setHistoryActivityTab(tab: String) { _state.value = _state.value.copy(historyActivityTab = tab) }
     fun showHistoryOverlay(historyId: Long) {
         _state.value = _state.value.copy(selectedHistoryId = historyId, overlay = Overlay.HISTORY_ITEM)
@@ -368,9 +425,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setSetting(label: String, value: String) {
-        if (label == "History retention") HistoryRetentionSettings.set(value)
+        if (label == "History retention") {
+            HistoryRetentionSettings.set(value)
+            pruneHistory()
+        }
         _state.value = _state.value.copy(settings = _state.value.settings + (label to value), overlay = Overlay.NONE)
         editPreferences { it[settingKey(label)] = value }
+    }
+
+    private fun pruneHistory() {
+        viewModelScope.launch {
+            runCatching {
+                historyDatabase.notificationDao().deleteBefore(
+                    retentionCutoffEpochMillis(
+                        HistoryRetentionSettings.get(),
+                        System.currentTimeMillis(),
+                    ),
+                )
+            }.onFailure {
+                _state.value = _state.value.copy(
+                    historyLoadState = HistoryLoadState.ERROR,
+                    historyError = "History retention could not be updated.",
+                )
+            }
+        }
     }
 
     fun addTestHistory() {
@@ -409,3 +487,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
     }
 }
+
+private data class HistoryLoadResult(
+    val state: HistoryLoadState,
+    val records: List<HistoryRecord> = emptyList(),
+    val error: String? = null,
+)

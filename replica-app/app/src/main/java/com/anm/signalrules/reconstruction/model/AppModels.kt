@@ -137,6 +137,23 @@ data class HistoryRecord(
     val isGroupSummary: Boolean = false,
 )
 
+enum class HistoryLoadState {
+    LOADING,
+    READY,
+    ERROR,
+}
+
+/** Query contract shared by the history screen and the Room-backed metadata repository. */
+data class HistoryQuery(
+    val search: String = "",
+    val filter: String = "All",
+    val packageName: String? = null,
+    val contentState: NotificationContentState? = null,
+    val groupKey: String? = null,
+    val fromEpochMillis: Long? = null,
+    val limit: Int = 100,
+)
+
 /** Provenance of notification content exposed to the app. */
 enum class NotificationContentState {
     /** The platform supplied content, but this build intentionally does not persist it. */
@@ -161,6 +178,8 @@ data class UiState(
     val listenerAccessGranted: Boolean = true,
     val rules: List<SignalRule> = emptyList(),
     val history: List<HistoryRecord> = emptyList(),
+    val historyLoadState: HistoryLoadState = HistoryLoadState.LOADING,
+    val historyError: String? = null,
     val historySearch: String = "",
     val historySearchActive: Boolean = false,
     val historyFilter: String = "All",

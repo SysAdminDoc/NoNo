@@ -72,6 +72,36 @@ interface NotificationDao {
     @Query("SELECT * FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC LIMIT :limit")
     fun observeRecent(limit: Int = 100): Flow<List<NotificationEntity>>
 
+    /**
+     * Queries only persisted metadata. Rule-triggered and dismissed are intentionally empty
+     * until an action engine writes those states; returning no rows is safer than inventing them.
+     */
+    @Query(
+        """
+        SELECT * FROM notification_history
+        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' OR
+            notificationKey LIKE '%' || :query || '%' OR
+            contentState LIKE '%' || :query || '%' OR
+            COALESCE(groupKey, '') LIKE '%' || :query || '%')
+          AND (:filter = 'All')
+          AND (:packageName IS NULL OR packageName = :packageName)
+          AND (:contentState IS NULL OR contentState = :contentState)
+          AND (:groupKey IS NULL OR groupKey = :groupKey)
+          AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
+        ORDER BY postedAtEpochMillis DESC, id DESC
+        LIMIT :limit
+        """,
+    )
+    fun observeHistory(
+        query: String,
+        filter: String,
+        packageName: String? = null,
+        contentState: String? = null,
+        groupKey: String? = null,
+        fromEpochMillis: Long? = null,
+        limit: Int = 100,
+    ): Flow<List<NotificationEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(notification: NotificationEntity)
 

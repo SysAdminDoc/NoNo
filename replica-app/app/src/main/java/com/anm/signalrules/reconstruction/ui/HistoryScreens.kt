@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.History
@@ -44,8 +46,8 @@ import androidx.compose.runtime.remember
 import com.anm.signalrules.reconstruction.MainViewModel
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
+import com.anm.signalrules.reconstruction.model.HistoryLoadState
 import com.anm.signalrules.reconstruction.model.UiState
-import com.anm.signalrules.reconstruction.model.filterHistory
 import kotlinx.coroutines.delay
 
 @Composable
@@ -77,6 +79,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                 ),
                 modifier = Modifier.fillMaxWidth().padding(top = 28.dp).focusRequester(focusRequester),
             )
+            HistoryResults(state, model, Modifier.weight(1f))
         }
         return
     }
@@ -89,7 +92,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
         Text(state.history.size.toString(), style = MaterialTheme.typography.displayLarge)
         Row(verticalAlignment = Alignment.Bottom) {
             Text("Notifications ", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text("today", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = SignalColors.Yellow)
+            Text("in history", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = SignalColors.Yellow)
         }
         Row(Modifier.fillMaxWidth().padding(top = 34.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("12AM", "6AM", "12PM", "6PM", "12AM").forEach { Text(it, fontWeight = FontWeight.Bold) }
@@ -111,40 +114,86 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                 model.setHistoryFilter(if (state.historyFilter == "Dismissed") "All" else "Dismissed")
             }
         }
-        if (state.history.isEmpty()) {
-            Spacer(Modifier.weight(0.9f))
-            Box(Modifier.size(72.dp).align(Alignment.CenterHorizontally).background(SignalColors.Secondary, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.History, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(46.dp))
+        HistoryResults(state, model, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modifier) {
+    when (state.historyLoadState) {
+        HistoryLoadState.LOADING -> Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Text("Loading notification history…", color = SignalColors.Secondary, fontWeight = FontWeight.Bold)
+        }
+        HistoryLoadState.ERROR -> Column(
+            modifier.fillMaxWidth().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(Icons.Rounded.History, contentDescription = null, tint = SignalColors.Error, modifier = Modifier.size(48.dp))
+            Text("History is unavailable", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 16.dp))
+            Text(
+                state.historyError ?: "The local metadata store could not be read.",
+                color = SignalColors.Secondary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Text(
+                "Retry",
+                color = SignalColors.Yellow,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 18.dp).clickable(role = Role.Button) { model.retryHistory() },
+            )
+        }
+        HistoryLoadState.READY -> if (state.history.isEmpty()) {
+            val narrowed = state.historySearch.isNotBlank() || state.historyFilter != "All"
+            Column(
+                modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Box(Modifier.size(72.dp).background(SignalColors.Secondary, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.History, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(46.dp))
+                }
+                Text(
+                    if (state.historySearch.isNotBlank()) "No matching notifications"
+                    else if (narrowed) "No notifications match this filter"
+                    else "Notification history",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(top = 24.dp),
+                )
+                Text(
+                    if (state.historySearch.isNotBlank()) "Try another search term."
+                    else if (narrowed) "This build stores metadata only; no rule-triggered or dismissed state is recorded yet."
+                    else "Notifications will appear here as local metadata. Notification content is never persisted.",
+                    color = SignalColors.Secondary,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
             }
-            Text(
-                if (state.historySearch.isNotBlank()) "No matching notifications" else "Notification history",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 24.dp),
-            )
-            Text(
-                if (state.historySearch.isNotBlank()) "Try another search term." else "Notifications will appear here along with any rules that were triggered. You can configure this in settings.",
-                color = SignalColors.Secondary, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = 32.dp, vertical = 12.dp),
-            )
-            Spacer(Modifier.weight(1.1f))
         } else {
-            filterHistory(state.history, state.historySearch, state.historyFilter).forEach { item ->
-                Row(
-                    Modifier.fillMaxWidth().padding(top = 22.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).clickable { model.showHistoryOverlay(item.id) }.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(46.dp).background(SignalColors.RuleBlue, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Notifications, contentDescription = null, tint = SignalColors.Background)
+            LazyColumn(
+                modifier = modifier.fillMaxWidth(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 10.dp, bottom = 24.dp),
+            ) {
+                items(state.history, key = { it.id }) { item ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 12.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp))
+                            .clickable { model.showHistoryOverlay(item.id) }.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(Modifier.size(46.dp).background(SignalColors.RuleBlue, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Notifications, contentDescription = null, tint = SignalColors.Background)
+                        }
+                        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                            Text(item.app, color = SignalColors.Secondary, fontSize = 14.sp)
+                            Text(item.title, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                            Text(item.body, color = SignalColors.Secondary, fontSize = 14.sp)
+                        }
+                        IconButton(onClick = { model.showHistoryOverlay(item.id) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
                     }
-                    Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                        Text(item.app, color = SignalColors.Secondary, fontSize = 14.sp)
-                        Text(item.title, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                        Text(item.body, color = SignalColors.Secondary, fontSize = 14.sp)
-                    }
-                    IconButton(onClick = { model.showHistoryOverlay(item.id) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
                 }
             }
-            Spacer(Modifier.weight(1f))
         }
     }
 }

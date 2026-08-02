@@ -30,6 +30,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Restricted notification-listener binding to the system, declared explicit listener filter
   defaults, removed unused notification/Doze permissions, and clarified the local redaction-only
   capability during onboarding.
+- History search and retention now run through bounded Room queries with metadata selectors,
+  explicit loading/empty/error/retry states, and immediate pruning when the retention setting
+  changes. The metadata-only build no longer claims to show only “today” or invent rule-action
+  history states.
 
 ## [1.1.0] - 2026-08-01
 
