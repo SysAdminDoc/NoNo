@@ -52,6 +52,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   marker, package-identity, and metadata-only dry-run behavior without payload logging.
 - Added checked-in Room schema fixtures for versions 1–4, an instrumented all-version migration
   test, and v1–v3 RuleCodec golden fixtures covering normalization and unsupported versions.
+- Connected encrypted rule transfer to Android's Storage Access Framework with passphrase prompts,
+  import preview, keep-or-replace conflict resolution, cancellation/error recovery, and explicit
+  exclusion of notification history.
 
 ## [1.1.0] - 2026-08-01
 

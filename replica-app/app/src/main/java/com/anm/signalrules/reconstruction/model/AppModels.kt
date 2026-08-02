@@ -35,6 +35,9 @@ enum class Overlay {
     MUTE_IMPORTANCE,
     HISTORY_STORAGE,
     HISTORY_RETENTION,
+    TRANSFER_EXPORT_PASSPHRASE,
+    TRANSFER_IMPORT_PASSPHRASE,
+    TRANSFER_PREVIEW,
     THEME,
     LANGUAGE
 }
@@ -192,6 +195,9 @@ data class UiState(
     val historyGroupFilter: String? = null,
     val historyContentStateFilter: NotificationContentState? = null,
     val historyGroupSummaryOnly: Boolean = false,
+    val transferExportRequest: Int = 0,
+    val transferAdditions: Int = 0,
+    val transferConflicts: Int = 0,
     val historyActivityTab: String = "Rules",
     val selectedHistoryId: Long? = null,
     val draft: SignalRule = SignalRule(name = "New rule"),

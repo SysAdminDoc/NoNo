@@ -44,6 +44,15 @@ import com.anm.signalrules.reconstruction.model.UiState
 @Composable
 fun SettingsScreen(state: UiState, model: MainViewModel) {
     val context = LocalContext.current
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri == null) model.exportCancelled() else model.writeExport(uri)
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) model.showMessage("Import cancelled.") else model.beginImport(uri)
+    }
+    LaunchedEffect(state.transferExportRequest) {
+        if (state.transferExportRequest > 0) exportLauncher.launch("signal-rules.json")
+    }
     val listState = rememberLazyListState()
     val target = when (state.auditState.substringBefore('_').toIntOrNull()) { 17 -> 7; 18 -> 13; 19 -> 20; 20 -> 28; else -> 0 }
     LaunchedEffect(state.auditState) { listState.scrollToItem(target) }
@@ -73,9 +82,9 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { PreferenceRow("Clear shortcuts", unavailable = NOT_RECONSTRUCTED) }
 
         item { SectionLabel("Backup") }
-        item { PreferenceRow("Import rules", unavailable = NO_BACKUP_FORMAT) }
-        item { PreferenceRow("Export rules", unavailable = NO_BACKUP_FORMAT) }
-        item { PreferenceRow("Automatic backups", unavailable = NO_BACKUP_FORMAT) }
+        item { PreferenceRow("Import rules", "Encrypted Signal Rules JSON; notification history is never imported.", onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) }) }
+        item { PreferenceRow("Export rules", "Create an encrypted file through Android storage access.", onClick = model::beginExport) }
+        item { PreferenceRow("Automatic backups", unavailable = NO_AUTOMATIC_BACKUPS) }
 
         item { SectionLabel("Advanced") }
         item { PersistentSwitchRow(state, model, "Privacy mode", "Hide notification text in history and diagnostics.", unavailable = NO_ACTION_ENGINE) }
@@ -96,7 +105,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
 /** Reasons a control exists for fidelity but cannot do anything in this build. */
 private const val NOT_RECONSTRUCTED = "the original behaviour was not observable during the audit."
 private const val NO_SUPPORT_CHANNEL = "this reconstruction has no support channel or community."
-private const val NO_BACKUP_FORMAT = "no backup file format has been defined for this reconstruction yet."
+private const val NO_AUTOMATIC_BACKUPS = "automatic backup scheduling is not implemented; use encrypted export instead."
 private const val NO_ACTION_ENGINE = "this build has no notification action engine, so the setting would have no effect."
 
 private fun openUrl(context: android.content.Context, url: String) {

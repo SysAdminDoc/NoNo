@@ -82,10 +82,10 @@ control rather than leaving the reader to infer it:
 - **No notification content is stored.** The listener records package identity, notification key,
   posted time, channel/group/summary metadata, content provenance, bounded ingestion counters, and
   failure timestamps. Titles and bodies are never persisted.
-- **Backup, import, export, and launcher shortcuts are not implemented.** No file format has
-  been exposed through the UI yet, so those rows are marked unavailable rather than opening a
-  picker that discards its result. The local rule-transfer core is covered separately and does
-  not include notification history.
+- **Automatic backups and launcher shortcuts are not implemented.** Encrypted rule import/export
+  is available through Android's Storage Access Framework, with a passphrase, preview, conflict
+  choice, cancellation/error handling, and no notification history in the file. Automatic backup
+  scheduling remains unavailable.
 - **Only the dark theme exists**, and the app ships no translated resources, so the Theme and
   Language rows are marked unavailable.
 - **History is bounded and queryable.** Search and package/channel/group/content-provenance and

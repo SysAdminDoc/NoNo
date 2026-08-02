@@ -1,6 +1,7 @@
 package com.anm.signalrules.reconstruction
 
 import android.app.Application
+import android.net.Uri
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
@@ -14,6 +15,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.anm.signalrules.reconstruction.audit.auditStateFor
 import com.anm.signalrules.reconstruction.data.SignalPreferences
+import com.anm.signalrules.reconstruction.data.ConflictResolution
+import com.anm.signalrules.reconstruction.data.RuleImportResult
+import com.anm.signalrules.reconstruction.data.RuleTransfer
 import com.anm.signalrules.reconstruction.data.SignalDatabase
 import com.anm.signalrules.reconstruction.data.toMetrics
 import com.anm.signalrules.reconstruction.data.toHistoryRecord
@@ -54,6 +58,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /** Shown once when an unreadable preferences file was replaced with defaults. */
@@ -65,6 +71,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var auditOverride: String? = null
     private val historyRetry = MutableStateFlow(0)
+    private var pendingExportPayload: String? = null
+    private var pendingImportEncoded: String? = null
+    private var pendingImportRules: List<SignalRule>? = null
 
     @Volatile
     private var recoveredFromCorruption = false
@@ -288,6 +297,142 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setHistoryGroupSummaryOnly(enabled: Boolean) {
         _state.value = _state.value.copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
+    }
+    fun beginExport() {
+        _state.value = _state.value.copy(overlay = Overlay.TRANSFER_EXPORT_PASSPHRASE, transientMessage = null)
+    }
+    fun requestExport(passphrase: String) {
+        if (passphrase.isBlank()) {
+            _state.value = _state.value.copy(transientMessage = "Enter a passphrase to encrypt the rule file.")
+            return
+        }
+        val rules = _state.value.rules
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Preparing encrypted rule export…")
+        viewModelScope.launch(Dispatchers.Default) {
+            val chars = passphrase.toCharArray()
+            val result = runCatching { RuleTransfer.exportRules(rules, chars) }
+                .onFailure { chars.fill('\u0000') }
+            withContext(Dispatchers.Main.immediate) {
+                result.fold(
+                    onSuccess = {
+                        pendingExportPayload = it
+                        _state.value = _state.value.copy(transferExportRequest = _state.value.transferExportRequest + 1, transientMessage = null)
+                    },
+                    onFailure = { _state.value = _state.value.copy(transientMessage = "Could not prepare the encrypted rule file.") },
+                )
+            }
+        }
+    }
+    fun writeExport(uri: Uri) {
+        val payload = pendingExportPayload
+        pendingExportPayload = null
+        if (payload == null) {
+            _state.value = _state.value.copy(transientMessage = "The export expired; try again.")
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = runCatching {
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { output ->
+                    output.write(payload.toByteArray(Charsets.UTF_8))
+                } ?: error("The selected location could not be opened.")
+            }
+            withContext(Dispatchers.Main.immediate) {
+                _state.value = _state.value.copy(
+                    transientMessage = result.fold({ "Encrypted rules exported. Notification history was not included." }, { "Export failed; no rule data was changed." }),
+                )
+            }
+        }
+    }
+    fun exportCancelled() {
+        pendingExportPayload = null
+        _state.value = _state.value.copy(transientMessage = "Export cancelled.")
+    }
+    fun beginImport(uri: Uri) {
+        _state.value = _state.value.copy(transientMessage = "Reading rule file…")
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = runCatching {
+                getApplication<Application>().contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+                    ?: error("The selected file could not be opened.")
+            }
+            withContext(Dispatchers.Main.immediate) {
+                result.fold(
+                    onSuccess = { encoded -> processImportedEncoding(encoded) },
+                    onFailure = { _state.value = _state.value.copy(transientMessage = "Import failed; the selected URI could not be read.") },
+                )
+            }
+        }
+    }
+    private fun processImportedEncoding(encoded: String) {
+        when (val result = RuleTransfer.importRules(encoded)) {
+            is RuleImportResult.NeedsPassphrase -> {
+                pendingImportEncoded = encoded
+                _state.value = _state.value.copy(overlay = Overlay.TRANSFER_IMPORT_PASSPHRASE, transientMessage = null)
+            }
+            is RuleImportResult.Success -> showImportPreview(result.rules)
+            RuleImportResult.Cancelled -> cancelTransfer()
+            RuleImportResult.InvalidFile -> _state.value = _state.value.copy(transientMessage = "Import failed; the file is invalid or unsupported.")
+        }
+    }
+    fun submitImportPassphrase(passphrase: String) {
+        val encoded = pendingImportEncoded ?: run {
+            cancelTransfer()
+            return
+        }
+        pendingImportEncoded = null
+        viewModelScope.launch(Dispatchers.Default) {
+            val chars = passphrase.toCharArray()
+            val result = try {
+                RuleTransfer.importRules(encoded, chars)
+            } finally {
+                chars.fill('\u0000')
+            }
+            withContext(Dispatchers.Main.immediate) {
+                when (result) {
+                    is RuleImportResult.Success -> showImportPreview(result.rules)
+                    RuleImportResult.Cancelled -> cancelTransfer()
+                    RuleImportResult.NeedsPassphrase, RuleImportResult.InvalidFile -> _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Import failed; the passphrase or file is invalid.")
+                }
+            }
+        }
+    }
+    private fun showImportPreview(incoming: List<SignalRule>) {
+        val preview = RuleTransfer.preview(_state.value.rules, incoming)
+        pendingImportRules = incoming
+        _state.value = _state.value.copy(
+            overlay = Overlay.TRANSFER_PREVIEW,
+            transferAdditions = preview.additions.size,
+            transferConflicts = preview.conflicts.size,
+            transientMessage = null,
+        )
+    }
+    fun commitImportedRules(resolution: ConflictResolution) {
+        val incoming = pendingImportRules ?: run {
+            cancelTransfer()
+            return
+        }
+        val current = _state.value.rules
+        val preview = RuleTransfer.preview(current, incoming)
+        val conflictIds = preview.conflicts.map { it.existing.id }
+        val resolutions = conflictIds.associateWith { resolution }
+        val updated = RuleTransfer.commit(current, incoming, resolutions) ?: run {
+            cancelTransfer()
+            return
+        }
+        pendingImportRules = null
+        _state.value = _state.value.copy(
+            rules = updated,
+            overlay = Overlay.NONE,
+            transferAdditions = 0,
+            transferConflicts = 0,
+            transientMessage = "Imported ${preview.additions.size} new rule(s); notification history was not imported.",
+        )
+        persistRules()
+    }
+    fun cancelTransfer() {
+        pendingExportPayload = null
+        pendingImportEncoded = null
+        pendingImportRules = null
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transferAdditions = 0, transferConflicts = 0, transientMessage = "Transfer cancelled.")
     }
     fun retryHistory() { historyRetry.value += 1 }
     fun setHistoryActivityTab(tab: String) { _state.value = _state.value.copy(historyActivityTab = tab) }
@@ -527,6 +672,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        pendingExportPayload = null
+        pendingImportEncoded = null
+        pendingImportRules = null
         historyDatabase.close()
         super.onCleared()
     }

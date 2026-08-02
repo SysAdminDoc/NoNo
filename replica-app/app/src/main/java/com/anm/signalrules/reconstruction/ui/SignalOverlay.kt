@@ -32,7 +32,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -41,11 +44,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.anm.signalrules.reconstruction.MainViewModel
+import com.anm.signalrules.reconstruction.data.ConflictResolution
 import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.UiState
@@ -144,6 +150,19 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
         Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", listOf("All notifications", "Store notification content", "Metadata only", "Off"), state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
         Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", listOf("7 days", "30 days", "3 months", "6 months", "Forever"), state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }
+        Overlay.TRANSFER_EXPORT_PASSPHRASE -> TransferPassphraseDialog(
+            title = "Encrypt rule export",
+            explanation = "The passphrase is used once and never saved or logged. Notification history is never included.",
+            onDismiss = model::cancelTransfer,
+            onDone = model::requestExport,
+        )
+        Overlay.TRANSFER_IMPORT_PASSPHRASE -> TransferPassphraseDialog(
+            title = "Unlock rule import",
+            explanation = "Enter the passphrase for this encrypted rule file. It is never saved or logged.",
+            onDismiss = model::cancelTransfer,
+            onDone = model::submitImportPassphrase,
+        )
+        Overlay.TRANSFER_PREVIEW -> TransferPreviewDialog(state, model)
         Overlay.THEME -> ChoiceDialog("Theme", listOf("Dark", "Light", "System default"), state.settings["Theme"], model::dismissOverlay) { model.setSetting("Theme", it) }
         Overlay.LANGUAGE -> ChoiceDialog("Language", listOf("System default", "English", "Deutsch", "Español", "Français"), state.settings["Language"], model::dismissOverlay) { model.setSetting("Language", it) }
         Overlay.NONE -> Unit
@@ -238,4 +257,68 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
             Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable { keyboard?.hide(); onDismiss() }.padding(18.dp))
         }
     }
+}
+
+@Composable
+private fun TransferPassphraseDialog(
+    title: String,
+    explanation: String,
+    onDismiss: () -> Unit,
+    onDone: (String) -> Unit,
+) {
+    var passphrase by remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
+            Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(explanation, color = SignalColors.Secondary, lineHeight = 21.sp, modifier = Modifier.padding(top = 10.dp))
+            OutlinedTextField(
+                value = passphrase,
+                onValueChange = { passphrase = it },
+                label = { Text("Passphrase") },
+                singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF4A4C56),
+                    unfocusedContainerColor = Color(0xFF4A4C56),
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                ),
+                modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+            )
+            SignalPrimaryButton("Continue", { onDone(passphrase) }, modifier = Modifier.padding(top = 14.dp))
+            Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable(onClick = onDismiss).padding(18.dp))
+        }
+    }
+}
+
+@Composable
+private fun TransferPreviewDialog(state: UiState, model: MainViewModel) {
+    DialogFrame("Review rule import", model::cancelTransfer) {
+        Text(
+            "${state.transferAdditions} new rule(s), ${state.transferConflicts} conflict(s). Notification history is never imported.",
+            color = SignalColors.Secondary,
+            lineHeight = 22.sp,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        )
+        Text(
+            "Keep existing rules when IDs conflict, or replace those rules with the imported copies.",
+            color = SignalColors.Secondary,
+            lineHeight = 22.sp,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        )
+        TransferChoice("Keep existing", { model.commitImportedRules(ConflictResolution.KEEP_EXISTING) })
+        TransferChoice("Replace conflicts", { model.commitImportedRules(ConflictResolution.REPLACE_EXISTING) })
+    }
+}
+
+@Composable
+private fun TransferChoice(label: String, onClick: () -> Unit) {
+    Text(
+        label,
+        color = SignalColors.Yellow,
+        fontWeight = FontWeight.Bold,
+        fontSize = 17.sp,
+        modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
+    )
 }
