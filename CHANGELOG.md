@@ -74,6 +74,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `targetSdk` moved from 35 to 36. System bar colour attributes were removed from the theme
+  (no-ops from API 35; `enableEdgeToEdge` owns them), predictive back is declared explicitly,
+  and the fixed-orientation lock was dropped since API 36 ignores it on displays 600dp and
+  wider and the opt-out property stops working at API 37. `androidx.activity:activity-compose`
+  moved 1.9.3 to 1.13.0, which was roughly two years of skew against the Compose BOM in use.
 - The 19.7 MB debug APK is no longer tracked in git. `dist/SHA256SUMS.txt` stays tracked so a
   downloaded artifact can still be verified.
 

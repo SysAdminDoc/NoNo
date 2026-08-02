@@ -10,12 +10,16 @@
         android:icon="@mipmap/ic_launcher"
         android:label="Signal Rules"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:enableOnBackInvokedCallback="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.SignalRules">
+        <!--
+            No screenOrientation lock: targetSdk 36 ignores it on displays >= 600dp anyway,
+            and the temporary opt-out property stops working at API 37.
+        -->
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="fullUser">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

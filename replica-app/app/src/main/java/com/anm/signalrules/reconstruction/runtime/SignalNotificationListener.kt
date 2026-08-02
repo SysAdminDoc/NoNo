@@ -2,7 +2,6 @@ package com.anm.signalrules.reconstruction.runtime
 
 import android.content.ComponentName
 import android.content.Context
-import android.os.Build
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -47,11 +46,9 @@ class SignalNotificationListener : NotificationListenerService() {
 
         /**
          * Asks the platform to rebind the listener. Safe at any time, and a no-op when access
-         * was never granted. Available from API 24; below that the settings screen is the only
-         * recovery.
+         * was never granted. Available since API 24, which is this app's minimum.
          */
         fun requestRebindIfPossible(context: Context) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return
             runCatching { requestRebind(componentName(context)) }
         }
     }
