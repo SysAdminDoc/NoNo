@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.focus.FocusRequester
+
+object SignalMetrics {
+    val pageHorizontal = 24.dp
+    val sectionGap = 24.dp
+    val rowGap = 8.dp
+    val rowMinHeight = 56.dp
+    val controlRadius = 12.dp
+    val cardRadius = 16.dp
+}
 
 @Composable
 fun SignalTopBar(
@@ -49,7 +60,7 @@ fun SignalTopBar(
     onAction: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 12.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (onBack != null) {
@@ -84,7 +95,7 @@ fun SignalPrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier =
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().height(52.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(containerColor = SignalColors.Yellow, contentColor = SignalColors.Background),
     ) { Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
@@ -133,6 +144,7 @@ fun TokenButton(label: String, error: Boolean = false, onClick: () -> Unit) {
         fontWeight = FontWeight.SemiBold,
         textDecoration = TextDecoration.Underline,
         modifier = Modifier
+            .heightIn(min = 48.dp)
             .clickable(role = Role.Button, onClick = onClick)
             .border(1.dp, Color.Transparent, RoundedCornerShape(4.dp))
             .padding(horizontal = 3.dp, vertical = 10.dp)
@@ -148,7 +160,11 @@ fun SurfaceCard(modifier: Modifier = Modifier, contentPadding: PaddingValues = P
 @Composable
 fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit, destructive: Boolean = false) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = 8.dp, vertical = 13.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 13.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -9,8 +9,8 @@ $steps = @(
     @{ Name = 'unit-tests'; Script = 'run-unit-tests.ps1'; NeedsDevice = $false },
     @{ Name = 'lint'; Script = 'run-lint.ps1'; NeedsDevice = $false },
     @{ Name = 'build'; Script = 'build-debug.ps1'; NeedsDevice = $false },
-    @{ Name = 'ui-tests'; Script = 'run-ui-tests.ps1'; NeedsDevice = $true },
     @{ Name = 'install'; Script = 'install-debug.ps1'; NeedsDevice = $true },
+    @{ Name = 'ui-tests'; Script = 'run-ui-tests.ps1'; NeedsDevice = $true },
     @{ Name = 'visual-validation'; Script = 'run-visual-validation.ps1'; NeedsDevice = $true }
 )
 $results = New-Object System.Collections.Generic.List[object]
@@ -25,6 +25,12 @@ foreach ($step in $steps) {
     }
     catch { $status = 'FAIL'; $detail = $_.Exception.Message }
     $results.Add([pscustomobject][ordered]@{ step = $step.Name; status = $status; duration_seconds = [math]::Round(((Get-Date) - $started).TotalSeconds, 2); detail = $detail })
+    if ($status -eq 'FAIL') {
+        foreach ($remaining in $steps[($results.Count)..($steps.Count - 1)]) {
+            $results.Add([pscustomobject][ordered]@{ step = $remaining.Name; status = 'NOT_RUN'; duration_seconds = 0; detail = "Skipped after $($step.Name) failed." })
+        }
+        break
+    }
 }
 $report = Join-Path $root 'validation\reports\full-validation.json'
 $results | ConvertTo-Json | Set-Content -LiteralPath $report -Encoding UTF8

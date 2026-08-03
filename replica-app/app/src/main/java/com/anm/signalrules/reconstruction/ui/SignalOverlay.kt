@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -185,7 +187,7 @@ private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composab
 @Composable
 private fun ChoiceDialog(title: String, choices: List<String>, selected: String?, onDismiss: () -> Unit, onChoice: (String) -> Unit) {
     DialogFrame(title, onDismiss) {
-        LazyColumn(Modifier.heightIn(max = 570.dp)) {
+        LazyColumn(Modifier.heightIn(max = 570.dp).semantics { selectableGroup() }) {
             items(choices) { choice ->
                 ChoiceRow(choice, choice == selected, { onChoice(choice) })
             }

@@ -62,6 +62,9 @@ object SignalPreferences {
     ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
         corruptionHandler = ReplaceFileCorruptionHandler {
             onCorruption()
+            // Some Windows and OEM filesystems cannot atomically replace an existing
+            // unreadable payload. Remove it before DataStore writes the recovered defaults.
+            runCatching { produceFile().delete() }
             emptyPreferences()
         },
         scope = scope,

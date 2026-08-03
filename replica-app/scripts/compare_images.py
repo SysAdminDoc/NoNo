@@ -24,6 +24,38 @@ def load_mask(path: Path | None, size: tuple[int, int]) -> np.ndarray:
     return mask
 
 
+def gaussian_blur(image: np.ndarray, radius: int = 5, sigma: float = 1.5) -> np.ndarray:
+    """Apply a small separable Gaussian blur without adding a SciPy dependency."""
+    axis = np.arange(-radius, radius + 1, dtype=np.float32)
+    kernel = np.exp(-(axis * axis) / (2.0 * sigma * sigma))
+    kernel /= kernel.sum()
+    padded_x = np.pad(image, ((0, 0), (radius, radius)), mode="reflect")
+    horizontal = np.empty_like(image, dtype=np.float32)
+    for row in range(image.shape[0]):
+        horizontal[row] = np.convolve(padded_x[row], kernel, mode="valid")
+    padded_y = np.pad(horizontal, ((radius, radius), (0, 0)), mode="reflect")
+    blurred = np.empty_like(image, dtype=np.float32)
+    for column in range(image.shape[1]):
+        blurred[:, column] = np.convolve(padded_y[:, column], kernel, mode="valid")
+    return blurred
+
+
+def windowed_ssim(base: np.ndarray, current: np.ndarray, mask: np.ndarray) -> float:
+    """Return Gaussian-windowed SSIM; this is diagnostic, not the pass/fail gate."""
+    base = base.astype(np.float32)
+    current = current.astype(np.float32)
+    mu_base = gaussian_blur(base)
+    mu_current = gaussian_blur(current)
+    sigma_base = np.maximum(gaussian_blur(base * base) - mu_base * mu_base, 0.0)
+    sigma_current = np.maximum(gaussian_blur(current * current) - mu_current * mu_current, 0.0)
+    covariance = gaussian_blur(base * current) - mu_base * mu_current
+    c1, c2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
+    numerator = (2 * mu_base * mu_current + c1) * (2 * covariance + c2)
+    denominator = (mu_base * mu_base + mu_current * mu_current + c1) * (sigma_base + sigma_current + c2)
+    values = (numerator / denominator)[mask]
+    return float(values.mean()) if values.size else 1.0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", required=True, type=Path)
@@ -66,13 +98,11 @@ def main() -> int:
     rmse = float(np.sqrt(np.mean(np.square(values)))) if values.size else 0.0
     pixel_similarity = float(max(0.0, 1.0 - mae / 255.0))
 
-    base_gray = np.asarray(ImageOps.grayscale(baseline), dtype=np.float64)[mask]
-    current_gray = np.asarray(ImageOps.grayscale(current), dtype=np.float64)[mask]
-    c1, c2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
-    mean_a, mean_b = base_gray.mean(), current_gray.mean()
-    var_a, var_b = base_gray.var(), current_gray.var()
-    covariance = ((base_gray - mean_a) * (current_gray - mean_b)).mean()
-    structural_similarity = float(((2 * mean_a * mean_b + c1) * (2 * covariance + c2)) / ((mean_a**2 + mean_b**2 + c1) * (var_a + var_b + c2)))
+    structural_similarity = windowed_ssim(
+        np.asarray(ImageOps.grayscale(baseline), dtype=np.float32),
+        np.asarray(ImageOps.grayscale(current), dtype=np.float32),
+        mask,
+    )
 
     side = Image.new("RGB", (baseline.width * 2, baseline.height), "black")
     side.paste(baseline, (0, 0))
@@ -105,7 +135,7 @@ def main() -> int:
         "mean_absolute_error": round(mae, 6),
         "root_mean_square_error": round(rmse, 6),
         "pixel_similarity": round(pixel_similarity, 8),
-        "global_structural_similarity": round(structural_similarity, 8),
+        "windowed_structural_similarity": round(structural_similarity, 8),
         "threshold": args.threshold,
         "result": result,
     }

@@ -7,4 +7,4 @@
 - Dynamic status/navigation regions are masked; app-owned content is not masked globally. Exact branding/art/font differences remain visible and are interpreted through the asset-rights and deviation registers.
 - Lifecycle validation includes cold launch, warm navigation, persisted rule state, force-stop/relaunch, and reversible rotation for the one audited landscape state.
 
-Pixel similarity is reported as `1 - normalized mean absolute RGB error`; global structural similarity is also reported as a diagnostic. Passing is based on the per-screen pixel threshold in `validation/screen-validation-matrix.csv`. A pass does not supersede manual review or known-deviation documentation.
+Pixel similarity is reported as `1 - normalized mean absolute RGB error`; 11x11 Gaussian-windowed structural similarity is also reported as a diagnostic. Passing is based only on the per-screen pixel threshold in `validation/screen-validation-matrix.csv`. A pass does not supersede manual review or known-deviation documentation.

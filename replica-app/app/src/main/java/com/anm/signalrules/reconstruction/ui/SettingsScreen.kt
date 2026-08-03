@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,6 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,7 +96,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
 
         item { SectionLabel("Advanced") }
         item { PersistentSwitchRow(state, model, "Privacy mode", "Hide notification text in history and diagnostics.", unavailable = NO_ACTION_ENGINE) }
-        item { PreferenceRow("Theme", unavailable = "Only the dark theme is implemented; light and follow-system are not.") }
+        item { PreferenceRow("Theme", value = state.settings["Theme"], onClick = { model.showOverlay(Overlay.THEME) }) }
         item { PreferenceRow("Language", unavailable = "This build ships no translated resources, so it follows the system locale only.") }
         item { PreferenceRow("Translate", unavailable = NOT_RECONSTRUCTED) }
         item { PersistentSwitchRow(state, model, "Hide popups when muting", "Avoid heads-up popups for notifications matched by a mute rule.", unavailable = NO_ACTION_ENGINE) }
@@ -132,7 +139,14 @@ private fun PreferenceRow(
         Modifier
             .fillMaxWidth()
             .then(if (enabled) Modifier.clickable(role = Role.Button) { onClick?.invoke() } else Modifier)
-            .padding(horizontal = 24.dp, vertical = 13.dp),
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 24.dp, vertical = 13.dp)
+            .semantics {
+                if (unavailable != null) {
+                    disabled()
+                    contentDescription = "$title. Unavailable: $unavailable"
+                }
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -172,7 +186,17 @@ private fun PersistentSwitchRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .then(if (enabled) Modifier.clickable(role = Role.Switch) { model.setSetting(title, if (checked) "Off" else "On") } else Modifier)
+            .heightIn(min = 64.dp)
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = { model.setSetting(title, if (it) "On" else "Off") },
+            )
+            .semantics {
+                stateDescription = if (checked) "On" else "Off"
+                contentDescription = title
+            }
             .padding(horizontal = 24.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -184,7 +208,8 @@ private fun PersistentSwitchRow(
         Switch(
             checked = checked,
             enabled = enabled,
-            onCheckedChange = { model.setSetting(title, if (it) "On" else "Off") },
+            onCheckedChange = null,
+            modifier = Modifier.clearAndSetSemantics { },
             colors = SwitchDefaults.colors(checkedTrackColor = SignalColors.Yellow, checkedThumbColor = SignalColors.Background, uncheckedTrackColor = SignalColors.Border),
         )
     }

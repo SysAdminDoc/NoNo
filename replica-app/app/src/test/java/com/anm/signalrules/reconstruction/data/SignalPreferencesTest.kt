@@ -22,7 +22,10 @@ class SignalPreferencesTest {
 
     private val onboarding = booleanPreferencesKey("onboarding_complete")
 
-    private fun storeFile(): File = File(tempFolder.root, "signal_rules.preferences_pb")
+    private fun storeFile(): File = File(
+        tempFolder.newFolder("store"),
+        "signal_rules.preferences_pb",
+    )
 
     @Test
     fun `round trips values through a healthy store`() = runTest {

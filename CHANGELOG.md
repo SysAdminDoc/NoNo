@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Applied the persisted Theme setting to dark, light, and system-default palettes, with accessible
+  preference controls, selectable dialogs, and minimum touch targets across shared UI components.
+- Hardened validation provenance with a build-manifest hash check, explicit capture/comparison
+  failure classes, fail-fast full validation, and Gaussian-windowed structural-similarity metrics.
+- Made corrupted preference recovery deterministic on Windows and OEM filesystems by removing the
+  unreadable payload before DataStore rewrites recovered defaults.
 - Added Android 15 sensitive-notification provenance, preventing system redaction placeholders
   from entering future rule matching and marking history as content hidden by the system.
 - Added bounded listener ingestion, Room-backed metadata history, transactional retention pruning,

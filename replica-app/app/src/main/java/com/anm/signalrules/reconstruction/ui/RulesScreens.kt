@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -97,7 +98,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
     } else {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             ListenerHealthBanner(state)
-            Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
                 SignalIconButton(Icons.Rounded.Search, "Search rules", onClick = { model.showMessage("Rule search is not reconstructed.") })
             }
             Box(Modifier.size(48.dp).align(Alignment.CenterHorizontally).background(SignalColors.White, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {

@@ -30,8 +30,9 @@ class MainActivity : ComponentActivity() {
         )
         requestedAuditState.value = readAuditState(intent)
         setContent {
-            SignalTheme {
-                val model: MainViewModel = viewModel()
+            val model: MainViewModel = viewModel()
+            val state by model.state.collectAsState()
+            SignalTheme(state.settings["Theme"] ?: "Dark") {
                 val requested by requestedAuditState.collectAsState()
                 val lifecycleOwner = LocalLifecycleOwner.current
                 LaunchedEffect(requested) {
