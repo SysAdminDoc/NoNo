@@ -1,6 +1,6 @@
 # Android Notification Manager clean-room project
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
