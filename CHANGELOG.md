@@ -214,3 +214,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `data/SignalPreferences.kt` centralises preference-store construction, and
   `SignalPreferencesTest` covers healthy round-trip, recovery from a deliberately corrupted
   file, writability after recovery, and the view model's read guard.
+
+## Roadmap archive — 2026-08-10 — ROADMAP.md
+
+<details>
+<summary>Original roadmap snapshot</summary>
+
+```markdown
+# Roadmap — ANM / Signal Rules
+
+Only incomplete work is listed here. This file was normalized on 2026-08-02: completed entries were removed, residual acceptance gaps were retained under their original IDs, and new research-driven items continue at R-042. Every item is traceable to `RESEARCH.md` and the cited repository evidence.
+
+## Research-Driven Additions
+
+### P0
+
+### P1
+
+### P2
+```
+
+</details>
