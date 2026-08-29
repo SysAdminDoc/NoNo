@@ -31,7 +31,7 @@ class SignalDatabaseTest {
     }
 
     @Test
-    fun `insert and prune are one transactional operation`() = runBlocking {
+    fun insertAndPruneAreOneTransactionalOperation() = runBlocking {
         val dao = database.notificationDao()
         dao.insertAndPrune(
             NotificationEntity(
@@ -57,7 +57,7 @@ class SignalDatabaseTest {
     }
 
     @Test
-    fun `history query applies metadata selectors and a hard result limit`() = runBlocking {
+    fun historyQueryAppliesMetadataSelectorsAndAHardResultLimit() = runBlocking {
         val dao = database.notificationDao()
         dao.insert(
             NotificationEntity(
@@ -112,7 +112,7 @@ class SignalDatabaseTest {
     }
 
     @Test
-    fun `ingestion diagnostics accumulate counters without payload data`() = runBlocking {
+    fun ingestionDiagnosticsAccumulateCountersWithoutPayloadData() = runBlocking {
         val dao = database.notificationDao()
         dao.mergeIngestionMetrics(
             persistedDelta = 4L,

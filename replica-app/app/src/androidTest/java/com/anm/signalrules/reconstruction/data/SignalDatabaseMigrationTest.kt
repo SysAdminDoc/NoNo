@@ -26,7 +26,7 @@ class SignalDatabaseMigrationTest {
 
     @Test
     @Throws(IOException::class)
-    fun `v1 metadata survives every schema migration`() {
+    fun v1MetadataSurvivesEverySchemaMigration() {
         helper.createDatabase("migration-v1-test.db", 1).apply {
             execSQL(
                 "INSERT INTO notification_history " +
@@ -58,7 +58,7 @@ class SignalDatabaseMigrationTest {
 
     @Test
     @Throws(IOException::class)
-    fun `v3 metadata survives the channel migration`() {
+    fun v3MetadataSurvivesTheChannelMigration() {
         helper.createDatabase(databaseName, 3).apply {
             execSQL(
                 "INSERT INTO notification_history " +

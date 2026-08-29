@@ -52,6 +52,13 @@ android {
         resources.excludes += '/META-INF/{AL2.0,LGPL2.1}'
     }
 
+    sourceSets {
+        // MigrationTestHelper reads the exported schemas from the test APK's assets. Without
+        // this the migration tests fail at createDatabase with "Cannot find the schema file",
+        // which is what kept them from ever passing on a device.
+        androidTest.assets.srcDirs += files("$projectDir/schemas")
+    }
+
     lint {
         abortOnError true
         checkDependencies true

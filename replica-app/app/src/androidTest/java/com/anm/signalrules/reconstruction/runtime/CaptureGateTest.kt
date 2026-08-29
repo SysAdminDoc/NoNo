@@ -26,7 +26,7 @@ class CaptureGateTest {
     }
 
     @Test
-    fun `pause state is persisted and restored without changing listener binding`() {
+    fun pauseStateIsPersistedAndRestoredWithoutChangingListenerBinding() {
         CaptureGate.setPaused(context, true)
         assertTrue(CaptureGate.isPaused())
 
