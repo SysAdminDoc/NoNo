@@ -31,6 +31,7 @@ enum class Overlay {
     RENAME,
     HISTORY_ITEM,
     HISTORY_FILTERS,
+    CONTENT_HIDDEN,
     MUTE_MODE,
     MUTE_IMPORTANCE,
     HISTORY_STORAGE,
@@ -211,7 +212,11 @@ data class UiState(
     val settings: Map<String, String> = defaultSettings,
     val validationError: String? = null,
     val transientMessage: String? = null,
-)
+) {
+    /** Content provenance of the record whose menu is open, if one is. */
+    val selectedHistoryContentState: NotificationContentState?
+        get() = history.firstOrNull { it.id == selectedHistoryId }?.contentState
+}
 
 val defaultSettings = mapOf(
     "Mute mode" to "Mute all sounds",

@@ -449,6 +449,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showHistoryOverlay(historyId: Long) {
         _state.value = _state.value.copy(selectedHistoryId = historyId, overlay = Overlay.HISTORY_ITEM)
     }
+    /** Feedback for the copy action in the content-hidden explainer. */
+    fun reportCommandCopied() {
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Command copied.")
+    }
+
     fun setRenameDraft(text: String) { _state.value = _state.value.copy(renameDraft = text) }
     fun setFolderDraft(text: String) { _state.value = _state.value.copy(folderDraft = text) }
 

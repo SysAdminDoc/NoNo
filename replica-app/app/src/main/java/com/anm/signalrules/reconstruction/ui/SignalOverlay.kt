@@ -1,5 +1,7 @@
 package com.anm.signalrules.reconstruction.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +44,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -117,15 +120,20 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.RENAME -> RenameDialog(state, model)
         Overlay.HISTORY_ITEM -> MenuDialog(
             "Notification actions",
-            listOf(
-                MenuItem("Restore", Icons.Rounded.MoreTime) { model.dismissOverlay() },
-                MenuItem("Open notification", Icons.Rounded.ChevronRight) { model.dismissOverlay() },
-                MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) },
-                MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() },
-                MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() },
-                MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() },
-            ), model::dismissOverlay,
+            buildList {
+                add(MenuItem("Restore", Icons.Rounded.MoreTime) { model.dismissOverlay() })
+                add(MenuItem("Open notification", Icons.Rounded.ChevronRight) { model.dismissOverlay() })
+                add(MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) })
+                add(MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() })
+                add(MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() })
+                // Only offered where it applies, so it explains this record rather than a general topic.
+                if (state.selectedHistoryContentState == NotificationContentState.HIDDEN_BY_SYSTEM) {
+                    add(MenuItem("Why is content hidden?", Icons.Rounded.Tune) { model.showOverlay(Overlay.CONTENT_HIDDEN) })
+                }
+                add(MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() })
+            }, model::dismissOverlay,
         )
+        Overlay.CONTENT_HIDDEN -> ContentHiddenDialog(model)
         Overlay.HISTORY_FILTERS -> {
             val packages = state.history.map { it.appPackageName ?: it.app }.distinct().sorted()
             val channels = state.history.mapNotNull { it.channelId }.distinct().sorted()
@@ -170,6 +178,68 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.NONE -> Unit
     }
 }
+
+/**
+ * Explains a record the platform redacted before this app ever saw it.
+ *
+ * Android 15 and newer hide the content of notifications that look like they carry a one-time
+ * code from any listener that does not hold RECEIVE_SENSITIVE_NOTIFICATIONS, which is a
+ * signature-or-role permission an installed app cannot obtain. Users read the resulting rows as a
+ * bug in whichever notification app they are using, so the app says plainly what happened, what
+ * still works, and what they can do about it.
+ */
+@Composable
+private fun ContentHiddenDialog(model: MainViewModel) {
+    val context = LocalContext.current
+    val command = remember { sensitiveNotificationsAppOpsCommand(context.packageName) }
+    DialogFrame("Content hidden by the system", model::dismissOverlay) {
+        Column(Modifier.padding(horizontal = 8.dp)) {
+            Text(
+                "Android hides the text of notifications it treats as sensitive, such as ones " +
+                    "carrying a sign-in code, from every app that reads notifications. Signal Rules " +
+                    "never received the content, so it stored none.",
+                color = SignalColors.Secondary,
+                fontSize = 15.sp,
+            )
+            Spacer(Modifier.padding(vertical = 6.dp))
+            Text(
+                "Rules can still match these notifications by app, channel, and group. Only the " +
+                    "phrase condition needs text, and it will not match a hidden notification.",
+                color = SignalColors.Secondary,
+                fontSize = 15.sp,
+            )
+            Spacer(Modifier.padding(vertical = 6.dp))
+            Text("If you want the text", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(
+                "Some devices offer Enhanced notifications under notification settings; turning it " +
+                    "off stops the redaction. Where that switch is missing, the permission can be " +
+                    "granted over ADB:",
+                color = SignalColors.Secondary,
+                fontSize = 15.sp,
+            )
+            Spacer(Modifier.padding(vertical = 6.dp))
+            Text(
+                command,
+                color = SignalColors.White,
+                fontSize = 13.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(SignalColors.Background, RoundedCornerShape(10.dp))
+                    .padding(12.dp),
+            )
+            Spacer(Modifier.padding(vertical = 6.dp))
+            SignalPrimaryButton("Copy command", onClick = {
+                val clipboard = context.getSystemService(ClipboardManager::class.java)
+                clipboard?.setPrimaryClip(ClipData.newPlainText("Signal Rules ADB command", command))
+                model.reportCommandCopied()
+            })
+        }
+    }
+}
+
+/** Built here so the dialog and its test agree on the exact command. */
+internal fun sensitiveNotificationsAppOpsCommand(packageName: String): String =
+    "adb shell cmd appops set --user 0 $packageName RECEIVE_SENSITIVE_NOTIFICATIONS allow"
 
 @Composable
 private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {

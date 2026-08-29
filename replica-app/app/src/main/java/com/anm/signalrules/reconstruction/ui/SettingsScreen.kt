@@ -83,6 +83,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { SectionLabel("History") }
         item { PreferenceRow("Notification capture", "Keep listener access enabled but ignore incoming notifications while paused.", if (state.capturePaused) "Paused" else "Active", onClick = { model.setCapturePaused(!state.capturePaused) }) }
         item { PreferenceRow("Notification history", "Choose what content is retained locally.", state.settings["Notification history"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) }) }
+        item { PreferenceRow("Why is content hidden?", "Android redacts notifications it treats as sensitive before any app reads them.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) }) }
         item { PreferenceRow("Keep history for", "Older entries are removed automatically.", state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_RETENTION) }) }
 
         item { SectionLabel("Shortcuts") }

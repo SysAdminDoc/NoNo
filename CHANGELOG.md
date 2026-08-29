@@ -25,6 +25,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   artifacts first, so the directory holds one binary and `SHA256SUMS.txt` names the version it
   describes.
 
+### Added
+
+- An explainer for notifications the system redacted. Android 15 and newer hide the text of
+  anything that looks like a sign-in code from every app that reads notifications, and the resulting
+  history rows read as a bug in whichever app you are using. History records the system hid now
+  offer "Why is content hidden?", matched by a row in Settings, covering what still matches, the
+  Enhanced notifications switch, and the ADB command that grants the permission where that switch
+  is missing. The command can be copied to the clipboard.
+
 ### Security
 
 - Rule export moved to format 2, which records its own key-derivation parameters and raises PBKDF2
