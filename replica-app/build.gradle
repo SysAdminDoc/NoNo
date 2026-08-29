@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.ksp) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
@@ -35,8 +34,8 @@ tasks.register('verifyBuildPolicy') {
             failures << "unexpected repository policy: ${repositories}"
         }
 
-        if (!(wrapperText =~ /(?m)^distributionUrl=https\\:\/\/services\.gradle\.org\/distributions\/gradle-8\.11\.1-bin\.zip$/).find()) {
-            failures << 'Gradle wrapper must remain pinned to the checked-in 8.11.1 binary distribution'
+        if (!(wrapperText =~ /(?m)^distributionUrl=https\\:\/\/services\.gradle\.org\/distributions\/gradle-9\.7\.1-bin\.zip$/).find()) {
+            failures << 'Gradle wrapper must remain pinned to the checked-in 9.7.1 binary distribution'
         }
         if (!wrapperText.contains('validateDistributionUrl=true')) {
             failures << 'Gradle wrapper URL validation is disabled'
@@ -62,6 +61,6 @@ tasks.register('verifyBuildPolicy') {
         if (!failures.isEmpty()) {
             throw new GradleException('Build policy failed:\n - ' + failures.join('\n - '))
         }
-        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=8.11.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
+        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=9.7.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
     }
 }

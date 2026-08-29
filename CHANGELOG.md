@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Moved the build to Gradle 9.7.1, Android Gradle Plugin 9.3.2, Kotlin 2.4.10, KSP 2.3.11,
+  Compose BOM 2026.08.00, kotlinx.serialization 1.11.0 and Lifecycle 2.11.0. Gradle 8.11.1 predated
+  the fixes for two 2026 repository-fallback advisories, which was the reason to move. AGP 9 brings
+  its own Kotlin, so the separate Kotlin plugin is gone, and Compose 1.12 requires compiling against
+  API 37; the app still targets API 36. Dependency verification covers all 1,471 resolved artifacts.
+
 - Pinned the Gradle daemon to Java 21 through `gradle/gradle-daemon-jvm.properties`, so the build
   no longer depends on what `JAVA_HOME` happens to point at. Handing Gradle the Android Studio JBR
   used to fail while creating tasks with a message that named neither Java nor the JDK. The build
