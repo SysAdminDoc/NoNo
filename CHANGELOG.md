@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Pinned the Gradle daemon to Java 21 through `gradle/gradle-daemon-jvm.properties`, so the build
+  no longer depends on what `JAVA_HOME` happens to point at. Handing Gradle the Android Studio JBR
+  used to fail while creating tasks with a message that named neither Java nor the JDK. The build
+  policy check now fails if that pin is removed, and the PowerShell scripts pick a supported JDK
+  instead of trusting `JAVA_HOME`.
+
 ### Fixed
 
 - Raised kotlinx.serialization from 1.7.3 to 1.8.1. Room 2.8.4 asks for 1.8.1 and the older pin

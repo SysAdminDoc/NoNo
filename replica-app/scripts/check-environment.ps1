@@ -25,7 +25,7 @@ $expected = [ordered]@{
 
 Write-Host "Project: $root"
 Write-Host "ADB: $adb"
-Write-Host "JDK: $javaHome"
+Write-Host "JDK: $javaHome (Java $(Get-JavaMajor -JavaHome $javaHome))"
 Write-Host "Device: $target"
 
 $mismatches = @()

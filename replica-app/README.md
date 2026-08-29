@@ -15,7 +15,10 @@ Signal Rules is an independent clean-room Android reconstruction of the native i
 ## Requirements
 
 - Windows PowerShell 5.1 or newer
-- JDK 17 or newer. `JAVA_HOME` is honoured when set; Android Studio's bundled JBR works.
+- JDK 17 or 21, an LTS OpenJDK build. `gradle/gradle-daemon-jvm.properties` pins the daemon to
+  Java 21, so Gradle finds an installed 21 no matter what `JAVA_HOME` points at. Android Studio's
+  bundled JBR is currently OpenJDK 25, which this Gradle cannot compile a build script under, so
+  do not hand it to the build directly. The PowerShell scripts pick a supported JDK for you.
 - Android SDK platform tools and an authorized ADB device
 - Python 3 for screenshot comparison: `py -3 -m pip install -r scripts/requirements.txt`
 

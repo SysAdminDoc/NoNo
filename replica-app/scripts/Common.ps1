@@ -18,10 +18,41 @@ function Resolve-AdbPath {
     throw 'ADB was not found. Set ANDROID_SDK_ROOT or install Android platform-tools.'
 }
 
+$script:SupportedJavaMajors = @(17, 21)
+
+function Get-JavaMajor {
+    param([Parameter(Mandatory = $true)][string]$JavaHome)
+    $exe = Join-Path $JavaHome 'bin\java.exe'
+    if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { return $null }
+    # java -version writes to stderr on every release line.
+    $output = & $exe '-version' 2>&1 | Out-String
+    if ($output -match 'version "(\d+)') { return [int]$Matches[1] }
+    return $null
+}
+
+# The build rejects unsupported JDKs in settings.gradle, so a script that hands Gradle the
+# Android Studio JBR (OpenJDK 25) only moves the failure later. Pick a supported one here.
 function Resolve-JavaHome {
-    if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME) -and (Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin\java.exe'))) { return $env:JAVA_HOME }
-    if (Test-Path -LiteralPath 'D:\tools\jdk21\bin\java.exe') { return 'D:\tools\jdk21' }
-    throw 'A compatible JDK was not found. Set JAVA_HOME to JDK 17 or newer.'
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:JAVA_HOME)) { $candidates += $env:JAVA_HOME }
+    $candidates += 'D:\tools\jdk21'
+    foreach ($root in @("$env:ProgramFiles\Eclipse Adoptium", "$env:ProgramFiles\Java", "$env:ProgramFiles\Microsoft")) {
+        if (Test-Path -LiteralPath $root) {
+            $candidates += (Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+        }
+    }
+
+    $rejected = @()
+    foreach ($candidate in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        $major = Get-JavaMajor -JavaHome $candidate
+        if ($null -eq $major) { continue }
+        if ($script:SupportedJavaMajors -contains $major) { return [System.IO.Path]::GetFullPath($candidate) }
+        $rejected += "$candidate (JDK $major)"
+    }
+
+    $detail = if ($rejected.Count -gt 0) { " Rejected: $($rejected -join '; ')." } else { '' }
+    throw "No supported JDK was found. This build needs JDK $($script:SupportedJavaMajors -join ' or ').$detail Set JAVA_HOME to a supported JDK."
 }
 
 # Prefers the Windows launcher, which is how Python is invoked on this workstation;

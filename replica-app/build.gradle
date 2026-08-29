@@ -15,7 +15,17 @@ tasks.register('verifyBuildPolicy') {
         def wrapperText = file('gradle/wrapper/gradle-wrapper.properties').getText('UTF-8')
         def catalogText = file('gradle/libs.versions.toml').getText('UTF-8')
         def verificationText = file('gradle/verification-metadata.xml').getText('UTF-8')
+        def daemonJvmFile = file('gradle/gradle-daemon-jvm.properties')
         def failures = []
+
+        // Without this the daemon runs on whatever JAVA_HOME points at. The Android Studio JBR is
+        // OpenJDK 25, which this Gradle cannot even compile a build script under, and reproducible
+        // builds are established against an LTS OpenJDK.
+        if (!daemonJvmFile.exists()) {
+            failures << 'gradle/gradle-daemon-jvm.properties is missing; the daemon JVM must stay pinned'
+        } else if (!(daemonJvmFile.getText('UTF-8') =~ /(?m)^toolchainVersion=21$/).find()) {
+            failures << 'daemon JVM criteria must pin toolchainVersion=21'
+        }
 
         if (!settingsText.contains('repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)')) {
             failures << 'dependency repositories must use FAIL_ON_PROJECT_REPOS'
@@ -52,6 +62,6 @@ tasks.register('verifyBuildPolicy') {
         if (!failures.isEmpty()) {
             throw new GradleException('Build policy failed:\n - ' + failures.join('\n - '))
         }
-        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=8.11.1 verifiedArtifacts=${hashCount} advisoryGate=CI"
+        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=8.11.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
     }
 }
