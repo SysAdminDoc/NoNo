@@ -3,6 +3,7 @@ package com.anm.signalrules.reconstruction.runtime
 import android.os.Build
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.NotificationContentState
+import com.anm.signalrules.reconstruction.model.RuleMatchState
 import com.anm.signalrules.reconstruction.model.SignalRule
 
 /** Why a rule was not selected during a dry-run evaluation. */
@@ -111,6 +112,40 @@ fun evaluateHistoryRecord(
     sdkInt = sdkInt,
     traceId = "history-${record.id}",
 )
+
+/**
+ * What a capture should record about the rules that matched it.
+ *
+ * Rule ids and an evaluation state only. No notification content and no action: this says which
+ * rules would have acted, which is the same boundary the dry-run evaluator already holds.
+ */
+data class CaptureEvaluation(
+    val matchedRuleIds: List<Long>,
+    val state: RuleMatchState,
+)
+
+/**
+ * Evaluates a live notification while its payload is still in scope.
+ *
+ * Every matching rule is recorded rather than only the conflict winner, so a rule can report how
+ * often it would have fired without re-reading anything the notification contained.
+ */
+fun evaluateCapture(
+    rules: List<SignalRule>,
+    payload: NotificationPayload,
+    sdkInt: Int = Build.VERSION.SDK_INT,
+): CaptureEvaluation {
+    if (rules.isEmpty()) return CaptureEvaluation(emptyList(), RuleMatchState.NOT_EVALUATED)
+    val trace = evaluateRules(rules, payload, sdkInt)
+    return CaptureEvaluation(
+        matchedRuleIds = trace.conditions.filter { it.matched }.map { it.ruleId }.sorted(),
+        state = if (trace.contentState == NotificationContentState.HIDDEN_BY_SYSTEM) {
+            RuleMatchState.CONTENT_HIDDEN
+        } else {
+            RuleMatchState.EVALUATED
+        },
+    )
+}
 
 private fun evaluateRule(
     rule: SignalRule,

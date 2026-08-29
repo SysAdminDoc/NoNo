@@ -27,6 +27,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- History now records which saved rules matched a notification when it arrived, so the
+  "Rule-triggered" filter returns real records, each row names the rules that would have matched,
+  and every rule reports how many recent notifications it would have caught. Only rule ids are
+  stored: the notification's own text is evaluated while it is in memory and never persisted, and
+  nothing is executed. A notification the system redacted is recorded as such rather than looking
+  like an ordinary miss.
+
 - An explainer for notifications the system redacted. Android 15 and newer hide the text of
   anything that looks like a sign-in code from every app that reads notifications, and the resulting
   history rows read as a bug in whichever app you are using. History records the system hid now

@@ -38,11 +38,12 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             "migration-v1-test.db",
-            4,
+            5,
             true,
             SignalDatabase.MIGRATION_1_2,
             SignalDatabase.MIGRATION_2_3,
             SignalDatabase.MIGRATION_3_4,
+            SignalDatabase.MIGRATION_4_5,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey, isGroupSummary FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -70,9 +71,10 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             databaseName,
-            4,
+            5,
             true,
             SignalDatabase.MIGRATION_3_4,
+            SignalDatabase.MIGRATION_4_5,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -84,5 +86,51 @@ class SignalDatabaseMigrationTest {
         migrated.close()
 
         ApplicationProvider.getApplicationContext<Context>().deleteDatabase(databaseName)
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun v4RowsGainMatchColumnsWithoutClaimingTheyWereEvaluated() {
+        val name = "migration-v4-test.db"
+        helper.createDatabase(name, 4).apply {
+            execSQL(
+                "INSERT INTO notification_history " +
+                    "(notificationKey, packageName, postedAtEpochMillis, contentState, channelId, isGroupSummary) " +
+                    "VALUES ('legacy-v4', 'com.example.messages', 64, 'AVAILABLE', 'messages', 0)",
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(name, 5, true, SignalDatabase.MIGRATION_4_5)
+        migrated.query("SELECT packageName, channelId, matchedRuleIds, matchState FROM notification_history").use { cursor ->
+            check(cursor.moveToFirst())
+            assertEquals("com.example.messages", cursor.getString(0))
+            assertEquals("messages", cursor.getString(1))
+            // A row captured before evaluation existed must not read as "nothing matched".
+            check(cursor.isNull(2))
+            check(cursor.isNull(3))
+        }
+        migrated.close()
+        ApplicationProvider.getApplicationContext<Context>().deleteDatabase(name)
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun theSchemaStoresNoNotificationContent() {
+        val name = "migration-content-test.db"
+        helper.createDatabase(name, 5).use { db ->
+            db.query("SELECT name FROM pragma_table_info('notification_history')").use { cursor ->
+                val columns = buildList {
+                    while (cursor.moveToNext()) add(cursor.getString(0))
+                }
+                // Nothing that could hold what a notification said.
+                listOf("title", "text", "body", "content", "message", "ticker", "bigText").forEach { banned ->
+                    check(columns.none { it.equals(banned, ignoreCase = true) }) {
+                        "notification_history must not carry a $banned column, found: $columns"
+                    }
+                }
+            }
+        }
+        ApplicationProvider.getApplicationContext<Context>().deleteDatabase(name)
     }
 }

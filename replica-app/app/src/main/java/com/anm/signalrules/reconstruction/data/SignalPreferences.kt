@@ -1,11 +1,16 @@
 package com.anm.signalrules.reconstruction.data
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.io.File
 
 /**
@@ -19,6 +24,9 @@ import java.io.File
 object SignalPreferences {
 
     const val STORE_NAME = "signal_rules"
+
+    /** Read by the view model and by the listener, which evaluates rules as notifications arrive. */
+    val RULES_KEY = stringPreferencesKey("rules_v1")
 
     private const val STORE_FILE = "$STORE_NAME.preferences_pb"
     private const val STORE_DIRECTORY = "datastore"
@@ -49,6 +57,39 @@ object SignalPreferences {
         }
         return target
     }
+
+    @Volatile
+    private var instance: DataStore<Preferences>? = null
+
+    @Volatile
+    private var recoveredFromCorruption = false
+
+    /**
+     * The process-wide preference store.
+     *
+     * DataStore permits exactly one active instance per file per process and throws on the second,
+     * so the notification listener and the view model cannot each build their own. The listener
+     * needs the rules to evaluate a notification as it arrives, and the platform can start it with
+     * no Activity ever having run, so reading them through the view model is not an option either.
+     *
+     * The scope belongs to the store rather than to any one owner, because a view model that is
+     * cleared must not take the listener's store down with it.
+     */
+    fun get(context: Context): DataStore<Preferences> = instance ?: synchronized(this) {
+        instance ?: create(
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+            produceFile = {
+                resolveStoreFile(
+                    noBackupFilesDir = context.applicationContext.noBackupFilesDir,
+                    legacyFile = context.applicationContext.preferencesDataStoreFile(STORE_NAME),
+                )
+            },
+            onCorruption = { recoveredFromCorruption = true },
+        ).also { instance = it }
+    }
+
+    /** True when the store on disk was unreadable and defaults were substituted this process. */
+    fun recoveredFromCorruption(): Boolean = recoveredFromCorruption
 
     /**
      * Builds a preference store that recovers from an unreadable backing file.

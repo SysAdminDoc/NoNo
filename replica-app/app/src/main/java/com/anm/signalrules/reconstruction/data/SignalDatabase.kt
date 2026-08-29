@@ -17,6 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.NotificationContentState
+import com.anm.signalrules.reconstruction.model.RuleMatchState
 import com.anm.signalrules.reconstruction.runtime.SanitizedNotification
 import com.anm.signalrules.reconstruction.runtime.IngestionMetrics
 
@@ -33,6 +34,10 @@ data class NotificationEntity(
     val channelId: String? = null,
     val groupKey: String? = null,
     val isGroupSummary: Boolean = false,
+    /** Ids of the saved rules that matched this notification, comma separated. Never any content. */
+    val matchedRuleIds: String? = null,
+    /** How far evaluation got: see [com.anm.signalrules.reconstruction.model.RuleMatchState]. */
+    val matchState: String? = null,
 )
 
 @Entity(tableName = "ingestion_diagnostics")
@@ -57,7 +62,10 @@ fun IngestionDiagnosticsEntity.toMetrics(): IngestionMetrics = IngestionMetrics(
     lastFailureAtEpochMillis = lastFailureAtEpochMillis,
 )
 
-fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
+fun SanitizedNotification.toEntity(
+    matchedRuleIds: List<Long> = emptyList(),
+    matchState: RuleMatchState = RuleMatchState.NOT_EVALUATED,
+): NotificationEntity = NotificationEntity(
     notificationKey = notificationKey,
     packageName = packageName,
     postedAtEpochMillis = postedAtEpochMillis,
@@ -65,7 +73,16 @@ fun SanitizedNotification.toEntity(): NotificationEntity = NotificationEntity(
     channelId = channelId,
     groupKey = groupKey,
     isGroupSummary = isGroupSummary,
+    matchedRuleIds = encodeMatchedRuleIds(matchedRuleIds),
+    matchState = matchState.name,
 )
+
+/** Stored as a delimited list so a row can name every rule that matched, not only the winner. */
+fun encodeMatchedRuleIds(ids: List<Long>): String? =
+    ids.takeIf { it.isNotEmpty() }?.sorted()?.joinToString(",")
+
+fun decodeMatchedRuleIds(encoded: String?): List<Long> =
+    encoded?.split(',').orEmpty().mapNotNull { it.trim().toLongOrNull() }
 
 fun NotificationEntity.toHistoryRecord(): HistoryRecord {
     val state = runCatching { NotificationContentState.valueOf(contentState) }
@@ -90,6 +107,9 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         channelId = channelId,
         groupKey = groupKey,
         isGroupSummary = isGroupSummary,
+        matchedRuleIds = decodeMatchedRuleIds(matchedRuleIds),
+        matchState = matchState?.let { name -> runCatching { RuleMatchState.valueOf(name) }.getOrNull() }
+            ?: RuleMatchState.NOT_EVALUATED,
     )
 }
 
@@ -99,8 +119,9 @@ interface NotificationDao {
     fun observeRecent(limit: Int = 100): Flow<List<NotificationEntity>>
 
     /**
-     * Queries only persisted metadata. Rule-triggered and dismissed are intentionally empty
-     * until an action engine writes those states; returning no rows is safer than inventing them.
+     * Queries only persisted metadata. Rule-triggered selects records whose saved rules matched
+     * when they arrived. Dismissed stays empty until an action engine writes that state; returning
+     * no rows is safer than inventing them.
      *
      * Group summaries are excluded unless [groupSummary] asks for them. Android 16 groups an app's
      * notifications itself and posts a summary alongside the children, so counting both reports
@@ -114,7 +135,10 @@ interface NotificationDao {
             contentState LIKE '%' || :query || '%' OR
             COALESCE(channelId, '') LIKE '%' || :query || '%' OR
             COALESCE(groupKey, '') LIKE '%' || :query || '%')
-          AND (:filter = 'All')
+          AND (
+            :filter = 'All'
+            OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
+          )
           AND (:packageName IS NULL OR packageName = :packageName)
           AND (:channelId IS NULL OR channelId = :channelId)
           AND (:contentState IS NULL OR contentState = :contentState)
@@ -196,7 +220,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 4, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 5, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -233,6 +257,17 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Records which saved rules matched a notification when it arrived. Existing rows keep a
+         * null match state, which reads as "not evaluated" rather than "nothing matched".
+         */
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN matchedRuleIds TEXT")
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN matchState TEXT")
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -257,6 +292,6 @@ abstract class SignalDatabase : RoomDatabase() {
             context.applicationContext,
             SignalDatabase::class.java,
             context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
     }
 }

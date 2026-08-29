@@ -6,11 +6,17 @@ import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.anm.signalrules.reconstruction.data.SignalDatabase
+import com.anm.signalrules.reconstruction.data.SignalPreferences
+import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.toEntity
+import com.anm.signalrules.reconstruction.model.RuleMatchState
+import com.anm.signalrules.reconstruction.model.SignalRule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import androidx.datastore.preferences.core.emptyPreferences
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -32,22 +38,38 @@ class SignalNotificationListener : NotificationListenerService() {
     private val acceptingCallbacks = AtomicBoolean(false)
     private val shutdownStarted = AtomicBoolean(false)
     private lateinit var database: SignalDatabase
-    private lateinit var ingestor: NotificationIngestor<SanitizedNotification>
+    private lateinit var ingestor: NotificationIngestor<CapturedNotification>
+
+    /**
+     * Latest saved rules, kept here so evaluation stays on the callback thread with the payload.
+     * Read on the platform's callback thread and written by the collector below.
+     */
+    @Volatile
+    private var currentRules: List<SignalRule> = emptyList()
 
     override fun onCreate() {
         super.onCreate()
         acceptingCallbacks.set(true)
         CaptureGate.load(applicationContext)
         database = SignalDatabase.get(applicationContext)
-        ingestor = NotificationIngestor(serviceScope) { notification ->
+        ingestor = NotificationIngestor(serviceScope) { captured ->
             database.notificationDao().insertAndPrune(
-                notification.toEntity(),
+                captured.sanitized.toEntity(captured.matchedRuleIds, captured.matchState),
                 retentionCutoffEpochMillis(
                     HistoryRetentionSettings.get(),
                     System.currentTimeMillis(),
                 ),
             )
             SignalWidgetProvider.requestUpdate(applicationContext)
+        }
+        serviceScope.launch {
+            // The platform can start this service with no Activity ever having run, so the rules
+            // are read here rather than handed over by the view model.
+            SignalPreferences.get(applicationContext).data
+                .catch { emit(emptyPreferences()) }
+                .collect { preferences ->
+                    currentRules = decodeRules(preferences[SignalPreferences.RULES_KEY]).orEmpty()
+                }
         }
         serviceScope.launch {
             var previous = IngestionMetrics()
@@ -90,8 +112,12 @@ class SignalNotificationListener : NotificationListenerService() {
         if (CaptureGate.isPaused()) return
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
         // all Room I/O is performed by the bounded worker.
-        val sanitized = sanitizeNotification(notification)
-        ingestor.offer(sanitized)
+        val payload = notificationPayload(notification)
+        val sanitized = sanitizeNotification(notification, payload)
+        // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
+        // payload itself goes no further than this stack frame.
+        val evaluation = evaluateCapture(currentRules, payload)
+        ingestor.offer(CapturedNotification(sanitized, evaluation.matchedRuleIds, evaluation.state))
         SignalObservability.emit(
             SignalEvent(
                 type = SignalEventType.NOTIFICATION_CAPTURED,

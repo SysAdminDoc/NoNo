@@ -21,6 +21,18 @@ data class NotificationPayload(
     val contentStateOverride: NotificationContentState? = null,
 )
 
+/**
+ * A sanitized record plus the rules that matched it, which is what the worker persists.
+ *
+ * Kept separate from [SanitizedNotification] because matching is a property of the user's saved
+ * rules rather than of redaction.
+ */
+data class CapturedNotification(
+    val sanitized: SanitizedNotification,
+    val matchedRuleIds: List<Long>,
+    val matchState: com.anm.signalrules.reconstruction.model.RuleMatchState,
+)
+
 data class SanitizedNotification(
     val notificationKey: String,
     val packageName: String,
@@ -69,15 +81,28 @@ fun matchableNotificationText(
         .takeIf(String::isNotBlank)
 }
 
-fun sanitizeNotification(sbn: StatusBarNotification): SanitizedNotification {
-    val notification = sbn.notification
-    val extras = notification.extras
-    val payload = NotificationPayload(
+/**
+ * Reads the fields a rule can be evaluated against.
+ *
+ * Deliberately separate from [sanitizeNotification] so a caller that needs to evaluate a rule can
+ * hold the payload for exactly as long as that takes. Nothing returned here is ever persisted.
+ */
+fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
+    val extras = sbn.notification.extras
+    return NotificationPayload(
         title = extras.getCharSequence(Notification.EXTRA_TITLE),
         text = extras.getCharSequence(Notification.EXTRA_TEXT),
         appLabel = null,
         systemMarkedSensitive = extras.getBoolean(ANDROID_SENSITIVE_CONTENT_EXTRA, false),
+        packageName = sbn.packageName,
     )
+}
+
+fun sanitizeNotification(
+    sbn: StatusBarNotification,
+    payload: NotificationPayload = notificationPayload(sbn),
+): SanitizedNotification {
+    val notification = sbn.notification
     return SanitizedNotification(
         notificationKey = sbn.key,
         packageName = sbn.packageName,

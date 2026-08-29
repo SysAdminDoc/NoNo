@@ -76,19 +76,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var pendingImportEncoded: String? = null
     private var pendingImportRules: List<SignalRule>? = null
 
-    @Volatile
-    private var recoveredFromCorruption = false
-
-    private val dataStore: DataStore<Preferences> = SignalPreferences.create(
-        scope = viewModelScope,
-        produceFile = {
-            SignalPreferences.resolveStoreFile(
-                noBackupFilesDir = application.noBackupFilesDir,
-                legacyFile = application.preferencesDataStoreFile(SignalPreferences.STORE_NAME),
-            )
-        },
-        onCorruption = { recoveredFromCorruption = true },
-    )
+    // Shared with the notification listener, which evaluates rules as notifications arrive.
+    private val dataStore: DataStore<Preferences> = SignalPreferences.get(application)
     private val historyDatabase = SignalDatabase.get(application)
 
     private object Keys {
@@ -135,7 +124,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
                 rules = rule,
                 settings = settings,
-                transientMessage = if (recoveredFromCorruption) SETTINGS_RESET_MESSAGE else null,
+                transientMessage = if (SignalPreferences.recoveredFromCorruption()) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
         }

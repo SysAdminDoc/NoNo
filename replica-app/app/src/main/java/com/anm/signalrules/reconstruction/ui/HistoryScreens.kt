@@ -50,6 +50,9 @@ import com.anm.signalrules.reconstruction.model.Overlay
 import com.anm.signalrules.reconstruction.model.Route
 import com.anm.signalrules.reconstruction.model.HistoryLoadState
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.model.HistoryRecord
+import com.anm.signalrules.reconstruction.model.RuleMatchState
+import com.anm.signalrules.reconstruction.model.SignalRule
 import com.anm.signalrules.reconstruction.runtime.EvaluationReason
 import com.anm.signalrules.reconstruction.runtime.RuleEvaluationTrace
 import com.anm.signalrules.reconstruction.runtime.evaluateHistoryRecord
@@ -223,6 +226,10 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
                             if (metadata.isNotBlank()) {
                                 Text(metadata, color = SignalColors.Secondary, fontSize = 12.sp)
                             }
+                            val matched = describeMatchedRules(item, state.rules)
+                            if (matched != null) {
+                                Text(matched, color = SignalColors.Yellow, fontSize = 12.sp)
+                            }
                         }
                         IconButton(onClick = { model.showHistoryOverlay(item.id) }) { Icon(Icons.Rounded.MoreVert, "History item actions") }
                     }
@@ -321,5 +328,24 @@ private fun ActivityRow(title: String, body: String) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp).background(SignalColors.Surface, RoundedCornerShape(16.dp)).padding(16.dp)) {
         Text(title, fontWeight = FontWeight.Bold, fontSize = 17.sp)
         Text(body, color = SignalColors.Secondary, modifier = Modifier.padding(top = 5.dp))
+    }
+}
+
+/**
+ * Names the saved rules that matched a record when it arrived.
+ *
+ * Nothing was executed: the rule engine is not part of this build, so the line says what would
+ * have matched rather than what happened. A rule deleted since the capture leaves its id behind,
+ * which is reported honestly rather than silently dropped.
+ */
+internal fun describeMatchedRules(record: HistoryRecord, rules: List<SignalRule>): String? = when {
+    record.matchState == RuleMatchState.CONTENT_HIDDEN ->
+        "Not matched: the system hid this content"
+    record.matchedRuleIds.isEmpty() -> null
+    else -> {
+        val names = record.matchedRuleIds.map { id ->
+            rules.firstOrNull { it.id == id }?.name ?: "deleted rule $id"
+        }
+        "Would match: " + names.joinToString(", ")
     }
 }

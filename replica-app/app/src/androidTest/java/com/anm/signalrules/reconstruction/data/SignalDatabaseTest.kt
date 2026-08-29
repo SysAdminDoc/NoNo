@@ -57,6 +57,37 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun theRuleTriggeredFilterSelectsRecordsWhoseRulesMatched() = runBlocking {
+        val dao = database.notificationDao()
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "matched",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                matchedRuleIds = "7",
+                matchState = "EVALUATED",
+            ),
+        )
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "unmatched",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                matchedRuleIds = null,
+                matchState = "EVALUATED",
+            ),
+        )
+
+        val triggered = dao.observeHistory(query = "", filter = "Rule-triggered").first()
+        assertEquals(listOf("matched"), triggered.map { it.notificationKey })
+
+        val all = dao.observeHistory(query = "", filter = "All").first()
+        assertEquals(listOf("unmatched", "matched"), all.map { it.notificationKey })
+    }
+
+    @Test
     fun systemGroupSummariesAreNotCountedAsNotifications() = runBlocking {
         val dao = database.notificationDao()
         // What Android 16 delivers for one app's burst: the children, plus a summary it made itself.

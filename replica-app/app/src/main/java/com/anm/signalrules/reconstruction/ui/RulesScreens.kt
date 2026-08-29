@@ -110,7 +110,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
                 color = SignalColors.Secondary, fontSize = 17.sp, lineHeight = 23.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = 20.dp, vertical = 12.dp)
             )
-            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model) } }
+            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model, state.history.count { rule.id in it.matchedRuleIds }) } }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), horizontalArrangement = Arrangement.End) { CreateRuleButton(model::newRule) }
         }
@@ -129,7 +129,7 @@ private fun CreateRuleButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun RuleCard(rule: SignalRule, model: MainViewModel) {
+private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int = 0) {
     val accent = if (rule.enabled) SignalColors.RuleBlue else SignalColors.RuleDisabled
     Column(
         Modifier.fillMaxWidth().padding(top = 20.dp).background(accent, RoundedCornerShape(18.dp)).padding(5.dp)
@@ -162,6 +162,15 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel) {
                 textDecoration = if (rule.enabled) TextDecoration.None else TextDecoration.LineThrough,
                 modifier = Modifier.padding(top = 6.dp),
             )
+            if (matchCount > 0) {
+                // Counted over the history currently loaded, and nothing was executed.
+                Text(
+                    if (matchCount == 1) "Would have matched 1 recent notification" else "Would have matched $matchCount recent notifications",
+                    color = SignalColors.Secondary,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
         }
     }
 }

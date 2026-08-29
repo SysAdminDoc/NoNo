@@ -141,6 +141,8 @@ data class HistoryRecord(
     val channelId: String? = null,
     val groupKey: String? = null,
     val isGroupSummary: Boolean = false,
+    val matchedRuleIds: List<Long> = emptyList(),
+    val matchState: RuleMatchState = RuleMatchState.NOT_EVALUATED,
 )
 
 enum class HistoryLoadState {
@@ -161,6 +163,24 @@ data class HistoryQuery(
     val fromEpochMillis: Long? = null,
     val limit: Int = 100,
 )
+
+/**
+ * How far rule evaluation got for a captured notification.
+ *
+ * Recorded per record so history can say which rules matched without storing anything the
+ * notification contained. No action is executed either way: this is a record of what a rule would
+ * have done, which is the same boundary the dry-run evaluator holds.
+ */
+enum class RuleMatchState {
+    /** No rules were saved when this arrived, or evaluation could not run. */
+    NOT_EVALUATED,
+
+    /** Evaluated against the saved rules with the text the platform supplied. */
+    EVALUATED,
+
+    /** Evaluated, but the system redacted the text, so phrase conditions could not be tested. */
+    CONTENT_HIDDEN,
+}
 
 /** Provenance of notification content exposed to the app. */
 enum class NotificationContentState {
@@ -272,7 +292,7 @@ fun validateRule(rule: SignalRule): String? = when {
 fun filterHistory(records: List<HistoryRecord>, query: String, filter: String): List<HistoryRecord> = records.filter { record ->
     val matchesQuery = query.isBlank() || listOf(record.app, record.title, record.body).any { it.contains(query, ignoreCase = true) }
     val matchesFilter = when (filter) {
-        "Rule-triggered" -> record.triggeredRule
+        "Rule-triggered" -> record.triggeredRule || record.matchedRuleIds.isNotEmpty()
         "Dismissed" -> record.dismissed
         else -> true
     }
