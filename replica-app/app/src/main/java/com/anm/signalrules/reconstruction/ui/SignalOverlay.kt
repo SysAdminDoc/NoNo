@@ -134,6 +134,12 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 add(MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) })
                 add(MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() })
                 add(MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() })
+                val starred = state.selectedHistoryStarred
+                add(
+                    MenuItem(if (starred) "Stop keeping this" else "Keep this record", Icons.Rounded.Tune) {
+                        state.selectedHistoryId?.let { model.setHistoryStarred(it, !starred) }
+                    },
+                )
                 // Only offered where it applies, so it explains this record rather than a general topic.
                 if (state.selectedHistoryContentState == NotificationContentState.HIDDEN_BY_SYSTEM) {
                     add(MenuItem("Why is content hidden?", Icons.Rounded.Tune) { model.showOverlay(Overlay.CONTENT_HIDDEN) })

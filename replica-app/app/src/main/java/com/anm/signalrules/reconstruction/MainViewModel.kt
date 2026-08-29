@@ -485,6 +485,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /** Stars or unstars a record. A starred record outlives the retention period. */
+    fun setHistoryStarred(historyId: Long, starred: Boolean) {
+        viewModelScope.launch {
+            runCatching { historyDatabase.notificationDao().setStarred(historyId, starred) }
+        }
+        _state.value = _state.value.copy(
+            overlay = Overlay.NONE,
+            transientMessage = if (starred) "Kept until you unstar it." else "No longer kept.",
+        )
+    }
+
     /** Feedback for the copy action in the content-hidden explainer. */
     fun reportCommandCopied() {
         _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Command copied.")

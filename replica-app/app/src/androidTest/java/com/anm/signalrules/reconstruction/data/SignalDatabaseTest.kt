@@ -252,4 +252,39 @@ class SignalDatabaseTest {
         assertEquals(11_000L, diagnostics.lastFailureAtEpochMillis)
         assertEquals(11_000L, diagnostics.updatedAtEpochMillis)
     }
+
+    @Test
+    fun aStarredRecordSurvivesRetentionPruning() = runBlocking {
+        val dao = database.notificationDao()
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "kept",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 100L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                starred = true,
+            ),
+        )
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "aged-out",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 100L,
+                contentState = NotificationContentState.AVAILABLE.name,
+            ),
+        )
+
+        dao.deleteBefore(1_000L)
+
+        assertEquals(
+            listOf("kept"),
+            dao.observeHistory(query = "", filter = "All").first().map { it.notificationKey },
+        )
+
+        // Unstarring makes it eligible again.
+        val kept = dao.observeHistory(query = "", filter = "All").first().single()
+        dao.setStarred(kept.id, false)
+        dao.deleteBefore(1_000L)
+        assertEquals(emptyList<String>(), dao.observeHistory(query = "", filter = "All").first().map { it.notificationKey })
+    }
 }

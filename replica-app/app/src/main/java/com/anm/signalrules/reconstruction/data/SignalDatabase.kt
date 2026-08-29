@@ -45,6 +45,8 @@ data class NotificationEntity(
     /** Platform category constant. A fixed vocabulary, never anything the notification said. */
     val category: String? = null,
     val isOngoing: Boolean = false,
+    /** Starred records are kept until the user unstars them, whatever the retention period says. */
+    val starred: Boolean = false,
 )
 
 @Entity(tableName = "ingestion_diagnostics")
@@ -125,6 +127,7 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         isConversation = isConversation,
         category = category,
         isOngoing = isOngoing,
+        starred = starred,
     )
 }
 
@@ -222,8 +225,12 @@ interface NotificationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(notification: NotificationEntity)
 
-    @Query("DELETE FROM notification_history WHERE postedAtEpochMillis < :cutoffEpochMillis")
+    /** Retention never removes a record the user starred. */
+    @Query("DELETE FROM notification_history WHERE postedAtEpochMillis < :cutoffEpochMillis AND starred = 0")
     suspend fun deleteBefore(cutoffEpochMillis: Long): Int
+
+    @Query("UPDATE notification_history SET starred = :starred WHERE id = :id")
+    suspend fun setStarred(id: Long, starred: Boolean)
 
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
@@ -249,7 +256,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 6, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 7, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -310,6 +317,13 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /** Adds the star. Existing records default to unstarred, which is what they were. */
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN starred INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -334,6 +348,6 @@ abstract class SignalDatabase : RoomDatabase() {
             context.applicationContext,
             SignalDatabase::class.java,
             context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
     }
 }

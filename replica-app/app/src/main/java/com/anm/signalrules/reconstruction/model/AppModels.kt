@@ -148,6 +148,7 @@ data class HistoryRecord(
     val isConversation: Boolean? = null,
     val category: String? = null,
     val isOngoing: Boolean = false,
+    val starred: Boolean = false,
 )
 
 enum class HistoryLoadState {
@@ -268,6 +269,10 @@ data class UiState(
     val validationError: String? = null,
     val transientMessage: String? = null,
 ) {
+    /** Whether the record whose menu is open is kept past the retention period. */
+    val selectedHistoryStarred: Boolean
+        get() = history.firstOrNull { it.id == selectedHistoryId }?.starred == true
+
     /** Package of the record whose menu is open, if one is. */
     val selectedHistoryPackageName: String?
         get() = history.firstOrNull { it.id == selectedHistoryId }?.appPackageName
