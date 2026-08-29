@@ -57,6 +57,46 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun systemGroupSummariesAreNotCountedAsNotifications() = runBlocking {
+        val dao = database.notificationDao()
+        // What Android 16 delivers for one app's burst: the children, plus a summary it made itself.
+        listOf(
+            NotificationEntity(
+                notificationKey = "child-1",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                groupKey = "chat-group",
+            ),
+            NotificationEntity(
+                notificationKey = "child-2",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                groupKey = "chat-group",
+            ),
+            NotificationEntity(
+                notificationKey = "summary",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 3_000L,
+                contentState = NotificationContentState.NOT_AVAILABLE.name,
+                groupKey = "chat-group",
+                isGroupSummary = true,
+            ),
+        ).forEach { dao.insert(it) }
+
+        assertEquals(2, dao.readWidgetCount())
+        // The summary is the newest row, so the widget would otherwise report its timestamp.
+        assertEquals(2_000L, dao.readWidgetLatest()?.postedAtEpochMillis)
+
+        val defaultHistory = dao.observeHistory(query = "", filter = "All").first()
+        assertEquals(listOf("child-2", "child-1"), defaultHistory.map { it.notificationKey })
+
+        val summariesOnly = dao.observeHistory(query = "", filter = "All", groupSummary = true).first()
+        assertEquals(listOf("summary"), summariesOnly.map { it.notificationKey })
+    }
+
+    @Test
     fun historyQueryAppliesMetadataSelectorsAndAHardResultLimit() = runBlocking {
         val dao = database.notificationDao()
         dao.insert(
@@ -88,12 +128,16 @@ class SignalDatabaseTest {
             ),
         )
 
+        // The target row is a group summary, and summaries are no longer returned by default, so
+        // this selector has to be stated like any other. Every other selector under test is
+        // unchanged.
         val filtered = dao.observeHistory(
             query = "chat",
             filter = "All",
             packageName = "com.example.chat",
             contentState = NotificationContentState.HIDDEN_BY_SYSTEM.name,
             groupKey = "conversation",
+            groupSummary = true,
             fromEpochMillis = 500L,
             limit = 1,
         ).first()

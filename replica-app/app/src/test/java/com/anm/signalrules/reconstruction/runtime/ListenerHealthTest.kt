@@ -39,17 +39,19 @@ class ListenerHealthTest {
     }
 
     @Test
-    fun `a resume only acts on the two states that need acting on`() {
+    fun `a resume acts on every state except a listener that reported itself connected`() {
         val expected = mapOf(
             (true to ListenerHealth.Connection.CONNECTED) to ListenerHealth.CapabilityAction.NONE,
-            (true to ListenerHealth.Connection.UNKNOWN) to ListenerHealth.CapabilityAction.NONE,
+            // Granted but never called back: what an OEM kill or an app update leaves behind.
+            (true to ListenerHealth.Connection.UNKNOWN) to ListenerHealth.CapabilityAction.REQUEST_REBIND,
             (true to ListenerHealth.Connection.DISCONNECTED) to ListenerHealth.CapabilityAction.REQUEST_REBIND,
             (false to ListenerHealth.Connection.CONNECTED) to ListenerHealth.CapabilityAction.MARK_REVOKED,
             (false to ListenerHealth.Connection.UNKNOWN) to ListenerHealth.CapabilityAction.MARK_REVOKED,
-            (false to ListenerHealth.Connection.DISCONNECTED) to ListenerHealth.CapabilityAction.NONE,
+            (false to ListenerHealth.Connection.DISCONNECTED) to ListenerHealth.CapabilityAction.MARK_REVOKED,
         )
 
         expected.forEach { (input, action) ->
+            ListenerHealth.reset()
             val (granted, connection) = input
             assertEquals(
                 "granted=$granted connection=$connection",
@@ -67,11 +69,25 @@ class ListenerHealthTest {
 
         repeat(3) {
             val action = ListenerHealth.capabilityAction(true, ListenerHealth.connection.value)
-            if (action == ListenerHealth.CapabilityAction.MARK_REVOKED) ListenerHealth.onAccessRevoked()
+            assertEquals(ListenerHealth.CapabilityAction.NONE, action)
         }
 
         assertEquals(ListenerHealth.Connection.CONNECTED, ListenerHealth.connection.value)
         assertEquals(emptyList<SignalEvent>(), events)
+    }
+
+    @Test
+    fun `a listener that never called back is asked to rebind rather than left for dead`() {
+        // Nothing else moves the state out of UNKNOWN, so a resume that did nothing here would
+        // leave capture dead while the app still reported itself healthy.
+        assertEquals(ListenerHealth.Connection.UNKNOWN, ListenerHealth.connection.value)
+
+        repeat(3) {
+            assertEquals(
+                ListenerHealth.CapabilityAction.REQUEST_REBIND,
+                ListenerHealth.capabilityAction(true, ListenerHealth.connection.value),
+            )
+        }
     }
 
     @Test
@@ -89,6 +105,37 @@ class ListenerHealthTest {
 
         assertEquals(ListenerHealth.Connection.DISCONNECTED, ListenerHealth.connection.value)
         assertEquals(1, revocations.size)
+    }
+
+    @Test
+    fun `revocation is announced even when the platform disconnected the listener first`() {
+        val revocations = mutableListOf<SignalEvent>()
+        ListenerHealth.onConnected()
+        // The platform can unbind a listener whose access the user still granted.
+        ListenerHealth.onDisconnected()
+        SignalObservability.register { event ->
+            if (event.type == SignalEventType.ACCESS_REVOKED) revocations += event
+        }
+
+        val action = ListenerHealth.capabilityAction(false, ListenerHealth.connection.value)
+        if (action == ListenerHealth.CapabilityAction.MARK_REVOKED) ListenerHealth.onAccessRevoked()
+
+        assertEquals(ListenerHealth.CapabilityAction.MARK_REVOKED, action)
+        assertEquals(1, revocations.size)
+    }
+
+    @Test
+    fun `regaining access re-arms the revocation notice`() {
+        ListenerHealth.onAccessRevoked()
+        assertEquals(ListenerHealth.CapabilityAction.NONE, ListenerHealth.capabilityAction(false, ListenerHealth.connection.value))
+
+        ListenerHealth.onConnected()
+        ListenerHealth.onDisconnected()
+
+        assertEquals(
+            ListenerHealth.CapabilityAction.MARK_REVOKED,
+            ListenerHealth.capabilityAction(false, ListenerHealth.connection.value),
+        )
     }
 
     @Test

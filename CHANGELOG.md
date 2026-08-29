@@ -15,6 +15,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Stopped counting Android 16's own group summaries as notifications. The platform groups an app's
+  notifications itself and posts a summary beside the children, so the widget count, the widget's
+  last-capture time, and the history list all included a row that carried nothing of its own.
+  Summaries are still reachable through the existing metadata filter.
+- Asked the platform to rebind a listener that has granted access but has never called back, rather
+  than treating that state as healthy. Nothing else moved the state out of unknown, so capture could
+  stay dead while the app reported itself fine.
+- Kept announcing a genuine revocation when the platform had already unbound the listener first.
+  Revocation is now tracked separately from the connection state instead of being inferred from it.
+
 - Raised kotlinx.serialization from 1.7.3 to 1.8.1. Room 2.8.4 asks for 1.8.1 and the older pin
   won the conflict, so the schema parser inside Room's migration test helper hit an
   AbstractMethodError on device.

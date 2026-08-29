@@ -101,6 +101,10 @@ interface NotificationDao {
     /**
      * Queries only persisted metadata. Rule-triggered and dismissed are intentionally empty
      * until an action engine writes those states; returning no rows is safer than inventing them.
+     *
+     * Group summaries are excluded unless [groupSummary] asks for them. Android 16 groups an app's
+     * notifications itself and posts a summary alongside the children, so counting both reports
+     * more notifications than arrived and shows the user a row with nothing of its own in it.
      */
     @Query(
         """
@@ -115,7 +119,7 @@ interface NotificationDao {
           AND (:channelId IS NULL OR channelId = :channelId)
           AND (:contentState IS NULL OR contentState = :contentState)
           AND (:groupKey IS NULL OR groupKey = :groupKey)
-          AND (:groupSummary IS NULL OR isGroupSummary = :groupSummary)
+          AND isGroupSummary = COALESCE(:groupSummary, 0)
           AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
         ORDER BY postedAtEpochMillis DESC, id DESC
         LIMIT :limit
@@ -171,10 +175,18 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
 
-    @Query("SELECT COUNT(*) FROM notification_history")
+    /** Counts what actually arrived: a system-generated group summary is not its own notification. */
+    @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 0")
     suspend fun readWidgetCount(): Int
 
-    @Query("SELECT postedAtEpochMillis, contentState FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC LIMIT 1")
+    @Query(
+        """
+        SELECT postedAtEpochMillis, contentState FROM notification_history
+        WHERE isGroupSummary = 0
+        ORDER BY postedAtEpochMillis DESC, id DESC
+        LIMIT 1
+        """,
+    )
     suspend fun readWidgetLatest(): WidgetLatestRow?
 
     @Transaction

@@ -132,7 +132,10 @@ class SignalNotificationListener : NotificationListenerService() {
          * API 24, which is this app's minimum.
          */
         fun requestRebindIfPossible(context: Context) {
-            if (ListenerHealth.connection.value != ListenerHealth.Connection.DISCONNECTED) return
+            // UNKNOWN counts: the service has not called back in this process, which is what an
+            // OEM background kill looks like. Only a listener that reported itself connected is
+            // excluded, because it has nothing to rebind.
+            if (ListenerHealth.connection.value == ListenerHealth.Connection.CONNECTED) return
             runCatching { requestRebind(componentName(context)) }
         }
     }

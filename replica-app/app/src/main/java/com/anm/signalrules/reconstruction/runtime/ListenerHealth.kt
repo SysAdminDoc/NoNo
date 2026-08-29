@@ -23,22 +23,30 @@ object ListenerHealth {
     /**
      * Decides how a resume should react to the platform's access state.
      *
-     * A healthy listener is one the user has granted access to and which has reported itself
-     * connected: it needs nothing. Only a granted-but-disconnected listener is inside the window
-     * the platform documents `requestRebind` for, and only an ungranted one has actually lost
-     * access. Treating any other combination as revoked - which an earlier revision did, because
-     * the healthy case fell through to the else branch - made every resume publish a
-     * disconnected listener and raise the health banner over a listener that was working.
+     * A listener that has reported itself connected needs nothing. Treating that case as revoked -
+     * which an earlier revision did, because the healthy case fell through to the else branch -
+     * made every resume publish a disconnected listener and raise the health banner over a
+     * listener that was working.
      *
-     * Access that is already recorded as gone stays gone without re-announcing itself, so a
-     * user who leaves the app disabled does not accumulate an ACCESS_REVOKED event per resume.
+     * UNKNOWN is not healthy. It means access is granted but the service has not called back in
+     * this process, which is exactly the state an OEM background kill or an app update leaves
+     * behind. Nothing else in the app moves the state out of UNKNOWN, so a resume that did nothing
+     * here would leave capture silently dead with the app still reporting itself fine. Asking for
+     * a rebind is safe when the listener is already bound.
+     *
+     * Revocation is announced once per loss rather than once per resume, tracked separately from
+     * the connection state: the platform can disconnect a listener whose access is still granted,
+     * so DISCONNECTED alone does not mean the user took access away.
      */
     fun capabilityAction(accessGranted: Boolean, connection: Connection): CapabilityAction = when {
-        accessGranted && connection == Connection.DISCONNECTED -> CapabilityAction.REQUEST_REBIND
-        accessGranted -> CapabilityAction.NONE
-        connection == Connection.DISCONNECTED -> CapabilityAction.NONE
-        else -> CapabilityAction.MARK_REVOKED
+        !accessGranted && revocationAnnounced -> CapabilityAction.NONE
+        !accessGranted -> CapabilityAction.MARK_REVOKED
+        connection == Connection.CONNECTED -> CapabilityAction.NONE
+        else -> CapabilityAction.REQUEST_REBIND
     }
+
+    @Volatile
+    private var revocationAnnounced = false
 
     private val _connection = MutableStateFlow(Connection.UNKNOWN)
     val connection: StateFlow<Connection> = _connection.asStateFlow()
@@ -57,6 +65,7 @@ object ListenerHealth {
     val durableIngestionMetrics: StateFlow<IngestionMetrics> = _durableIngestionMetrics.asStateFlow()
 
     fun onConnected() {
+        revocationAnnounced = false
         _connection.value = Connection.CONNECTED
         SignalObservability.emit(SignalEvent(SignalEventType.LISTENER_CONNECTED))
     }
@@ -92,11 +101,13 @@ object ListenerHealth {
 
     /** Called when the OS reports access was revoked while the app was not running. */
     fun onAccessRevoked() {
+        revocationAnnounced = true
         _connection.value = Connection.DISCONNECTED
         SignalObservability.emit(SignalEvent(SignalEventType.ACCESS_REVOKED))
     }
 
     fun reset() {
+        revocationAnnounced = false
         _connection.value = Connection.UNKNOWN
         _lastEventAt.value = null
         _eventCount.value = 0L
