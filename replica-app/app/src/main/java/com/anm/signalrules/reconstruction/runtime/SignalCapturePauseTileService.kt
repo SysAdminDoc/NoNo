@@ -25,7 +25,7 @@ class SignalCapturePauseTileService : TileService() {
             tile.state = if (paused) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
             tile.label = if (paused) "Capture paused" else "Capture notifications"
             tile.contentDescription = if (paused) "Resume notification capture" else "Pause notification capture"
-            tile.icon = Icon.createWithResource(this, R.drawable.ic_signal_foreground)
+            tile.icon = Icon.createWithResource(this, R.mipmap.ic_launcher_monochrome)
             tile.updateTile()
         }
     }

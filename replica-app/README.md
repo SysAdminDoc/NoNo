@@ -7,7 +7,7 @@ Signal Rules is an independent clean-room Android reconstruction of the native i
 - Display name: **Signal Rules**
 - Application ID: `com.anm.signalrules.reconstruction`
 - Debug package: `com.anm.signalrules.reconstruction.debug`
-- Android support: API 24 and newer; target SDK 36; compiled with SDK 36
+- Android support: API 24 and newer; target SDK 36; compiled with SDK 37
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
   The current Room history schema is version 4; the DataStore rule payload is version 3.
@@ -112,8 +112,8 @@ planned.
 
 ## Documentation
 
-- `docs\rebuild-plan.md` — scope and implementation order
-- `docs\audit-traceability-matrix.csv` — all 88 audit rows mapped to implementation and evidence
-- `docs\architecture.md` — clean-room architecture
-- `docs\testing-guide.md` — repeatable QA procedure
-- `validation\reports\final-coverage-report.md` — measured outcome and gaps
+- `docs\rebuild-plan.md` covers scope and implementation order
+- `docs\audit-traceability-matrix.csv` maps all 88 audit rows to implementation and evidence
+- `docs\architecture.md` documents the clean-room architecture
+- `docs\testing-guide.md` contains the repeatable QA procedure
+- `validation\reports\final-coverage-report.md` records measured outcomes and remaining gaps

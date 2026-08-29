@@ -1,13 +1,13 @@
 # Android Notification Manager clean-room project
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
 This repository contains two strictly separated deliverables:
 
-- `app-audit/` — the preserved black-box audit, reconstruction specification, and captured evidence.
-- `replica-app/` — the independent Android implementation named **Signal Rules**, its tests, validation tooling, and comparison artifacts.
+- `app-audit/` contains the preserved black-box audit, reconstruction specification, and captured evidence.
+- `replica-app/` contains the independent Android implementation named **Signal Rules**, its tests, validation tooling, and comparison artifacts.
 
 The reconstructed app uses the independent package identity `com.anm.signalrules.reconstruction` (`.debug` for the supplied APK). It does not contain the audited app's source, package identity, branding, proprietary illustrations, signing material, or extracted APK assets.
 

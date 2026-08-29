@@ -5,7 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-08-29
+
 ### Changed
+
+- New app icon: adaptive, themed (monochrome) and legacy variants regenerated from the 2026-08 icon set.
 
 - Moved the build to Gradle 9.7.1, Android Gradle Plugin 9.3.2, Kotlin 2.4.10, KSP 2.3.11,
   Compose BOM 2026.08.00, kotlinx.serialization 1.11.0 and Lifecycle 2.11.0. Gradle 8.11.1 predated
