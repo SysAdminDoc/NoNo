@@ -70,6 +70,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- The Dismissed history filter is shown as unavailable with its reason, the way every other
+  unavailable control in the app is, instead of accepting a tap and always returning nothing.
+  Rule-triggered became a working filter in the same release.
+
 - History retention honours every period the dialog offers. "7 days" and "Forever" were selectable
   and remembered, but neither was implemented, so both silently pruned at thirty days. Choosing
   "Forever" now keeps everything, and the dialog is built from the periods the code can actually

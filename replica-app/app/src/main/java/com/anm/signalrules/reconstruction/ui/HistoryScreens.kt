@@ -40,6 +40,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -122,9 +125,14 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
             HistoryFilterButton(if (state.historyFilter == "Rule-triggered") "Rule-triggered" else "All", state.historyFilter in listOf("All", "Rule-triggered"), Modifier.weight(1f)) {
                 model.setHistoryFilter(if (state.historyFilter == "All") "Rule-triggered" else "All")
             }
-            HistoryFilterButton(if (state.historyFilter == "Dismissed") "Dismissed" else "Sent at", state.historyFilter != "Dismissed", Modifier.weight(1f)) {
-                model.setHistoryFilter(if (state.historyFilter == "Dismissed") "All" else "Dismissed")
-            }
+            HistoryFilterButton(
+                "Dismissed",
+                // The audit state contract can still select this filter, so it has to render
+                // selected when it is; it simply cannot be chosen by tapping.
+                selected = state.historyFilter == "Dismissed",
+                modifier = Modifier.weight(1f),
+                unavailable = NO_DISMISSAL_STATE,
+            ) {}
         }
         val metadataFilterSummary = listOfNotNull(
             state.historyPackageFilter?.let { "package=$it" },
@@ -249,17 +257,43 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
 }
 
 @Composable
-private fun HistoryFilterButton(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun HistoryFilterButton(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier,
+    unavailable: String? = null,
+    onClick: () -> Unit,
+) {
+    // Everything else in this app renders an unavailable control as disabled with its reason. A
+    // chip that accepts a tap and then always reports nothing reads as a defect instead.
     Row(
         modifier.background(if (selected) SignalColors.SurfaceSelected else SignalColors.Surface, RoundedCornerShape(16.dp))
-            .clickable(role = Role.Button, onClick = onClick)
+            .then(
+                if (unavailable == null) {
+                    Modifier.clickable(role = Role.Button, onClick = onClick)
+                } else {
+                    Modifier.semantics {
+                        disabled()
+                        contentDescription = "$label. Unavailable: $unavailable"
+                    }
+                },
+            )
             .then(if (selected) Modifier.background(Color.Transparent).padding(3.dp) else Modifier.padding(3.dp))
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         if (selected) Icon(Icons.Rounded.Check, contentDescription = null, tint = SignalColors.Yellow, modifier = Modifier.size(18.dp))
-        Text(label, color = if (selected) SignalColors.White else SignalColors.Secondary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = if (selected) 6.dp else 0.dp))
+        Text(
+            label,
+            color = when {
+                unavailable != null -> SignalColors.RuleDisabled
+                selected -> SignalColors.White
+                else -> SignalColors.Secondary
+            },
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = if (selected) 6.dp else 0.dp),
+        )
     }
 }
 
@@ -358,3 +392,7 @@ internal fun describeMatchedRules(record: HistoryRecord, rules: List<SignalRule>
         "Would match: " + names.joinToString(", ")
     }
 }
+
+/** Why the Dismissed chip cannot select anything. */
+internal const val NO_DISMISSAL_STATE =
+    "this build runs no actions, so nothing ever records a dismissal"
