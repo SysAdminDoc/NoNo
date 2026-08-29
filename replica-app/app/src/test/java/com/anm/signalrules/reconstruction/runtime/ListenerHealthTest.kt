@@ -39,6 +39,59 @@ class ListenerHealthTest {
     }
 
     @Test
+    fun `a resume only acts on the two states that need acting on`() {
+        val expected = mapOf(
+            (true to ListenerHealth.Connection.CONNECTED) to ListenerHealth.CapabilityAction.NONE,
+            (true to ListenerHealth.Connection.UNKNOWN) to ListenerHealth.CapabilityAction.NONE,
+            (true to ListenerHealth.Connection.DISCONNECTED) to ListenerHealth.CapabilityAction.REQUEST_REBIND,
+            (false to ListenerHealth.Connection.CONNECTED) to ListenerHealth.CapabilityAction.MARK_REVOKED,
+            (false to ListenerHealth.Connection.UNKNOWN) to ListenerHealth.CapabilityAction.MARK_REVOKED,
+            (false to ListenerHealth.Connection.DISCONNECTED) to ListenerHealth.CapabilityAction.NONE,
+        )
+
+        expected.forEach { (input, action) ->
+            val (granted, connection) = input
+            assertEquals(
+                "granted=$granted connection=$connection",
+                action,
+                ListenerHealth.capabilityAction(granted, connection),
+            )
+        }
+    }
+
+    @Test
+    fun `a granted connected listener survives repeated resumes without an event`() {
+        val events = mutableListOf<SignalEvent>()
+        ListenerHealth.onConnected()
+        SignalObservability.register { event -> events += event }
+
+        repeat(3) {
+            val action = ListenerHealth.capabilityAction(true, ListenerHealth.connection.value)
+            if (action == ListenerHealth.CapabilityAction.MARK_REVOKED) ListenerHealth.onAccessRevoked()
+        }
+
+        assertEquals(ListenerHealth.Connection.CONNECTED, ListenerHealth.connection.value)
+        assertEquals(emptyList<SignalEvent>(), events)
+    }
+
+    @Test
+    fun `losing access announces itself once, not on every resume`() {
+        val revocations = mutableListOf<SignalEvent>()
+        ListenerHealth.onConnected()
+        SignalObservability.register { event ->
+            if (event.type == SignalEventType.ACCESS_REVOKED) revocations += event
+        }
+
+        repeat(3) {
+            val action = ListenerHealth.capabilityAction(false, ListenerHealth.connection.value)
+            if (action == ListenerHealth.CapabilityAction.MARK_REVOKED) ListenerHealth.onAccessRevoked()
+        }
+
+        assertEquals(ListenerHealth.Connection.DISCONNECTED, ListenerHealth.connection.value)
+        assertEquals(1, revocations.size)
+    }
+
+    @Test
     fun `events record a timestamp and a count`() {
         ListenerHealth.recordEvent(1_000L)
         ListenerHealth.recordEvent(2_500L)

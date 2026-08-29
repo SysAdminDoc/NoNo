@@ -246,11 +246,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
         }.getOrDefault(false)
 
-        if (listenerGranted && ListenerHealth.connection.value == ListenerHealth.Connection.DISCONNECTED) {
+        when (ListenerHealth.capabilityAction(listenerGranted, ListenerHealth.connection.value)) {
             // The platform documents requestRebind for the disconnected window only.
-            SignalNotificationListener.requestRebindIfPossible(app)
-        } else {
-            ListenerHealth.onAccessRevoked()
+            ListenerHealth.CapabilityAction.REQUEST_REBIND -> SignalNotificationListener.requestRebindIfPossible(app)
+            ListenerHealth.CapabilityAction.MARK_REVOKED -> ListenerHealth.onAccessRevoked()
+            ListenerHealth.CapabilityAction.NONE -> Unit
         }
         _state.value = _state.value.copy(listenerAccessGranted = listenerGranted)
 

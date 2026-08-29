@@ -17,6 +17,29 @@ object ListenerHealth {
 
     enum class Connection { UNKNOWN, CONNECTED, DISCONNECTED }
 
+    /** What a capability refresh should do about the listener. */
+    enum class CapabilityAction { NONE, REQUEST_REBIND, MARK_REVOKED }
+
+    /**
+     * Decides how a resume should react to the platform's access state.
+     *
+     * A healthy listener is one the user has granted access to and which has reported itself
+     * connected: it needs nothing. Only a granted-but-disconnected listener is inside the window
+     * the platform documents `requestRebind` for, and only an ungranted one has actually lost
+     * access. Treating any other combination as revoked - which an earlier revision did, because
+     * the healthy case fell through to the else branch - made every resume publish a
+     * disconnected listener and raise the health banner over a listener that was working.
+     *
+     * Access that is already recorded as gone stays gone without re-announcing itself, so a
+     * user who leaves the app disabled does not accumulate an ACCESS_REVOKED event per resume.
+     */
+    fun capabilityAction(accessGranted: Boolean, connection: Connection): CapabilityAction = when {
+        accessGranted && connection == Connection.DISCONNECTED -> CapabilityAction.REQUEST_REBIND
+        accessGranted -> CapabilityAction.NONE
+        connection == Connection.DISCONNECTED -> CapabilityAction.NONE
+        else -> CapabilityAction.MARK_REVOKED
+    }
+
     private val _connection = MutableStateFlow(Connection.UNKNOWN)
     val connection: StateFlow<Connection> = _connection.asStateFlow()
 

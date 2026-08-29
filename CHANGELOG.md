@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Stopped a resume from reporting a working notification listener as disconnected. The healthy
+  case (access granted, listener connected) fell through to the revoked branch, so every return
+  to the app published a disconnected listener, emitted an access-revoked event, and raised the
+  health banner over a listener that was fine. The decision is now a pure function covered by a
+  table test, and losing access announces itself once instead of on every resume.
+
 ## [1.3.1] - 2026-08-02
 
 ### Added
