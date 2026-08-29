@@ -67,6 +67,7 @@ import com.anm.signalrules.reconstruction.model.extraFilterCatalog
 import com.anm.signalrules.reconstruction.model.filterOperatorCatalog
 import com.anm.signalrules.reconstruction.model.importanceCatalog
 import com.anm.signalrules.reconstruction.model.matchTypeCatalog
+import com.anm.signalrules.reconstruction.runtime.historyRetentionCatalog
 import com.anm.signalrules.reconstruction.runtime.oemListenerChecklist
 import kotlinx.coroutines.delay
 
@@ -167,7 +168,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", listOf("Default", "Mute all sounds", "Aggressive"), state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
         Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
         Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", listOf("All notifications", "Store notification content", "Metadata only", "Off"), state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
-        Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", listOf("7 days", "30 days", "3 months", "6 months", "Forever"), state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }
+        Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", historyRetentionCatalog, state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }
         Overlay.TRANSFER_EXPORT_PASSPHRASE -> TransferPassphraseDialog(
             title = "Encrypt rule export",
             explanation = "The passphrase is used once and never saved or logged. Notification history is never included.",

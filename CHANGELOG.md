@@ -70,6 +70,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- History retention honours every period the dialog offers. "7 days" and "Forever" were selectable
+  and remembered, but neither was implemented, so both silently pruned at thirty days. Choosing
+  "Forever" now keeps everything, and the dialog is built from the periods the code can actually
+  apply, so the two cannot drift apart again.
+
 - A rule that tests no phrase now matches a notification carrying no title or text. Custom layouts,
   foreground-service notifications and summaries routinely carry neither, and an app-only rule was
   being refused for missing content it never asked for. Content the system redacted is still
