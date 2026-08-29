@@ -52,8 +52,12 @@ class MatchedRuleSummaryTest {
         assertEquals("Not matched: the system hid this content", line)
     }
 
+    /**
+     * Covers the in-memory helper the audit fixtures use. The screen itself filters in SQL, and
+     * that path is covered by SignalDatabaseTest.theRuleTriggeredFilterSelectsRecordsWhoseRulesMatched.
+     */
     @Test
-    fun theRuleTriggeredFilterSelectsRecordsThatMatched() {
+    fun theInMemoryRuleTriggeredHelperSelectsRecordsThatMatched() {
         val matched = HistoryRecord(id = 1L, matchedRuleIds = listOf(7L))
         val unmatched = HistoryRecord(id = 2L)
 

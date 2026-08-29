@@ -157,8 +157,12 @@ private fun evaluateRule(
 
     val reasons = buildList {
         if (!matchesApp(rule, payload)) add(EvaluationReason.APP_MISMATCH)
+        // A rule that tests no phrase needs no content, so absent content is not a reason to
+        // refuse it. Redaction stays a refusal either way: content the system hid might have
+        // matched, and this build will not guess which way.
         when {
             contentState == NotificationContentState.HIDDEN_BY_SYSTEM -> add(EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM)
+            !ruleRequiresContent(rule) -> Unit
             contentState != NotificationContentState.AVAILABLE -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             !matchesPhrase(rule, matchableText) -> add(EvaluationReason.PHRASE_MISMATCH)
         }
@@ -171,6 +175,10 @@ private fun evaluateRule(
         specificity = specificity(rule),
     )
 }
+
+/** A blank phrase, or the audited "anything" token, tests nothing and so needs no content. */
+private fun ruleRequiresContent(rule: SignalRule): Boolean =
+    rule.phrase.isNotBlank() && !rule.phrase.equals("anything", ignoreCase = true)
 
 private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean {
     if (rule.app.isBlank() || rule.app.equals("any app", ignoreCase = true)) return true

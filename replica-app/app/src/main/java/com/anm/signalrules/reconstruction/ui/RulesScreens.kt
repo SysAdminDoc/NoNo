@@ -110,7 +110,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
                 color = SignalColors.Secondary, fontSize = 17.sp, lineHeight = 23.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = 20.dp, vertical = 12.dp)
             )
-            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model, state.history.count { rule.id in it.matchedRuleIds }) } }
+            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model, state.ruleMatchCounts[rule.id] ?: 0) } }
             Spacer(Modifier.weight(1f))
             Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), horizontalArrangement = Arrangement.End) { CreateRuleButton(model::newRule) }
         }
@@ -165,7 +165,7 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int = 0
             if (matchCount > 0) {
                 // Counted over the history currently loaded, and nothing was executed.
                 Text(
-                    if (matchCount == 1) "Would have matched 1 recent notification" else "Would have matched $matchCount recent notifications",
+                    if (matchCount == 1) "Would have matched 1 stored notification" else "Would have matched $matchCount stored notifications",
                     color = SignalColors.Secondary,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(top = 4.dp),

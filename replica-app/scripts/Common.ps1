@@ -39,16 +39,20 @@ function Get-JavaMajor {
     }
     # Fall back to asking the binary, capturing stderr through a file rather than the pipeline.
     $stderrPath = [System.IO.Path]::GetTempFileName()
+    $stdoutPath = [System.IO.Path]::GetTempFileName()
     try {
         Start-Process -FilePath $exe -ArgumentList '-version' -NoNewWindow -Wait `
-            -RedirectStandardError $stderrPath -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) | Out-Null
+            -RedirectStandardError $stderrPath -RedirectStandardOutput $stdoutPath | Out-Null
         $output = Get-Content -LiteralPath $stderrPath -Raw
-        if ($output -match 'version "(\d+)') { return [int]$Matches[1] }
+        # Java 8 and earlier report version "1.8.0_412", so the legacy shape is tested first:
+        # the modern pattern would otherwise capture the 1 and call it major 1.
         if ($output -match 'version "1\.(\d+)') { return [int]$Matches[1] }
+        if ($output -match 'version "(\d+)') { return [int]$Matches[1] }
     } catch {
         return $null
     } finally {
         Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $stdoutPath -ErrorAction SilentlyContinue
     }
     return $null
 }

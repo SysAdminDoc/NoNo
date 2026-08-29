@@ -46,7 +46,7 @@ class SignalNotificationListener : NotificationListenerService() {
      * Read on the platform's callback thread and written by the collector below.
      */
     @Volatile
-    private var currentRules: List<SignalRule> = emptyList()
+    private var currentRules: List<SignalRule>? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -126,7 +126,13 @@ class SignalNotificationListener : NotificationListenerService() {
         val sanitized = sanitizeNotification(notification, payload, ranking)
         // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
         // payload itself goes no further than this stack frame.
-        val evaluation = evaluateCapture(currentRules, payload)
+        val rules = currentRules
+        val evaluation = if (rules == null) {
+            // The platform can deliver a notification before the store has been read.
+            CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
+        } else {
+            evaluateCapture(rules, payload)
+        }
         ingestor.offer(CapturedNotification(sanitized, evaluation.matchedRuleIds, evaluation.state))
         SignalObservability.emit(
             SignalEvent(

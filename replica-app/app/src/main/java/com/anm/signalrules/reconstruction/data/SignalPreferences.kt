@@ -88,8 +88,18 @@ object SignalPreferences {
         ).also { instance = it }
     }
 
-    /** True when the store on disk was unreadable and defaults were substituted this process. */
-    fun recoveredFromCorruption(): Boolean = recoveredFromCorruption
+    /**
+     * True once if the store on disk was unreadable and defaults were substituted.
+     *
+     * Consuming the flag matters because the store is now process-wide: without it a view model
+     * built after the first one would repeat a message about a recovery that happened minutes ago
+     * and has already been reported.
+     */
+    fun consumeCorruptionRecovery(): Boolean {
+        if (!recoveredFromCorruption) return false
+        recoveredFromCorruption = false
+        return true
+    }
 
     /**
      * Builds a preference store that recovers from an unreadable backing file.

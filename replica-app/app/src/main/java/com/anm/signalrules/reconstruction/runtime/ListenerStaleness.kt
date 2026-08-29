@@ -15,8 +15,22 @@ object ListenerActivityLog {
     private const val PREFERENCES = "runtime_history"
     private const val LAST_EVENT_AT = "last_event_at_epoch_millis"
 
-    /** Wall clock rather than elapsed realtime, because this has to survive a reboot. */
+    /** Minimum gap between writes. The value is read against a threshold measured in hours. */
+    private const val WRITE_INTERVAL_MILLIS = 60_000L
+
+    @Volatile
+    private var lastWriteAt = 0L
+
+    /**
+     * Wall clock rather than elapsed realtime, because this has to survive a reboot.
+     *
+     * Throttled because this runs on the notification callback thread, and SharedPreferences
+     * rewrites the whole file per commit: a burst would otherwise mean one full rewrite per
+     * notification, with the queue drained on the main thread at the next pause.
+     */
     fun recordEvent(context: Context, epochMillis: Long) {
+        if (epochMillis - lastWriteAt < WRITE_INTERVAL_MILLIS && lastWriteAt != 0L) return
+        lastWriteAt = epochMillis
         context.applicationContext
             .getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
             .edit()

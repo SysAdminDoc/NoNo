@@ -70,6 +70,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- A rule that tests no phrase now matches a notification carrying no title or text. Custom layouts,
+  foreground-service notifications and summaries routinely carry neither, and an app-only rule was
+  being refused for missing content it never asked for. Content the system redacted is still
+  refused, because the hidden text might have matched either way.
+- The stale-listener warning clears as soon as a notification arrives, instead of insisting the
+  listener is dead until the screen is left and reopened.
+- Each rule's match count is taken from all stored history rather than from whatever the History
+  tab happens to be filtered to, which could report an active rule as idle.
+- The last-capture time is written at most once a minute instead of on every notification, so a
+  burst no longer means one full preferences rewrite per notification on the callback thread.
+- A settings-recovery notice is shown once rather than repeating for every screen that opens
+  afterwards in the same process.
+- Captures that arrive before the saved rules have been read are recorded as such, so they cannot
+  be misread as "your rules were checked and none matched".
+
 - Repaired the PowerShell helpers on Windows PowerShell 5.1, the shell the README asks for. Reading
   a JDK version through a redirected `java -version` turned its banner into a terminating error, so
   every build, test, lint and validation script failed with a message that named no cause.

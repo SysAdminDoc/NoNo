@@ -80,11 +80,27 @@ class ListenerStalenessTest {
 
     @Test
     fun brandStepsAreSpecificRatherThanTheGenericFallback() {
-        val xiaomi = oemListenerChecklist("xiaomi", sdkInt = 34)
-        val unknown = oemListenerChecklist("some-new-brand", sdkInt = 34)
+        val generic = oemListenerChecklist("some-new-brand", sdkInt = 34)
+        assertTrue(generic.any { it.contains("autostart", ignoreCase = true) })
 
-        assertTrue(xiaomi.any { it.contains("Autostart") })
-        assertTrue(unknown.any { it.contains("autostart", ignoreCase = true) })
-        assertTrue(xiaomi != unknown)
+        // Every brand named in the acceptance criterion needs a step no other brand supplies,
+        // otherwise deleting its branch silently falls back to the generic list.
+        val expected = mapOf(
+            "samsung" to "put to sleep",
+            "xiaomi" to "Autostart",
+            "huawei" to "App launch",
+            "oneplus" to "Auto-launch",
+            "oppo" to "Auto-launch",
+            "vivo" to "Auto-start",
+        )
+        expected.forEach { (brand, marker) ->
+            val steps = oemListenerChecklist(brand, sdkInt = 34)
+            assertTrue("$brand is missing its own step", steps.any { it.contains(marker, ignoreCase = true) })
+            assertTrue("$brand fell back to the generic list", steps != generic)
+            assertTrue(
+                "$brand should not also carry the generic fallback line",
+                steps.none { it.contains("Look for an autostart", ignoreCase = true) },
+            )
+        }
     }
 }

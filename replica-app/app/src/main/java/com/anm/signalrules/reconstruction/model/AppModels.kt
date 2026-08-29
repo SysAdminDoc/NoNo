@@ -196,8 +196,15 @@ fun importanceLabel(importance: Int?): String? =
  * have done, which is the same boundary the dry-run evaluator holds.
  */
 enum class RuleMatchState {
-    /** No rules were saved when this arrived, or evaluation could not run. */
+    /** No rules were saved when this arrived. */
     NOT_EVALUATED,
+
+    /**
+     * The notification arrived before the saved rules had been read from disk, which can happen
+     * to the first few captures after the platform starts the listener. Recorded distinctly so it
+     * cannot be misread as "your rules were checked and none matched".
+     */
+    RULES_NOT_LOADED,
 
     /** Evaluated against the saved rules with the text the platform supplied. */
     EVALUATED,
@@ -240,6 +247,8 @@ data class UiState(
     val historyGroupFilter: String? = null,
     val historyContentStateFilter: NotificationContentState? = null,
     val historyGroupSummaryOnly: Boolean = false,
+    /** Matches per rule id across all stored history, not just the page History is showing. */
+    val ruleMatchCounts: Map<Long, Int> = emptyMap(),
     val historyImportanceFilter: Int? = null,
     val historyConversationFilter: Boolean? = null,
     val transferExportRequest: Int = 0,

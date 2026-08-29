@@ -180,6 +180,16 @@ interface NotificationDao {
         limit: Int = 100,
     ): Flow<List<NotificationEntity>>
 
+    /**
+     * Every stored match, for counting how often each rule would have fired.
+     *
+     * Deliberately not the history screen's query: that one carries the user's filters and a page
+     * limit, so counting from it would report a rule as idle simply because History was filtered
+     * to another app.
+     */
+    @Query("SELECT matchedRuleIds FROM notification_history WHERE matchedRuleIds IS NOT NULL AND matchedRuleIds != ''")
+    fun observeMatchedRuleIds(): Flow<List<String>>
+
     @Query("SELECT * FROM ingestion_diagnostics WHERE singletonId = 1 LIMIT 1")
     fun observeIngestionDiagnostics(): Flow<IngestionDiagnosticsEntity?>
 

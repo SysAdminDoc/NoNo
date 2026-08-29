@@ -56,7 +56,10 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     val dropped = maxOf(ingestionMetrics.dropped, durableMetrics.dropped)
     val failed = maxOf(ingestionMetrics.failed, durableMetrics.failed)
 
-    val lastCapture = remember { ListenerActivityLog.lastEventAt(context) }
+    // Keyed on the live event count so a capture arriving while this screen is open clears the
+    // warning. Reading once would leave the banner insisting the listener is dead while it works.
+    val eventCount by ListenerHealth.eventCount.collectAsState()
+    val lastCapture = remember(eventCount) { ListenerActivityLog.lastEventAt(context) }
     val activity = listenerActivity(
         accessGranted = state.listenerAccessGranted,
         connection = connection,

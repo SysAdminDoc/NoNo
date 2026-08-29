@@ -104,4 +104,42 @@ class CaptureEvaluationTest {
         // A value written by some future build must not crash a reader.
         assertEquals(listOf(4L), decodeMatchedRuleIds("4,not-an-id"))
     }
+
+    @Test
+    fun aRuleThatTestsNoPhraseMatchesANotificationCarryingNoText() {
+        // Custom layouts, foreground-service notifications and summaries often carry neither
+        // title nor text. An app-only rule asks nothing of the content, so it still applies.
+        val evaluation = evaluateCapture(
+            rules = listOf(chatRule),
+            payload = payload(title = null, text = null, packageName = "com.example.chat"),
+            sdkInt = 34,
+        )
+
+        assertEquals(listOf(7L), evaluation.matchedRuleIds)
+        assertEquals(RuleMatchState.EVALUATED, evaluation.state)
+    }
+
+    @Test
+    fun aRuleThatTestsAPhraseStillNeedsContent() {
+        val evaluation = evaluateCapture(
+            rules = listOf(invoiceRule),
+            payload = payload(title = null, text = null, packageName = "com.example.chat"),
+            sdkInt = 34,
+        )
+
+        assertEquals(emptyList<Long>(), evaluation.matchedRuleIds)
+    }
+
+    @Test
+    fun contentTheSystemHidRefusesEvenARuleThatTestsNoPhrase() {
+        // The hidden text might have matched. Guessing either way would be inventing a result.
+        val evaluation = evaluateCapture(
+            rules = listOf(chatRule),
+            payload = payload("Sensitive notification content hidden", null, "com.example.chat", sensitive = true),
+            sdkInt = 35,
+        )
+
+        assertEquals(emptyList<Long>(), evaluation.matchedRuleIds)
+        assertEquals(RuleMatchState.CONTENT_HIDDEN, evaluation.state)
+    }
 }

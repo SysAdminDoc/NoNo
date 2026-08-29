@@ -21,6 +21,7 @@ import com.anm.signalrules.reconstruction.data.RuleTransfer
 import com.anm.signalrules.reconstruction.data.SignalDatabase
 import com.anm.signalrules.reconstruction.data.toMetrics
 import com.anm.signalrules.reconstruction.data.toHistoryRecord
+import com.anm.signalrules.reconstruction.data.decodeMatchedRuleIds
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
 import com.anm.signalrules.reconstruction.model.HistoryRecord
@@ -124,7 +125,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
                 rules = rule,
                 settings = settings,
-                transientMessage = if (SignalPreferences.recoveredFromCorruption()) SETTINGS_RESET_MESSAGE else null,
+                transientMessage = if (SignalPreferences.consumeCorruptionRecovery()) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
         }
@@ -132,6 +133,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             CaptureGate.load(application)
             CaptureGate.paused.collect { paused ->
                 _state.value = _state.value.copy(capturePaused = paused)
+            }
+        }
+        viewModelScope.launch {
+            historyDatabase.notificationDao().observeMatchedRuleIds().collect { encoded ->
+                val counts = encoded.flatMap(::decodeMatchedRuleIds)
+                    .groupingBy { it }
+                    .eachCount()
+                _state.value = _state.value.copy(ruleMatchCounts = counts)
             }
         }
         viewModelScope.launch {
