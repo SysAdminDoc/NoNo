@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Raised kotlinx.serialization from 1.7.3 to 1.8.1. Room 2.8.4 asks for 1.8.1 and the older pin
+  won the conflict, so the schema parser inside Room's migration test helper hit an
+  AbstractMethodError on device.
 - Made the instrumented test suite runnable for the first time. Dexing rejected every Kotlin test
   name containing spaces at this minimum SDK, so the whole androidTest source set failed to build,
   and the exported Room schemas were never packaged into the test APK. Nine instrumented tests now
