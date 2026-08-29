@@ -25,6 +25,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   artifacts first, so the directory holds one binary and `SHA256SUMS.txt` names the version it
   describes.
 
+### Security
+
+- Rule export moved to format 2, which records its own key-derivation parameters and raises PBKDF2
+  from 120,000 iterations to 600,000, the OWASP floor for HMAC-SHA256. The parameters are
+  authenticated alongside the ciphertext, an import refuses a file asking for an unreasonable
+  derivation cost, and files written by earlier builds still import.
+
 ### Fixed
 
 - Stopped counting Android 16's own group summaries as notifications. The platform groups an app's

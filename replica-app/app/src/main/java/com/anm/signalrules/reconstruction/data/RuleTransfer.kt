@@ -13,8 +13,19 @@ import javax.crypto.spec.SecretKeySpec
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-private const val TRANSFER_FORMAT_VERSION = 1
-private const val PBKDF2_ITERATIONS = 120_000
+private const val TRANSFER_FORMAT_VERSION = 2
+
+/** Format 1 derived its key with a fixed cost that the file never recorded. */
+private const val LEGACY_FORMAT_VERSION = 1
+private const val LEGACY_PBKDF2_ITERATIONS = 120_000
+
+const val PBKDF2_KDF_NAME = "pbkdf2-sha256"
+
+/** OWASP's floor for PBKDF2-HMAC-SHA256. Written into the file so it can be raised again later. */
+const val PBKDF2_ITERATIONS = 600_000
+
+/** An import must not be talked into an unbounded key derivation by a hostile file. */
+private const val MAX_PBKDF2_ITERATIONS = 4_000_000
 private const val KEY_BITS = 256
 private const val SALT_BYTES = 16
 private const val IV_BYTES = 12
@@ -29,6 +40,8 @@ data class PortableRuleFile(
     val payload: String,
     val salt: String? = null,
     val iv: String? = null,
+    val kdf: String? = null,
+    val iterations: Int? = null,
     val privacyWarning: String = PORTABLE_TRANSFER_PRIVACY_WARNING,
 )
 
@@ -67,7 +80,14 @@ object RuleTransfer {
             val salt = ByteArray(SALT_BYTES).also(secureRandom::nextBytes)
             val iv = ByteArray(IV_BYTES).also(secureRandom::nextBytes)
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, deriveKey(passphrase, salt), GCMParameterSpec(128, iv))
+            cipher.init(
+                Cipher.ENCRYPT_MODE,
+                deriveKey(passphrase, salt, PBKDF2_ITERATIONS),
+                GCMParameterSpec(128, iv),
+            )
+            // The derivation parameters are authenticated, so a file whose recorded cost has been
+            // edited fails to open rather than deriving a different key in silence.
+            cipher.updateAAD(headerAad(TRANSFER_FORMAT_VERSION, PBKDF2_KDF_NAME, PBKDF2_ITERATIONS))
             val encrypted = runCatching { cipher.doFinal(rulePayload) }
                 .also { passphrase.fill('\u0000') }
                 .getOrThrow()
@@ -76,6 +96,8 @@ object RuleTransfer {
                 payload = encodeBase64(encrypted),
                 salt = encodeBase64(salt),
                 iv = encodeBase64(iv),
+                kdf = PBKDF2_KDF_NAME,
+                iterations = PBKDF2_ITERATIONS,
             )
         }
         return transferJson.encodeToString(PortableRuleFile.serializer(), file)
@@ -90,7 +112,9 @@ object RuleTransfer {
         val file = runCatching {
             transferJson.decodeFromString(PortableRuleFile.serializer(), encodedFile)
         }.getOrNull() ?: return RuleImportResult.InvalidFile
-        if (file.formatVersion != TRANSFER_FORMAT_VERSION) return RuleImportResult.InvalidFile
+        if (file.formatVersion != TRANSFER_FORMAT_VERSION && file.formatVersion != LEGACY_FORMAT_VERSION) {
+            return RuleImportResult.InvalidFile
+        }
         if (file.encrypted && passphrase == null) return RuleImportResult.NeedsPassphrase
 
         val bytes = runCatching {
@@ -98,8 +122,20 @@ object RuleTransfer {
             if (!file.encrypted) return@runCatching payload
             val salt = decodeBase64(file.salt ?: return@runCatching null)
             val iv = decodeBase64(file.iv ?: return@runCatching null)
+            val legacy = file.formatVersion == LEGACY_FORMAT_VERSION
+            val kdf = file.kdf ?: if (legacy) PBKDF2_KDF_NAME else return@runCatching null
+            if (kdf != PBKDF2_KDF_NAME) return@runCatching null
+            val iterations = file.iterations
+                ?: if (legacy) LEGACY_PBKDF2_ITERATIONS else return@runCatching null
+            if (iterations !in 1..MAX_PBKDF2_ITERATIONS) return@runCatching null
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, deriveKey(passphrase!!, salt), GCMParameterSpec(128, iv))
+            cipher.init(
+                Cipher.DECRYPT_MODE,
+                deriveKey(passphrase!!, salt, iterations),
+                GCMParameterSpec(128, iv),
+            )
+            // Format 1 predates authenticated headers and has none to bind.
+            if (!legacy) cipher.updateAAD(headerAad(file.formatVersion, kdf, iterations))
             cipher.doFinal(payload)
         }.getOrNull()
         passphrase?.fill('\u0000')
@@ -138,8 +174,12 @@ object RuleTransfer {
             .distinctBy { it.id }
     }
 
-    private fun deriveKey(passphrase: CharArray, salt: ByteArray): SecretKeySpec {
-        val spec = PBEKeySpec(passphrase, salt, PBKDF2_ITERATIONS, KEY_BITS)
+    /** Binds the derivation parameters to the ciphertext. */
+    private fun headerAad(formatVersion: Int, kdf: String, iterations: Int): ByteArray =
+        "$formatVersion|$kdf|$iterations".toByteArray(StandardCharsets.UTF_8)
+
+    private fun deriveKey(passphrase: CharArray, salt: ByteArray, iterations: Int): SecretKeySpec {
+        val spec = PBEKeySpec(passphrase, salt, iterations, KEY_BITS)
         return try {
             SecretKeySpec(
                 SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded,

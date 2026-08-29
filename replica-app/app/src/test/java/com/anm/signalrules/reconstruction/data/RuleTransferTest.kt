@@ -25,6 +25,58 @@ class RuleTransferTest {
     }
 
     @Test
+    fun `exports record the derivation cost instead of hiding it in the code`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+
+        assertTrue(encoded.contains("\"formatVersion\":2"))
+        assertTrue(encoded.contains("\"kdf\":\"$PBKDF2_KDF_NAME\""))
+        assertTrue(encoded.contains("\"iterations\":$PBKDF2_ITERATIONS"))
+        // OWASP's floor for PBKDF2-HMAC-SHA256.
+        assertTrue(PBKDF2_ITERATIONS >= 600_000)
+    }
+
+    @Test
+    fun `a file written by the previous format still imports`() {
+        val legacy = checkNotNull(javaClass.getResourceAsStream("/transfer/portable-rules-v1.json"))
+            .bufferedReader()
+            .use { it.readText() }
+
+        val result = RuleTransfer.importRules(legacy, "legacy-transfer-passphrase".toCharArray())
+
+        val rules = (result as RuleImportResult.Success).rules
+        assertEquals(1, rules.size)
+        assertEquals("Legacy rule", rules.single().name)
+        assertEquals("invoice", rules.single().phrase)
+    }
+
+    @Test
+    fun `editing the recorded derivation cost fails authentication`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+        val tampered = encoded.replace(
+            "\"iterations\":$PBKDF2_ITERATIONS",
+            "\"iterations\":${PBKDF2_ITERATIONS - 1}",
+        )
+        assertNotEquals(encoded, tampered)
+
+        assertTrue(
+            RuleTransfer.importRules(tampered, "correct horse".toCharArray()) is RuleImportResult.InvalidFile,
+        )
+    }
+
+    @Test
+    fun `an import will not be talked into an unbounded key derivation`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+        val hostile = encoded.replace(
+            "\"iterations\":$PBKDF2_ITERATIONS",
+            "\"iterations\":2000000000",
+        )
+
+        assertTrue(
+            RuleTransfer.importRules(hostile, "correct horse".toCharArray()) is RuleImportResult.InvalidFile,
+        )
+    }
+
+    @Test
     fun `encrypted import requires a passphrase and rejects the wrong one`() {
         val encoded = RuleTransfer.exportRules(incoming, "secret".toCharArray())
 
