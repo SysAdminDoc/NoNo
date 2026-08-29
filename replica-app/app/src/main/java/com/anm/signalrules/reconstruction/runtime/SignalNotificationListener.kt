@@ -126,6 +126,8 @@ class SignalNotificationListener : NotificationListenerService() {
             ),
         )
         ListenerHealth.recordEvent(SystemClock.elapsedRealtime())
+        // Durable, so silence can still be measured after the process or the phone restarts.
+        ListenerActivityLog.recordEvent(applicationContext, System.currentTimeMillis())
     }
 
     override fun onDestroy() {

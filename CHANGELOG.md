@@ -27,6 +27,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- A warning when the listener has gone quiet. Access granted, the service reporting itself
+  connected, and nothing captured for twelve hours is the shape an OEM battery manager leaves
+  behind, and it used to look identical to a quiet day. The last capture time is now stored on
+  disk, so the warning survives restarting the app or the phone.
+- Per-manufacturer steps for keeping the listener bound, under "Rules are not triggering?" in
+  Settings. Samsung, Xiaomi, Huawei, OnePlus, Oppo and Vivo get their own wording, everything else
+  gets a generic list, and Android 13 and newer add the restricted-settings unlock.
+
 - History now records which saved rules matched a notification when it arrived, so the
   "Rule-triggered" filter returns real records, each row names the rules that would have matched,
   and every rule reports how many recent notifications it would have caught. Only rule ids are

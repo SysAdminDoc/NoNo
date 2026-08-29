@@ -68,7 +68,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { PreferenceRow("Contact support", unavailable = NO_SUPPORT_CHANNEL) }
         item { PreferenceRow("Guide and FAQs", onClick = { openUrl(context, "https://developer.android.com/develop/ui/views/notifications") }) }
         item { PreferenceRow("Open community", unavailable = NO_SUPPORT_CHANNEL) }
-        item { PreferenceRow("Rules are not triggering?", onClick = { openUrl(context, "https://developer.android.com/reference/android/service/notification/NotificationListenerService") }) }
+        item { PreferenceRow("Rules are not triggering?", "Steps for keeping the listener alive on this phone.", onClick = { model.showOverlay(Overlay.LISTENER_CHECKLIST) }) }
 
         item { SectionLabel("Settings") }
         item { PreferenceRow("Mute mode", "Configure how aggressively the mute should be.", state.settings["Mute mode"], onClick = { model.showOverlay(Overlay.MUTE_MODE) }) }

@@ -1,6 +1,7 @@
 package com.anm.signalrules.reconstruction.ui
 
 import android.content.ClipData
+import android.os.Build
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,6 +66,7 @@ import com.anm.signalrules.reconstruction.model.enableForCatalog
 import com.anm.signalrules.reconstruction.model.extraFilterCatalog
 import com.anm.signalrules.reconstruction.model.filterOperatorCatalog
 import com.anm.signalrules.reconstruction.model.matchTypeCatalog
+import com.anm.signalrules.reconstruction.runtime.oemListenerChecklist
 import kotlinx.coroutines.delay
 
 @Composable
@@ -134,6 +136,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             }, model::dismissOverlay,
         )
         Overlay.CONTENT_HIDDEN -> ContentHiddenDialog(model)
+        Overlay.LISTENER_CHECKLIST -> ListenerChecklistDialog(model)
         Overlay.HISTORY_FILTERS -> {
             val packages = state.history.map { it.appPackageName ?: it.app }.distinct().sorted()
             val channels = state.history.mapNotNull { it.channelId }.distinct().sorted()
@@ -233,6 +236,42 @@ private fun ContentHiddenDialog(model: MainViewModel) {
                 clipboard?.setPrimaryClip(ClipData.newPlainText("Signal Rules ADB command", command))
                 model.reportCommandCopied()
             })
+        }
+    }
+}
+
+/**
+ * Steps for keeping the listener bound on this particular phone.
+ *
+ * An OEM battery manager unbinding the service is the most common reason an app in this category
+ * appears to stop working, and the setting that causes it is in a different place on every brand.
+ */
+@Composable
+private fun ListenerChecklistDialog(model: MainViewModel) {
+    val steps = remember { oemListenerChecklist(Build.MANUFACTURER, Build.VERSION.SDK_INT) }
+    DialogFrame("Keeping the listener alive", model::dismissOverlay) {
+        LazyColumn(Modifier.heightIn(max = 520.dp).padding(horizontal = 8.dp)) {
+            item {
+                Text(
+                    "Android lets a manufacturer stop background services to save power, which is " +
+                        "what usually silences a notification listener. On " + Build.MANUFACTURER + ":",
+                    color = SignalColors.Secondary,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+            }
+            items(steps) { step ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                    Text("•", color = SignalColors.Yellow, fontSize = 15.sp)
+                    Text(
+                        step,
+                        color = SignalColors.White,
+                        fontSize = 15.sp,
+                        lineHeight = 21.sp,
+                        modifier = Modifier.padding(start = 10.dp),
+                    )
+                }
+            }
         }
     }
 }

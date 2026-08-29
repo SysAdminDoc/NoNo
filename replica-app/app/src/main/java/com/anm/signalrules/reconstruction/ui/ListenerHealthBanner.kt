@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anm.signalrules.reconstruction.model.UiState
+import com.anm.signalrules.reconstruction.runtime.ListenerActivity
+import com.anm.signalrules.reconstruction.runtime.ListenerActivityLog
 import com.anm.signalrules.reconstruction.runtime.ListenerHealth
+import com.anm.signalrules.reconstruction.runtime.listenerActivity
 import com.anm.signalrules.reconstruction.runtime.SignalNotificationListener
 
 /**
@@ -52,10 +56,19 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     val dropped = maxOf(ingestionMetrics.dropped, durableMetrics.dropped)
     val failed = maxOf(ingestionMetrics.failed, durableMetrics.failed)
 
+    val lastCapture = remember { ListenerActivityLog.lastEventAt(context) }
+    val activity = listenerActivity(
+        accessGranted = state.listenerAccessGranted,
+        connection = connection,
+        capturePaused = state.capturePaused,
+        lastEventAtEpochMillis = lastCapture,
+        nowEpochMillis = System.currentTimeMillis(),
+    )
     val problem = !state.listenerAccessGranted ||
         connection == ListenerHealth.Connection.DISCONNECTED ||
         dropped > 0L ||
-        failed > 0L
+        failed > 0L ||
+        activity == ListenerActivity.STALE
     if (!problem) return
 
     val detail = if (!state.listenerAccessGranted) {
@@ -64,10 +77,14 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
         val failure = durableMetrics.lastFailureAtEpochMillis?.let { " Last failure: ${describeWallClock(it)}." }.orEmpty()
         "Listener queue diagnostics: $dropped dropped, $failed failed.$failure " +
             "Tap to request a safe rebind and review notification access."
-    } else {
+    } else if (connection == ListenerHealth.Connection.DISCONNECTED) {
         val age = lastEventAt?.let { describeAge(SystemClock.elapsedRealtime() - it) }
         val seen = if (age == null) "No notifications seen yet." else "Last notification seen $age."
         "The listener is disconnected. $seen ${vendorGuidance()} Tap to review notification access."
+    } else {
+        val age = lastCapture?.let { describeAge(System.currentTimeMillis() - it) }
+        "Notification access is on and the listener says it is connected, but nothing has arrived " +
+            "since ${age ?: "a long time ago"}. ${vendorGuidance()} Tap to review notification access."
     }
 
     Row(
