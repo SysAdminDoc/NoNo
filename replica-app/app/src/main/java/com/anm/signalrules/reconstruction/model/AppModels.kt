@@ -144,6 +144,10 @@ data class HistoryRecord(
     val isGroupSummary: Boolean = false,
     val matchedRuleIds: List<Long> = emptyList(),
     val matchState: RuleMatchState = RuleMatchState.NOT_EVALUATED,
+    val importance: Int? = null,
+    val isConversation: Boolean? = null,
+    val category: String? = null,
+    val isOngoing: Boolean = false,
 )
 
 enum class HistoryLoadState {
@@ -161,9 +165,28 @@ data class HistoryQuery(
     val contentState: NotificationContentState? = null,
     val groupKey: String? = null,
     val groupSummary: Boolean? = null,
+    val importance: Int? = null,
+    val conversation: Boolean? = null,
     val fromEpochMillis: Long? = null,
     val limit: Int = 100,
 )
+
+/**
+ * Android's channel importance levels, as the platform numbers them.
+ *
+ * NotificationManager names these IMPORTANCE_NONE through IMPORTANCE_HIGH. The labels are for the
+ * history filter, where a raw 0 to 4 would mean nothing to anyone.
+ */
+val importanceCatalog: List<Pair<Int, String>> = listOf(
+    0 to "None",
+    1 to "Min",
+    2 to "Low",
+    3 to "Default",
+    4 to "High",
+)
+
+fun importanceLabel(importance: Int?): String? =
+    importanceCatalog.firstOrNull { it.first == importance }?.second
 
 /**
  * How far rule evaluation got for a captured notification.
@@ -217,6 +240,8 @@ data class UiState(
     val historyGroupFilter: String? = null,
     val historyContentStateFilter: NotificationContentState? = null,
     val historyGroupSummaryOnly: Boolean = false,
+    val historyImportanceFilter: Int? = null,
+    val historyConversationFilter: Boolean? = null,
     val transferExportRequest: Int = 0,
     val transferAdditions: Int = 0,
     val transferConflicts: Int = 0,

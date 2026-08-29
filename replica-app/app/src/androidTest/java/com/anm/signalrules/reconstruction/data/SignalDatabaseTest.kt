@@ -57,6 +57,46 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun historyFiltersOnThePlatformsOwnAssessment() = runBlocking {
+        val dao = database.notificationDao()
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "chat",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                importance = 4,
+                isConversation = true,
+                category = "msg",
+            ),
+        )
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "promo",
+                packageName = "com.example.shop",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                importance = 2,
+                isConversation = false,
+                category = "promo",
+                isOngoing = true,
+            ),
+        )
+
+        assertEquals(
+            listOf("chat"),
+            dao.observeHistory(query = "", filter = "All", conversation = true).first().map { it.notificationKey },
+        )
+        assertEquals(
+            listOf("promo"),
+            dao.observeHistory(query = "", filter = "All", importance = 2).first().map { it.notificationKey },
+        )
+        val ongoing = dao.observeHistory(query = "", filter = "All").first().single { it.notificationKey == "promo" }
+        assertEquals(true, ongoing.isOngoing)
+        assertEquals("promo", ongoing.category)
+    }
+
+    @Test
     fun theRuleTriggeredFilterSelectsRecordsWhoseRulesMatched() = runBlocking {
         val dao = database.notificationDao()
         dao.insert(

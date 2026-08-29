@@ -27,6 +27,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- History now records what Android itself thought of each notification: channel importance, whether
+  it is a conversation, the platform category, and whether it is ongoing. All four come from the
+  system rather than from anything the notification said, and they are what tells a silent promotion
+  apart from a priority conversation. History can filter on importance and on conversations, and
+  each row shows the values it has.
+
 - A warning when the listener has gone quiet. Access granted, the service reporting itself
   connected, and nothing captured for twelve hours is the shape an OEM battery manager leaves
   behind, and it used to look identical to a quiet day. The last capture time is now stored on

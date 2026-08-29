@@ -3,6 +3,7 @@ package com.anm.signalrules.reconstruction.runtime
 import android.app.Notification
 import android.os.Build
 import android.os.Bundle
+import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.anm.signalrules.reconstruction.model.NotificationContentState
 
@@ -41,6 +42,13 @@ data class SanitizedNotification(
     val groupKey: String? = null,
     val isGroupSummary: Boolean = false,
     val channelId: String? = null,
+    /** Channel importance the platform assigned, 0 to 5, or null below API 26. */
+    val importance: Int? = null,
+    /** Whether the platform treats this as a conversation. Null below API 31. */
+    val isConversation: Boolean? = null,
+    /** Platform category constant such as msg or email. A fixed vocabulary, never user text. */
+    val category: String? = null,
+    val isOngoing: Boolean = false,
 )
 
 private const val ANDROID_SENSITIVE_CONTENT_EXTRA = "key_sensitive_content"
@@ -98,9 +106,18 @@ fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
     )
 }
 
+/**
+ * Reads the platform's own assessment of a notification.
+ *
+ * Importance, conversation status, category and the ongoing flag all come from Android rather
+ * than from anything the notification says, so they can be stored without holding content. They
+ * are what tells a silent promotion apart from a priority conversation, which the app previously
+ * could not distinguish at all.
+ */
 fun sanitizeNotification(
     sbn: StatusBarNotification,
     payload: NotificationPayload = notificationPayload(sbn),
+    ranking: NotificationListenerService.Ranking? = null,
 ): SanitizedNotification {
     val notification = sbn.notification
     return SanitizedNotification(
@@ -111,6 +128,10 @@ fun sanitizeNotification(
         channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) notification.channelId else null,
         groupKey = notification.group,
         isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+        importance = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ranking?.importance else null,
+        isConversation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ranking?.isConversation else null,
+        category = notification.category,
+        isOngoing = notification.flags and Notification.FLAG_ONGOING_EVENT != 0,
     )
 }
 

@@ -38,6 +38,13 @@ data class NotificationEntity(
     val matchedRuleIds: String? = null,
     /** How far evaluation got: see [com.anm.signalrules.reconstruction.model.RuleMatchState]. */
     val matchState: String? = null,
+    /** Channel importance the platform assigned, 0 to 5. Null below API 26 or when unranked. */
+    val importance: Int? = null,
+    /** Whether the platform treats this as a conversation. Null below API 31. */
+    val isConversation: Boolean? = null,
+    /** Platform category constant. A fixed vocabulary, never anything the notification said. */
+    val category: String? = null,
+    val isOngoing: Boolean = false,
 )
 
 @Entity(tableName = "ingestion_diagnostics")
@@ -75,6 +82,10 @@ fun SanitizedNotification.toEntity(
     isGroupSummary = isGroupSummary,
     matchedRuleIds = encodeMatchedRuleIds(matchedRuleIds),
     matchState = matchState.name,
+    importance = importance,
+    isConversation = isConversation,
+    category = category,
+    isOngoing = isOngoing,
 )
 
 /** Stored as a delimited list so a row can name every rule that matched, not only the winner. */
@@ -110,6 +121,10 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         matchedRuleIds = decodeMatchedRuleIds(matchedRuleIds),
         matchState = matchState?.let { name -> runCatching { RuleMatchState.valueOf(name) }.getOrNull() }
             ?: RuleMatchState.NOT_EVALUATED,
+        importance = importance,
+        isConversation = isConversation,
+        category = category,
+        isOngoing = isOngoing,
     )
 }
 
@@ -143,6 +158,8 @@ interface NotificationDao {
           AND (:channelId IS NULL OR channelId = :channelId)
           AND (:contentState IS NULL OR contentState = :contentState)
           AND (:groupKey IS NULL OR groupKey = :groupKey)
+          AND (:importance IS NULL OR importance = :importance)
+          AND (:conversation IS NULL OR isConversation = :conversation)
           AND isGroupSummary = COALESCE(:groupSummary, 0)
           AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
         ORDER BY postedAtEpochMillis DESC, id DESC
@@ -157,6 +174,8 @@ interface NotificationDao {
         contentState: String? = null,
         groupKey: String? = null,
         groupSummary: Boolean? = null,
+        importance: Int? = null,
+        conversation: Boolean? = null,
         fromEpochMillis: Long? = null,
         limit: Int = 100,
     ): Flow<List<NotificationEntity>>
@@ -220,7 +239,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 5, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 6, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -268,6 +287,19 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Records the platform's own assessment of a notification. All four are supplied by
+         * Android rather than by the notification's content.
+         */
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN importance INTEGER")
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN isConversation INTEGER")
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN category TEXT")
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN isOngoing INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -292,6 +324,6 @@ abstract class SignalDatabase : RoomDatabase() {
             context.applicationContext,
             SignalDatabase::class.java,
             context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
     }
 }

@@ -52,6 +52,7 @@ import com.anm.signalrules.reconstruction.model.HistoryLoadState
 import com.anm.signalrules.reconstruction.model.UiState
 import com.anm.signalrules.reconstruction.model.HistoryRecord
 import com.anm.signalrules.reconstruction.model.RuleMatchState
+import com.anm.signalrules.reconstruction.model.importanceLabel
 import com.anm.signalrules.reconstruction.model.SignalRule
 import com.anm.signalrules.reconstruction.runtime.EvaluationReason
 import com.anm.signalrules.reconstruction.runtime.RuleEvaluationTrace
@@ -131,6 +132,8 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
             state.historyGroupFilter?.let { "group=$it" },
             state.historyContentStateFilter?.let { "content=${it.name}" },
             "summaries".takeIf { state.historyGroupSummaryOnly },
+            importanceLabel(state.historyImportanceFilter)?.let { "importance $it" },
+            "conversations".takeIf { state.historyConversationFilter == true },
         ).joinToString(" · ")
         if (metadataFilterSummary.isNotBlank()) {
             Text(
@@ -174,7 +177,8 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
             val narrowed = state.historySearch.isNotBlank() || state.historyFilter != "All" ||
                 state.historyPackageFilter != null || state.historyChannelFilter != null ||
                 state.historyGroupFilter != null || state.historyContentStateFilter != null ||
-                state.historyGroupSummaryOnly
+                state.historyGroupSummaryOnly || state.historyImportanceFilter != null ||
+                state.historyConversationFilter != null
             Column(
                 modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -192,7 +196,8 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
                 )
                 Text(
                     if (state.historySearch.isNotBlank()) "Try another search term."
-                    else if (narrowed) "This build stores metadata only; no rule-triggered or dismissed state is recorded yet."
+                    else if (state.historyFilter == "Dismissed") "Nothing records a dismissal yet, because this build runs no actions."
+                    else if (narrowed) "No stored metadata matches every filter you have set."
                     else "Notifications will appear here as local metadata. Notification content is never persisted.",
                     color = SignalColors.Secondary,
                     fontWeight = FontWeight.Bold,
@@ -222,6 +227,10 @@ private fun HistoryResults(state: UiState, model: MainViewModel, modifier: Modif
                                 item.channelId?.let { "channel=$it" },
                                 item.groupKey?.let { "group=$it" },
                                 "summary".takeIf { item.isGroupSummary },
+                                importanceLabel(item.importance)?.let { "importance=$it" },
+                                "conversation".takeIf { item.isConversation == true },
+                                item.category?.let { "category=$it" },
+                                "ongoing".takeIf { item.isOngoing },
                             ).joinToString(" · ")
                             if (metadata.isNotBlank()) {
                                 Text(metadata, color = SignalColors.Secondary, fontSize = 12.sp)

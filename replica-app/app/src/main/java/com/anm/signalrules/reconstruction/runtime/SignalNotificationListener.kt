@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
+import android.service.notification.NotificationListenerService.RankingMap
 import android.service.notification.StatusBarNotification
 import com.anm.signalrules.reconstruction.data.SignalDatabase
 import com.anm.signalrules.reconstruction.data.SignalPreferences
@@ -105,7 +106,13 @@ class SignalNotificationListener : NotificationListenerService() {
         requestRebindIfPossible(this)
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+    override fun onNotificationPosted(sbn: StatusBarNotification?) = onNotificationPosted(sbn, null)
+
+    /**
+     * The platform's ranking arrives alongside the notification, and carries what Android itself
+     * thinks of it: channel importance and, from API 31, whether this is a conversation.
+     */
+    override fun onNotificationPosted(sbn: StatusBarNotification?, rankingMap: RankingMap?) {
         if (!acceptingCallbacks.get()) return
         val notification = sbn ?: return
         if (notification.packageName == packageName) return
@@ -113,7 +120,10 @@ class SignalNotificationListener : NotificationListenerService() {
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;
         // all Room I/O is performed by the bounded worker.
         val payload = notificationPayload(notification)
-        val sanitized = sanitizeNotification(notification, payload)
+        val ranking = rankingMap?.let { map ->
+            NotificationListenerService.Ranking().takeIf { map.getRanking(notification.key, it) }
+        }
+        val sanitized = sanitizeNotification(notification, payload, ranking)
         // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
         // payload itself goes no further than this stack frame.
         val evaluation = evaluateCapture(currentRules, payload)

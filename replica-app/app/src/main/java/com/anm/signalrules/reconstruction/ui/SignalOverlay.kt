@@ -65,6 +65,7 @@ import com.anm.signalrules.reconstruction.model.NotificationContentState
 import com.anm.signalrules.reconstruction.model.enableForCatalog
 import com.anm.signalrules.reconstruction.model.extraFilterCatalog
 import com.anm.signalrules.reconstruction.model.filterOperatorCatalog
+import com.anm.signalrules.reconstruction.model.importanceCatalog
 import com.anm.signalrules.reconstruction.model.matchTypeCatalog
 import com.anm.signalrules.reconstruction.runtime.oemListenerChecklist
 import kotlinx.coroutines.delay
@@ -152,6 +153,10 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 }
                 groups.forEach { value ->
                     add(MenuItem("Group: $value", Icons.Rounded.FilterAlt) { model.setHistoryGroupFilter(value) })
+                }
+                add(MenuItem("Conversations only", Icons.Rounded.Tune) { model.setHistoryConversationFilter(true) })
+                importanceCatalog.forEach { (level, label) ->
+                    add(MenuItem("Importance: $label", Icons.Rounded.FilterAlt) { model.setHistoryImportanceFilter(level) })
                 }
                 NotificationContentState.values().forEach { value ->
                     add(MenuItem("Content: ${value.name}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })

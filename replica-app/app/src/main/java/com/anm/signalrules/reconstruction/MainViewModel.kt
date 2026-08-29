@@ -151,6 +151,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             contentState = it.historyContentStateFilter,
                             groupKey = it.historyGroupFilter,
                             groupSummary = it.historyGroupSummaryOnly.takeIf { only -> only },
+                            importance = it.historyImportanceFilter,
+                            conversation = it.historyConversationFilter,
                         )
                     }
                     .distinctUntilChanged(),
@@ -165,6 +167,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         contentState = query.contentState?.name,
                         groupKey = query.groupKey,
                         groupSummary = query.groupSummary,
+                        importance = query.importance,
+                        conversation = query.conversation,
                         fromEpochMillis = query.fromEpochMillis,
                         limit = query.limit,
                     ).map { records ->
@@ -276,6 +280,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             historyGroupFilter = null,
             historyContentStateFilter = null,
             historyGroupSummaryOnly = false,
+            historyImportanceFilter = null,
+            historyConversationFilter = null,
             overlay = Overlay.NONE,
         )
     }
@@ -293,6 +299,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setHistoryGroupSummaryOnly(enabled: Boolean) {
         _state.value = _state.value.copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
+    }
+    fun setHistoryImportanceFilter(value: Int?) {
+        _state.value = _state.value.copy(historyImportanceFilter = value, overlay = Overlay.NONE)
+    }
+    fun setHistoryConversationFilter(value: Boolean?) {
+        _state.value = _state.value.copy(historyConversationFilter = value, overlay = Overlay.NONE)
     }
     fun setCapturePaused(paused: Boolean) {
         CaptureGate.setPaused(getApplication(), paused)

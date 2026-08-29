@@ -38,12 +38,13 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             "migration-v1-test.db",
-            5,
+            6,
             true,
             SignalDatabase.MIGRATION_1_2,
             SignalDatabase.MIGRATION_2_3,
             SignalDatabase.MIGRATION_3_4,
             SignalDatabase.MIGRATION_4_5,
+            SignalDatabase.MIGRATION_5_6,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey, isGroupSummary FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -71,10 +72,11 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             databaseName,
-            5,
+            6,
             true,
             SignalDatabase.MIGRATION_3_4,
             SignalDatabase.MIGRATION_4_5,
+            SignalDatabase.MIGRATION_5_6,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -101,7 +103,13 @@ class SignalDatabaseMigrationTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(name, 5, true, SignalDatabase.MIGRATION_4_5)
+        val migrated = helper.runMigrationsAndValidate(
+            name,
+            6,
+            true,
+            SignalDatabase.MIGRATION_4_5,
+            SignalDatabase.MIGRATION_5_6,
+        )
         migrated.query("SELECT packageName, channelId, matchedRuleIds, matchState FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
             assertEquals("com.example.messages", cursor.getString(0))
@@ -118,7 +126,7 @@ class SignalDatabaseMigrationTest {
     @Throws(IOException::class)
     fun theSchemaStoresNoNotificationContent() {
         val name = "migration-content-test.db"
-        helper.createDatabase(name, 5).use { db ->
+        helper.createDatabase(name, 6).use { db ->
             db.query("SELECT name FROM pragma_table_info('notification_history')").use { cursor ->
                 val columns = buildList {
                     while (cursor.moveToNext()) add(cursor.getString(0))
@@ -131,6 +139,33 @@ class SignalDatabaseMigrationTest {
                 }
             }
         }
+        ApplicationProvider.getApplicationContext<Context>().deleteDatabase(name)
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun v5RowsGainRankingColumnsWithoutInventingAnAssessment() {
+        val name = "migration-v5-test.db"
+        helper.createDatabase(name, 5).apply {
+            execSQL(
+                "INSERT INTO notification_history " +
+                    "(notificationKey, packageName, postedAtEpochMillis, contentState, isGroupSummary) " +
+                    "VALUES ('legacy-v5', 'com.example.messages', 96, 'AVAILABLE', 0)",
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(name, 6, true, SignalDatabase.MIGRATION_5_6)
+        migrated.query("SELECT packageName, importance, isConversation, category, isOngoing FROM notification_history").use { cursor ->
+            check(cursor.moveToFirst())
+            assertEquals("com.example.messages", cursor.getString(0))
+            // Nothing is known about a row captured before the ranking was read.
+            check(cursor.isNull(1))
+            check(cursor.isNull(2))
+            check(cursor.isNull(3))
+            assertEquals(0, cursor.getInt(4))
+        }
+        migrated.close()
         ApplicationProvider.getApplicationContext<Context>().deleteDatabase(name)
     }
 }
