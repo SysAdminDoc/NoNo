@@ -33,6 +33,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- History metadata can be exported as CSV through Android's storage access, under Settings, Backup.
+  The file carries exactly the columns the database holds, so no notification content is written,
+  and every field is quoted because notification keys and group keys routinely contain commas.
+
 - A history record can be kept past the retention period. Starring one exempts it from pruning
   until you unstar it, so a record worth holding on to does not need retention widened for
   everything else.

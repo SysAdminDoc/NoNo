@@ -57,11 +57,26 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) model.showMessage("Import cancelled.") else model.beginImport(uri)
     }
+    val historyExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri == null) model.exportCancelled() else model.writeExport(uri)
+    }
     LaunchedEffect(state.transferExportRequest) {
-        if (state.transferExportRequest > 0) exportLauncher.launch("signal-rules.json")
+        if (state.transferExportRequest == 0) return@LaunchedEffect
+        // Two contracts because the MIME type is fixed when the contract is built.
+        if (state.transferExportIsHistory) {
+            historyExportLauncher.launch("signal-rules-history.csv")
+        } else {
+            exportLauncher.launch("signal-rules.json")
+        }
     }
     val listState = rememberLazyListState()
-    val target = when (state.auditState.substringBefore('_').toIntOrNull()) { 17 -> 7; 18 -> 13; 19 -> 20; 20 -> 28; else -> 0 }
+    // Scroll offsets for the audited settings captures, as item positions in the list below.
+    // They name rows, so re-derive them whenever a row is added or removed:
+    //   17 -> "Allow dismissing fixed notifications"
+    //   18 -> "Notification capture"
+    //   19 -> "Import rules"
+    //   20 -> "Hide popups when muting"
+    val target = when (state.auditState.substringBefore('_').toIntOrNull()) { 17 -> 7; 18 -> 13; 19 -> 21; 20 -> 30; else -> 0 }
     LaunchedEffect(state.auditState) { listState.scrollToItem(target) }
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp)) {
         item { SectionLabel("Help") }
@@ -93,6 +108,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { SectionLabel("Backup") }
         item { PreferenceRow("Import rules", "Encrypted Signal Rules JSON; notification history is never imported.", onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) }) }
         item { PreferenceRow("Export rules", "Create an encrypted file through Android storage access.", onClick = model::beginExport) }
+        item { PreferenceRow("Export history", "Write the stored metadata as CSV. Notification content is never included.", onClick = model::beginHistoryExport) }
         item { PreferenceRow("Automatic backups", unavailable = NO_AUTOMATIC_BACKUPS) }
 
         item { SectionLabel("Advanced") }

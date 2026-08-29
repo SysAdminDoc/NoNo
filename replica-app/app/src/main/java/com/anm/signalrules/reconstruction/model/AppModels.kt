@@ -253,6 +253,8 @@ data class UiState(
     val historyImportanceFilter: Int? = null,
     val historyConversationFilter: Boolean? = null,
     val transferExportRequest: Int = 0,
+    /** True when the pending export is history CSV rather than the encrypted rule file. */
+    val transferExportIsHistory: Boolean = false,
     val transferAdditions: Int = 0,
     val transferConflicts: Int = 0,
     val capturePaused: Boolean = false,

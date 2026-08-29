@@ -21,6 +21,7 @@ import com.anm.signalrules.reconstruction.data.RuleTransfer
 import com.anm.signalrules.reconstruction.data.SignalDatabase
 import com.anm.signalrules.reconstruction.data.toMetrics
 import com.anm.signalrules.reconstruction.data.toHistoryRecord
+import com.anm.signalrules.reconstruction.data.HistoryExport
 import com.anm.signalrules.reconstruction.data.decodeMatchedRuleIds
 import com.anm.signalrules.reconstruction.data.decodeRules
 import com.anm.signalrules.reconstruction.data.encodeRules
@@ -74,6 +75,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var auditOverride: String? = null
     private val historyRetry = MutableStateFlow(0)
     private var pendingExportPayload: String? = null
+    private var pendingExportIsHistory = false
     private var pendingImportEncoded: String? = null
     private var pendingImportRules: List<SignalRule>? = null
 
@@ -336,7 +338,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 result.fold(
                     onSuccess = {
                         pendingExportPayload = it
-                        _state.value = _state.value.copy(transferExportRequest = _state.value.transferExportRequest + 1, transientMessage = null)
+                        _state.value = _state.value.copy(
+                            transferExportRequest = _state.value.transferExportRequest + 1,
+                            transferExportIsHistory = false,
+                            transientMessage = null,
+                        )
                     },
                     onFailure = { _state.value = _state.value.copy(transientMessage = "Could not prepare the encrypted rule file.") },
                 )
@@ -345,7 +351,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun writeExport(uri: Uri) {
         val payload = pendingExportPayload
+        val history = pendingExportIsHistory
         pendingExportPayload = null
+        pendingExportIsHistory = false
         if (payload == null) {
             _state.value = _state.value.copy(transientMessage = "The export expired; try again.")
             return
@@ -358,13 +366,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             withContext(Dispatchers.Main.immediate) {
                 _state.value = _state.value.copy(
-                    transientMessage = result.fold({ "Encrypted rules exported. Notification history was not included." }, { "Export failed; no rule data was changed." }),
+                    transientMessage = result.fold(
+                        {
+                            if (history) {
+                                "History metadata exported. No notification content was written."
+                            } else {
+                                "Encrypted rules exported. Notification history was not included."
+                            }
+                        },
+                        { "Export failed; nothing on this device was changed." },
+                    ),
                 )
             }
         }
     }
+    /**
+     * Prepares a CSV of the history currently loaded and asks the UI for a destination.
+     *
+     * Shares the export plumbing with the rule file; the payload is decided here so the two cannot
+     * be confused. Only stored metadata is written, never notification content.
+     */
+    fun beginHistoryExport() {
+        val records = _state.value.history
+        if (records.isEmpty()) {
+            _state.value = _state.value.copy(transientMessage = "There is no history to export yet.")
+            return
+        }
+        pendingExportPayload = HistoryExport.toCsv(records)
+        pendingExportIsHistory = true
+        _state.value = _state.value.copy(
+            transferExportRequest = _state.value.transferExportRequest + 1,
+            transferExportIsHistory = true,
+            transientMessage = null,
+        )
+    }
+
     fun exportCancelled() {
         pendingExportPayload = null
+        pendingExportIsHistory = false
         _state.value = _state.value.copy(transientMessage = "Export cancelled.")
     }
     fun beginImport(uri: Uri) {
