@@ -13,6 +13,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   policy check now fails if that pin is removed, and the PowerShell scripts pick a supported JDK
   instead of trusting `JAVA_HOME`.
 
+### Documentation
+
+- Corrected the capability boundary in the README: dark, light, and system themes all ship and the
+  choice is persisted. Only the Language row stays unavailable.
+- Rewrote `docs/architecture.md`, which still described a prototype that stored a package name, a
+  timestamp, and a counter for a single rule. It now covers the capture pipeline, Room and its
+  migrations, the shared database instance, the pure evaluator, encrypted transfer, the Quick
+  Settings tile, and the widget.
+- `build-debug.ps1` now freezes the APK as `dist/SignalRules-v<version>.apk` and clears earlier
+  artifacts first, so the directory holds one binary and `SHA256SUMS.txt` names the version it
+  describes.
+
 ### Fixed
 
 - Stopped counting Android 16's own group summaries as notifications. The platform groups an app's

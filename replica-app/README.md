@@ -38,7 +38,7 @@ From the `replica-app` directory of your clone:
 .\scripts\launch-replica.ps1 -Serial emulator-5554
 ```
 
-The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. Copy it to `dist\SignalRules-debug.apk` when freezing a deliverable; the APK itself is not tracked in git, but `dist\SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
+The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. `build-debug.ps1` also freezes it as `dist\SignalRules-v<version>.apk`, clearing any earlier APK from that directory first so the version in the file name is always the one `dist\SHA256SUMS.txt` describes. The APK itself is not tracked in git, but `SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
 
 ## Tests and validation
 
@@ -89,8 +89,8 @@ control rather than leaving the reader to infer it:
   is available through Android's Storage Access Framework, with a passphrase, preview, conflict
   choice, cancellation/error handling, and no notification history in the file. Automatic backup
   scheduling remains unavailable.
-- **Only the dark theme exists**, and the app ships no translated resources, so the Theme and
-  Language rows are marked unavailable.
+- **Dark, light, and system themes are available** and the choice is persisted. The app ships no
+  translated resources, so the Language row stays unavailable and the app follows the system locale.
 - **History is bounded and queryable.** Search and package/channel/group/content-provenance and
   summary filters are backed by Room migrations and explicit loading/error/retry states. Debug
   captures remain available for deterministic audit states.
