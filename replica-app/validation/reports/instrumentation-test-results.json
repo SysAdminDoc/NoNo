@@ -1,7 +1,7 @@
 {
   "suite": "instrumentation",
   "source": "C:\\repos\\ANM-Android_Notification_Manager\\replica-app\\app\\build\\outputs\\androidTest-results\\connected (device emulator-5584)",
-  "generated_at": "2026-08-29T15:34:37-04:00",
+  "generated_at": "2026-08-29T15:40:10-04:00",
   "tests": 13,
   "failures": 0,
   "errors": 0,

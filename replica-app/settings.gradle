@@ -22,7 +22,7 @@ include ':app'
 // Gradle Plugin fails while creating tasks, with "Could not create task ':app:testDebugUnitTest'
 // ... Type T not present" - a message that names neither Java nor the JDK. The Android Studio JBR
 // is the usual cause on a developer machine: it is OpenJDK 25 and is what a bare `gradlew` picks up.
-def supportedJavaMajors = [17, 21]
+def supportedJavaMajors = [21]
 // Read as a plain string rather than through JavaVersion: resolving that type makes Groovy
 // analyse JDK class files, and this Gradle's ASM cannot read a class file newer than it knows,
 // which replaces this message with "Unsupported class file major version NN".
@@ -30,7 +30,7 @@ def rawJavaVersion = System.getProperty('java.specification.version')
 def currentJavaMajor = (rawJavaVersion.startsWith('1.') ? rawJavaVersion.substring(2) : rawJavaVersion).toInteger()
 if (!supportedJavaMajors.contains(currentJavaMajor)) {
     throw new GradleException(
-        "This build supports JDK ${supportedJavaMajors.join(' and ')} (LTS releases); it is running on JDK ${currentJavaMajor} " +
+        "This build runs on JDK ${supportedJavaMajors.join(' and ')}; it is running on JDK ${currentJavaMajor} " +
         "at '${System.getProperty('java.home')}'.\n" +
         "Set JAVA_HOME to a supported JDK, or pass -Dorg.gradle.java.home=<path>. Do not use the Android Studio JBR: " +
         "reproducible builds are established against an LTS OpenJDK."

@@ -85,8 +85,9 @@ object RuleTransfer {
                 deriveKey(passphrase, salt, PBKDF2_ITERATIONS),
                 GCMParameterSpec(128, iv),
             )
-            // The derivation parameters are authenticated, so a file whose recorded cost has been
-            // edited fails to open rather than deriving a different key in silence.
+            // Editing the recorded cost already breaks decryption, because the cost feeds the key.
+            // Binding the header as well pins the parts that do not: it stops a format-2 file from
+            // being relabelled as format 1 to reach the legacy branch.
             cipher.updateAAD(headerAad(TRANSFER_FORMAT_VERSION, PBKDF2_KDF_NAME, PBKDF2_ITERATIONS))
             val encrypted = runCatching { cipher.doFinal(rulePayload) }
                 .also { passphrase.fill('\u0000') }
@@ -125,8 +126,15 @@ object RuleTransfer {
             val legacy = file.formatVersion == LEGACY_FORMAT_VERSION
             val kdf = file.kdf ?: if (legacy) PBKDF2_KDF_NAME else return@runCatching null
             if (kdf != PBKDF2_KDF_NAME) return@runCatching null
-            val iterations = file.iterations
-                ?: if (legacy) LEGACY_PBKDF2_ITERATIONS else return@runCatching null
+            // Every format-1 file was written with one fixed cost, so the legacy branch accepts
+            // that and nothing else. Otherwise a file claiming to be format 1 could name any cost
+            // it liked and be honoured without an authenticated header to check it against.
+            val iterations = if (legacy) {
+                LEGACY_PBKDF2_ITERATIONS.takeIf { file.iterations == null || file.iterations == it }
+                    ?: return@runCatching null
+            } else {
+                file.iterations ?: return@runCatching null
+            }
             if (iterations !in 1..MAX_PBKDF2_ITERATIONS) return@runCatching null
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(

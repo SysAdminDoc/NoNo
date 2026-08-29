@@ -139,6 +139,22 @@ class ListenerHealthTest {
     }
 
     @Test
+    fun `a second revocation is announced even when the listener never bound in between`() {
+        // Revoke, re-grant, and let the platform fail to bind. Nothing calls onConnected here,
+        // which is the path that used to leave the notice permanently spent.
+        ListenerHealth.onAccessRevoked()
+        assertEquals(
+            ListenerHealth.CapabilityAction.REQUEST_REBIND,
+            ListenerHealth.capabilityAction(true, ListenerHealth.connection.value),
+        )
+
+        assertEquals(
+            ListenerHealth.CapabilityAction.MARK_REVOKED,
+            ListenerHealth.capabilityAction(false, ListenerHealth.connection.value),
+        )
+    }
+
+    @Test
     fun `events record a timestamp and a count`() {
         ListenerHealth.recordEvent(1_000L)
         ListenerHealth.recordEvent(2_500L)

@@ -50,6 +50,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Repaired the PowerShell helpers on Windows PowerShell 5.1, the shell the README asks for. Reading
+  a JDK version through a redirected `java -version` turned its banner into a terminating error, so
+  every build, test, lint and validation script failed with a message that named no cause.
+- A second loss of notification access is announced again even when the listener never managed to
+  bind between the two, instead of the first notice spending the flag for the life of the process.
+- The rule file's legacy format no longer accepts a key-derivation cost of its own choosing, which
+  a file could otherwise use to make an import take tens of seconds with no way to cancel it.
+
 - Stopped counting Android 16's own group summaries as notifications. The platform groups an app's
   notifications itself and posts a summary beside the children, so the widget count, the widget's
   last-capture time, and the history list all included a row that carried nothing of its own.

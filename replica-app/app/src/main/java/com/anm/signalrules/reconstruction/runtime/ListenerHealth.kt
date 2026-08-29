@@ -36,13 +36,22 @@ object ListenerHealth {
      *
      * Revocation is announced once per loss rather than once per resume, tracked separately from
      * the connection state: the platform can disconnect a listener whose access is still granted,
-     * so DISCONNECTED alone does not mean the user took access away.
+     * so DISCONNECTED alone does not mean the user took access away. Seeing access present re-arms
+     * that notice, so a user who revokes, re-grants and revokes again is reported both times even
+     * if the listener never managed to bind in between. The flag is process-local, so a loss is
+     * announced once per process rather than once for all time.
      */
-    fun capabilityAction(accessGranted: Boolean, connection: Connection): CapabilityAction = when {
-        !accessGranted && revocationAnnounced -> CapabilityAction.NONE
-        !accessGranted -> CapabilityAction.MARK_REVOKED
-        connection == Connection.CONNECTED -> CapabilityAction.NONE
-        else -> CapabilityAction.REQUEST_REBIND
+    fun capabilityAction(accessGranted: Boolean, connection: Connection): CapabilityAction {
+        if (accessGranted) {
+            revocationAnnounced = false
+            return if (connection == Connection.CONNECTED) {
+                CapabilityAction.NONE
+            } else {
+                CapabilityAction.REQUEST_REBIND
+            }
+        }
+        if (revocationAnnounced) return CapabilityAction.NONE
+        return CapabilityAction.MARK_REVOKED
     }
 
     @Volatile

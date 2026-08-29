@@ -50,7 +50,8 @@ evaluator touches the notification manager, a `PendingIntent`, or the ringer.
 
 ## Transfer
 
-`RuleTransfer` writes rules and settings, never history, through the Storage Access Framework.
+`RuleTransfer` writes the rule list, and nothing else, through the Storage Access Framework. Neither
+settings nor history are included.
 Encryption is AES-GCM with a 256-bit key derived by PBKDF2-HMAC-SHA256, a random salt, and a random
 IV; the passphrase is held as a char array and zeroed. Import previews additions and same-id
 conflicts before anything is committed, and cancellation leaves the caller's state alone.

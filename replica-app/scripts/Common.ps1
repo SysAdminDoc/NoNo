@@ -18,15 +18,38 @@ function Resolve-AdbPath {
     throw 'ADB was not found. Set ANDROID_SDK_ROOT or install Android platform-tools.'
 }
 
-$script:SupportedJavaMajors = @(17, 21)
+$script:SupportedJavaMajors = @(21)
 
 function Get-JavaMajor {
     param([Parameter(Mandatory = $true)][string]$JavaHome)
     $exe = Join-Path $JavaHome 'bin\java.exe'
     if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { return $null }
-    # java -version writes to stderr on every release line.
-    $output = & $exe '-version' 2>&1 | Out-String
-    if ($output -match 'version "(\d+)') { return [int]$Matches[1] }
+    # java -version writes its banner to stderr. Under Windows PowerShell 5.1 a redirected native
+    # stderr line becomes an ErrorRecord, which $ErrorActionPreference = 'Stop' turns into a
+    # terminating error, so this must not use 2>&1. The release file avoids the problem entirely.
+    $releaseFile = Join-Path $JavaHome 'release'
+    if (Test-Path -LiteralPath $releaseFile -PathType Leaf) {
+        $line = Select-String -LiteralPath $releaseFile -Pattern '^JAVA_VERSION="([^"]+)"' |
+            Select-Object -First 1
+        if ($null -ne $line) {
+            $version = $line.Matches[0].Groups[1].Value
+            if ($version -match '^1\.(\d+)') { return [int]$Matches[1] }
+            if ($version -match '^(\d+)') { return [int]$Matches[1] }
+        }
+    }
+    # Fall back to asking the binary, capturing stderr through a file rather than the pipeline.
+    $stderrPath = [System.IO.Path]::GetTempFileName()
+    try {
+        Start-Process -FilePath $exe -ArgumentList '-version' -NoNewWindow -Wait `
+            -RedirectStandardError $stderrPath -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) | Out-Null
+        $output = Get-Content -LiteralPath $stderrPath -Raw
+        if ($output -match 'version "(\d+)') { return [int]$Matches[1] }
+        if ($output -match 'version "1\.(\d+)') { return [int]$Matches[1] }
+    } catch {
+        return $null
+    } finally {
+        Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue
+    }
     return $null
 }
 

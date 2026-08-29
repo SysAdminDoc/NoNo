@@ -77,6 +77,35 @@ class RuleTransferTest {
     }
 
     @Test
+    fun `the legacy format cannot be used to name an expensive derivation`() {
+        // Format 1 predates the authenticated header, so a file claiming to be format 1 with a
+        // cost of its own choosing would otherwise be honoured without anything to check it.
+        val legacy = checkNotNull(javaClass.getResourceAsStream("/transfer/portable-rules-v1.json"))
+            .bufferedReader()
+            .use { it.readText() }
+        val hostile = legacy.replace(
+            "\"formatVersion\": 1,",
+            "\"formatVersion\": 1,\n  \"iterations\": 3000000,",
+        )
+        assertNotEquals(legacy, hostile)
+
+        assertTrue(
+            RuleTransfer.importRules(hostile, "legacy-transfer-passphrase".toCharArray())
+                is RuleImportResult.InvalidFile,
+        )
+    }
+
+    @Test
+    fun `a current file relabelled as the legacy format is refused`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+        val downgraded = encoded.replace("\"formatVersion\":2", "\"formatVersion\":1")
+
+        assertTrue(
+            RuleTransfer.importRules(downgraded, "correct horse".toCharArray()) is RuleImportResult.InvalidFile,
+        )
+    }
+
+    @Test
     fun `encrypted import requires a passphrase and rejects the wrong one`() {
         val encoded = RuleTransfer.exportRules(incoming, "secret".toCharArray())
 
