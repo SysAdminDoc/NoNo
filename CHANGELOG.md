@@ -7,6 +7,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Made the instrumented test suite runnable for the first time. Dexing rejected every Kotlin test
+  name containing spaces at this minimum SDK, so the whole androidTest source set failed to build,
+  and the exported Room schemas were never packaged into the test APK. Nine instrumented tests now
+  execute on a device.
+- Gave the listener, the UI, and the widget one shared database handle. Room only notifies
+  observers registered on the instance that performed a write, so history captured by the listener
+  never reached the screen watching it. The widget also opened and closed its own database on every
+  broadcast, which the listener sends after each captured notification.
+
 - Stopped a resume from reporting a working notification listener as disconnected. The healthy
   case (access granted, listener connected) fell through to the revoked branch, so every return
   to the app published a disconnected listener, emitted an access-revoked event, and raised the

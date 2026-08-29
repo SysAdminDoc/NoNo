@@ -221,11 +221,30 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
-        /** Stores notification-derived metadata in the no-backup tree by default. */
-        fun create(context: Context): SignalDatabase = Room.databaseBuilder(
+        @Volatile
+        private var instance: SignalDatabase? = null
+
+        /**
+         * The process-wide handle on the metadata store, kept in the no-backup tree.
+         *
+         * Room's invalidation tracker only notifies observers registered on the instance that
+         * performed the write. The listener, the view model, and the widget all read and write
+         * the same file, so handing each of them its own instance meant a captured notification
+         * never woke the history flow: the screen looked frozen until it was rebuilt. One
+         * instance per process is also what lets the widget answer a broadcast without opening
+         * and closing the database each time.
+         *
+         * Nothing closes this. A shared handle closed by whichever owner happens to stop first
+         * would break the others, and the store is meant to live as long as the process.
+         */
+        fun get(context: Context): SignalDatabase = instance ?: synchronized(this) {
+            instance ?: build(context).also { instance = it }
+        }
+
+        private fun build(context: Context): SignalDatabase = Room.databaseBuilder(
             context.applicationContext,
             SignalDatabase::class.java,
-            context.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
+            context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
         ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
     }
 }

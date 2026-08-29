@@ -89,7 +89,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         },
         onCorruption = { recoveredFromCorruption = true },
     )
-    private val historyDatabase = SignalDatabase.create(application)
+    private val historyDatabase = SignalDatabase.get(application)
 
     private object Keys {
         val Onboarding = booleanPreferencesKey("onboarding_complete")
@@ -685,7 +685,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportPayload = null
         pendingImportEncoded = null
         pendingImportRules = null
-        historyDatabase.close()
+        // The database is shared with the listener and the widget, so it outlives this owner.
         super.onCleared()
     }
 }

@@ -15,6 +15,7 @@ import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -25,12 +26,11 @@ import kotlinx.coroutines.withContext
 class SignalWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
+        updateScope.launch {
             try {
-                val database = SignalDatabase.create(context)
-                val count = database.notificationDao().readWidgetCount()
-                val latest = database.notificationDao().readWidgetLatest()
-                database.close()
+                val dao = SignalDatabase.get(context).notificationDao()
+                val count = dao.readWidgetCount()
+                val latest = dao.readWidgetLatest()
                 CaptureGate.load(context)
                 val views = widgetViews(context, count, latest?.postedAtEpochMillis, latest?.contentState)
                 withContext(Dispatchers.Main) { manager.updateAppWidget(appWidgetIds, views) }
@@ -41,6 +41,11 @@ class SignalWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        // The listener broadcasts an update after every persisted notification. A fresh
+        // CoroutineScope per broadcast leaves an orphaned Job behind each time, so the receiver
+        // keeps one supervised scope for the life of the process.
+        private val updateScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         fun requestUpdate(context: Context) {
             val appContext = context.applicationContext
             val manager = AppWidgetManager.getInstance(appContext)

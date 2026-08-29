@@ -38,7 +38,7 @@ class SignalNotificationListener : NotificationListenerService() {
         super.onCreate()
         acceptingCallbacks.set(true)
         CaptureGate.load(applicationContext)
-        database = SignalDatabase.create(applicationContext)
+        database = SignalDatabase.get(applicationContext)
         ingestor = NotificationIngestor(serviceScope) { notification ->
             database.notificationDao().insertAndPrune(
                 notification.toEntity(),
@@ -105,14 +105,14 @@ class SignalNotificationListener : NotificationListenerService() {
     override fun onDestroy() {
         acceptingCallbacks.set(false)
         if (shutdownStarted.compareAndSet(false, true)) {
-            if (::ingestor.isInitialized && ::database.isInitialized) {
+            if (::ingestor.isInitialized) {
                 serviceScope.launch {
                     try {
-                        // The worker drains the closed queue before Room is closed, so no write can
-                        // race the database shutdown. A second onDestroy cannot enqueue another close.
+                        // The worker drains the closed queue so no write is lost. The database
+                        // itself is process-shared and deliberately stays open: the view model and
+                        // the widget read through the same instance after the service stops.
                         ingestor.close()
                     } finally {
-                        database.close()
                         serviceScope.cancel()
                     }
                 }
