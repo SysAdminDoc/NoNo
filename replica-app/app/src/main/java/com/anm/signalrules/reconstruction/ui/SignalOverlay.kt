@@ -126,7 +126,11 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             "Notification actions",
             buildList {
                 add(MenuItem("Restore", Icons.Rounded.MoreTime) { model.dismissOverlay() })
-                add(MenuItem("Open notification", Icons.Rounded.ChevronRight) { model.dismissOverlay() })
+                add(
+                    MenuItem("Open app", Icons.Rounded.ChevronRight) {
+                        model.openRecordedApp(state.selectedHistoryPackageName)
+                    },
+                )
                 add(MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) })
                 add(MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() })
                 add(MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() })

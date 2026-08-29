@@ -268,6 +268,10 @@ data class UiState(
     val validationError: String? = null,
     val transientMessage: String? = null,
 ) {
+    /** Package of the record whose menu is open, if one is. */
+    val selectedHistoryPackageName: String?
+        get() = history.firstOrNull { it.id == selectedHistoryId }?.appPackageName
+
     /** Content provenance of the record whose menu is open, if one is. */
     val selectedHistoryContentState: NotificationContentState?
         get() = history.firstOrNull { it.id == selectedHistoryId }?.contentState

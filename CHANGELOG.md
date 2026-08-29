@@ -33,6 +33,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- A history record can open the app it came from. This uses the app's own launcher entry, not the
+  notification's action, which this build neither stores nor fires. Package visibility is declared
+  narrowly, for launchable activities only, rather than by asking to see every installed package.
+
 - History now records what Android itself thought of each notification: channel importance, whether
   it is a conversation, the platform category, and whether it is ongoing. All four come from the
   system rather than from anything the notification said, and they are what tells a silent promotion

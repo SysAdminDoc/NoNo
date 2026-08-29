@@ -459,6 +459,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showHistoryOverlay(historyId: Long) {
         _state.value = _state.value.copy(selectedHistoryId = historyId, overlay = Overlay.HISTORY_ITEM)
     }
+    /**
+     * Opens the app a history record came from.
+     *
+     * Uses the launch intent rather than the notification's own PendingIntent, which this build
+     * never stores and could not fire without acting on the notification.
+     */
+    fun openRecordedApp(packageName: String?) {
+        val target = packageName?.takeIf { it.isNotBlank() }
+        val app = getApplication<Application>()
+        val intent = target?.let { app.packageManager.getLaunchIntentForPackage(it) }
+        if (intent == null) {
+            _state.value = _state.value.copy(
+                overlay = Overlay.NONE,
+                transientMessage = "That app is not installed, or it has no screen to open.",
+            )
+            return
+        }
+        val launched = runCatching {
+            app.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.isSuccess
+        _state.value = _state.value.copy(
+            overlay = Overlay.NONE,
+            transientMessage = if (launched) null else "That app could not be opened.",
+        )
+    }
+
     /** Feedback for the copy action in the content-hidden explainer. */
     fun reportCommandCopied() {
         _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Command copied.")
