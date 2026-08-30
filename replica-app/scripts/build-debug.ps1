@@ -26,7 +26,7 @@ $dist = Join-Path $root 'dist'
 if (-not (Test-Path -LiteralPath $dist)) { New-Item -ItemType Directory -Path $dist | Out-Null }
 Get-ChildItem -LiteralPath $dist -Filter '*.apk' | Remove-Item -Force
 Get-ChildItem -LiteralPath $dist -Filter 'reproducibility-*.json' | Remove-Item -Force
-$distApkName = "SignalRules-v$versionName.apk"
+$distApkName = "NoNo-v$versionName.apk"
 $distApk = Join-Path $dist $distApkName
 Copy-Item -LiteralPath $apk -Destination $distApk -Force
 $distHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $distApk).Hash

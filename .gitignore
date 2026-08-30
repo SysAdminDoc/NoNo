@@ -11,6 +11,11 @@ replica-app/dist/*.apk
 replica-app/dist/reproducibility-*.json
 replica-app/validation/reports/build-manifest.json
 
+# Raw Android input-method dumps can expose keys from installed system apps.
+# Capture them locally for diagnosis, but never publish them.
+app-audit/evidence/activity/*-input-method.txt
+app-audit/evidence/measurements/device-input-method-*.txt
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

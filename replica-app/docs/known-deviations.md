@@ -4,7 +4,7 @@ These deviations are intentional and remain traceable throughout validation.
 
 | ID | Area | Deviation | Reason | Validation handling |
 |---|---|---|---|---|
-| DEV-001 | Identity | Product name is **Signal Rules**, package is `com.anm.signalrules.reconstruction`, and launcher art is original. | No authorization to reuse BuzzKill identity or artwork. | Mask/discount identity-only regions; verify geometry and behavior separately. |
+| DEV-001 | Identity | Product name is **NoNo**, package is `com.sysadmindoc.nono`, and launcher art is original. | No authorization to reuse BuzzKill identity or artwork. | Mask/discount identity-only regions; verify geometry and behavior separately. |
 | DEV-002 | Typography | Uses Android's legal system sans-serif family with rounded presentation where available. | Exact original font family was not confirmed or licensed. | Compare size, weight, line wrapping, and position; record residual glyph differences. |
 | DEV-003 | Illustrations | Explore/onboarding art uses code-native abstract replacements. | Original illustrations and photographs are not authorized. | Compare occupied bounds, aspect ratio, color role, and hierarchy, not pixels. |
 | DEV-004 | Accessibility | Interactive targets are at least 48 dp and builder tokens expose separate semantic actions. | Audit observed some ~44.2 dp boxes and merged sentence semantics. This is an intentional accessibility improvement. | Record small layout shifts and run semantics tests. |

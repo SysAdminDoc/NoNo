@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SignalRules" parent="android:style/Theme.Material.NoActionBar">
+    <style name="Theme.NoNo" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <!--
             System bar colours are no-ops from API 35 and are owned by enableEdgeToEdge in

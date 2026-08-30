@@ -14,13 +14,13 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="datastore" />
-        <exclude domain="database" path="signal_rules_history.db" />
+        <exclude domain="database" path="nono_history.db" />
         <exclude domain="sharedpref" path="runtime_history.xml" />
         <exclude domain="sharedpref" path="capture_gate.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="datastore" />
-        <exclude domain="database" path="signal_rules_history.db" />
+        <exclude domain="database" path="nono_history.db" />
         <exclude domain="sharedpref" path="runtime_history.xml" />
         <exclude domain="sharedpref" path="capture_gate.xml" />
     </device-transfer>

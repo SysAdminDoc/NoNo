@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SignalRulesReconstruction"
+rootProject.name = "NoNo"
 include ':app'
 
 // Gradle requires pluginManagement {} to be the first statement, so this sits below it. It still

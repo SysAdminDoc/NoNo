@@ -30,8 +30,8 @@ Full per-screen histograms: `evidence/measurements/color-analysis.json`. Anti-al
 - List/card margins: often 42 px/16 dp. Evidence: `063`, `071` XML.
 - Bottom navigation: y=2154..2337, approximately 70 dp; system gesture area below is approximately 24 dp. Evidence: `010`, `013`, `063` XML.
 - Icon button boxes frequently measure 116 px/44.2 dp. This is slightly below the usual 48 dp accessibility target. Evidence: Rules close/search/More buttons in screen specs.
-- Rule cards use an outer colored frame plus inset black sentence surface. Estimated outer radius 18 dp and inner radius 14–16 dp; confidence MEDIUM because radius is screenshot-derived.
-- Dividers are very dark 1–3 dp lines. Shadows are subtle and mainly visible under floating buttons/dialogs; exact elevation is UNKNOWN.
+- Rule cards use an outer colored frame plus inset black sentence surface. Estimated outer radius 18 dp and inner radius 14-16 dp; confidence MEDIUM because radius is screenshot-derived.
+- Dividers are very dark 1-3 dp lines. Shadows are subtle and mainly visible under floating buttons/dialogs; exact elevation is UNKNOWN.
 
 ## Rule sentence styling
 

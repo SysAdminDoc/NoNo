@@ -1,14 +1,14 @@
 # Behavioral validation report
 
-Date: 2026-08-01  
-Device: `emulator-5554` (`BuzzKill_Audit_API36`, Android 16/API 36, 1080 × 2400, 420 dpi)
+Date: 2026-08-29  
+Device: `emulator-5566` (`irlstreamer_drain_api35`, Android 15/API 35, 1080 × 2400, 420 dpi)
 
 ## Automated results
 
-- Unit tests: **PASS**, 4 tests, 0 failures.
+- Unit tests: **PASS**, 131 tests, 0 failures.
 - Android lint: **PASS**.
-- Instrumentation: **PASS**, 1 test, 0 failures on the reference emulator.
-- Build/install/launch: **PASS** for `com.anm.signalrules.reconstruction.debug`.
+- Instrumentation: **PASS**, 16 tests, 0 failures on the validation emulator.
+- Build/install/launch: **PASS** for `com.sysadmindoc.nono.debug`.
 
 ## Flow coverage
 
@@ -38,7 +38,7 @@ Totals: 6 fully validated, 4 partially validated, 1 not implemented.
 
 ## Performance observations
 
-- Measured cold launch after install: approximately 1.2–2.3 seconds on this emulator.
+- Measured cold launch after install: approximately 1.2 to 2.3 seconds on this emulator.
 - Warm delivery to the already-running top activity: approximately 13 ms in the sampled run.
 - Sample total PSS after launch: approximately 101 MB; device/emulator-specific.
 - No crash, ANR, or visible freeze occurred during the 76-state capture sweep. The three-frame `gfxinfo` launch sample was too small for a meaningful scrolling-jank conclusion.

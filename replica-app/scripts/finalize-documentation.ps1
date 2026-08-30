@@ -62,21 +62,21 @@ function Test-EvidenceFilesExist {
 
 function Get-ImplementationReference([string]$group) {
     switch ($group) {
-        'onboarding_welcome' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/OnboardingScreen.kt' }
-        'rules_home' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'explore' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/ExploreScreen.kt' }
-        'history' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/HistoryScreens.kt' }
-        'history_activity' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/HistoryScreens.kt' }
-        'settings' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/SettingsScreen.kt' }
-        'shortcut_editor' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/SettingsScreen.kt' }
-        'app_selector' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'condition_builder' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'phrase_editor' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'nested_filter_group' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'action_selector' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/RulesScreens.kt' }
-        'android_system_handoffs' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/OnboardingScreen.kt;app/src/main/java/com/anm/signalrules/reconstruction/ui/SettingsScreen.kt' }
-        'external_browser_handoffs' { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/ExploreScreen.kt;app/src/main/java/com/anm/signalrules/reconstruction/ui/SettingsScreen.kt' }
-        default { 'app/src/main/java/com/anm/signalrules/reconstruction/ui/SignalOverlay.kt' }
+        'onboarding_welcome' { 'app/src/main/java/com/sysadmindoc/nono/ui/OnboardingScreen.kt' }
+        'rules_home' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'explore' { 'app/src/main/java/com/sysadmindoc/nono/ui/ExploreScreen.kt' }
+        'history' { 'app/src/main/java/com/sysadmindoc/nono/ui/HistoryScreens.kt' }
+        'history_activity' { 'app/src/main/java/com/sysadmindoc/nono/ui/HistoryScreens.kt' }
+        'settings' { 'app/src/main/java/com/sysadmindoc/nono/ui/SettingsScreen.kt' }
+        'shortcut_editor' { 'app/src/main/java/com/sysadmindoc/nono/ui/SettingsScreen.kt' }
+        'app_selector' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'condition_builder' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'phrase_editor' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'nested_filter_group' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'action_selector' { 'app/src/main/java/com/sysadmindoc/nono/ui/RulesScreens.kt' }
+        'android_system_handoffs' { 'app/src/main/java/com/sysadmindoc/nono/ui/OnboardingScreen.kt;app/src/main/java/com/sysadmindoc/nono/ui/SettingsScreen.kt' }
+        'external_browser_handoffs' { 'app/src/main/java/com/sysadmindoc/nono/ui/ExploreScreen.kt;app/src/main/java/com/sysadmindoc/nono/ui/SettingsScreen.kt' }
+        default { 'app/src/main/java/com/sysadmindoc/nono/ui/SignalOverlay.kt' }
     }
 }
 

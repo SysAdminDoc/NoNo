@@ -5,7 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-## [1.3.2] - 2026-08-29
+## [1.3.3] (2026-08-29)
+
+### Changed
+
+- Renamed the pre-release app from Signal Rules to **NoNo** and moved it to the new `com.sysadmindoc.nono` application ID. No migration layer is included because this identity has not shipped publicly.
+- Updated the visible copy, local storage names, export names, build scripts, documentation, and frozen APK name to match NoNo.
+- Removed the stale GitHub Actions workflow. Builds and validation remain local.
+
+## [1.3.2] (2026-08-29)
 
 ### Changed
 
@@ -61,7 +69,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   disk, so the warning survives restarting the app or the phone.
 - Per-manufacturer steps for keeping the listener bound, under "Rules are not triggering?" in
   Settings. Samsung, Xiaomi, Huawei, OnePlus, Oppo and Vivo get their own wording, everything else
-  gets a generic list, and Android 13 and newer add the restricted-settings unlock.
+  gets a generic list, and Android 13 and newer add the restricted-settings permission step.
 
 - History now records which saved rules matched a notification when it arrived, so the
   "Rule-triggered" filter returns real records, each row names the rules that would have matched,
@@ -146,7 +154,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   health banner over a listener that was fine. The decision is now a pure function covered by a
   table test, and losing access announces itself once instead of on every resume.
 
-## [1.3.1] - 2026-08-02
+## [1.3.1] (2026-08-02)
 
 ### Added
 
@@ -199,8 +207,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   evaluator, schema versions, bounded history filters, and intentionally disabled live actions.
 - Added API 24/35/36 redaction fixtures covering available, unavailable, explicit-sensitive,
   marker, package-identity, and metadata-only dry-run behavior without payload logging.
-- Added checked-in Room schema fixtures for versions 1–4, an instrumented all-version migration
-  test, and v1–v3 RuleCodec golden fixtures covering normalization and unsupported versions.
+- Added checked-in Room schema fixtures for versions 1-4, an instrumented all-version migration
+  test, and v1-v3 RuleCodec golden fixtures covering normalization and unsupported versions.
 - Connected encrypted rule transfer to Android's Storage Access Framework with passphrase prompts,
   import preview, keep-or-replace conflict resolution, cancellation/error recovery, and explicit
   exclusion of notification history.
@@ -209,7 +217,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Added an adaptive home-screen metadata widget showing only bounded count, timestamp,
   content-provenance, or paused state; listener writes request bounded widget refreshes.
 
-## [1.1.0] - 2026-08-01
+## [1.1.0] (2026-08-01)
 
 ### Fixed
 
@@ -242,8 +250,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   operator, "Enable for", priority, and folder all dismissed without applying anything, and the
   folder dialog wrote into the rename dialog's field before throwing it away. Each selection is
   now applied to the addressed rule or draft, persisted, and reflected in the rule builder and
-  on the rule card. Evaluation semantics are still absent - the audit records rule precedence
-  and folder behaviour as UNKNOWN - so these are stored and displayed, not acted on.
+  on the rule card. Evaluation semantics are still absent. The audit records rule precedence
+  and folder behaviour as UNKNOWN, so these are stored and displayed, not acted on.
 - The rule-builder overflow menu addresses the rule being edited rather than whichever rule
   happened to be first.
 - Bottom-anchored controls on full-screen editors no longer render underneath the navigation
@@ -255,7 +263,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   unit-tested sentence renderer rather than a second, divergent copy of the same string.
 - The notification listener now recovers from being unbound. It had no
   `onListenerConnected`/`onListenerDisconnected` overrides and never called `requestRebind`,
-  so a routine platform unbind - an app update, a service crash, an OEM background kill -
+  so a routine platform unbind, such as an app update or OEM background kill,
   silently ended all functionality until the user toggled notification access by hand.
   Rebind is requested on disconnect and on every app resume.
 - Notification access is re-checked on every resume, not only during onboarding. Access
@@ -273,7 +281,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   community, Theme, Language, and every switch that would depend on the absent action engine
   are shown disabled with the reason stated inline. Import/Export previously opened a folder
   picker whose result was discarded, and several rows only raised a toast.
-- `Delete all rules` is implemented instead of raising a toast that said it was disabled.
+- `Delete all rules` is implemented instead of showing a disabled toast.
 - Notification-derived data is excluded from automatic backup and device transfer. The app
   declared `allowBackup="true"` with neither `dataExtractionRules` nor `fullBackupContent`, so
   its preference store was eligible for upload to the user's Google Drive. Both rule sets are
@@ -295,7 +303,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Preference storage now survives a corrupt or unreadable backing file. `MainViewModel`
   built its DataStore with no `corruptionHandler` and read it with a bare
   `viewModelScope.launch`, so a truncated `signal_rules.preferences_pb` threw
-  `CorruptionException` on every launch and — because the bad file persisted — bricked the
+  `CorruptionException` on every launch and, because the bad file persisted, bricked the
   app permanently. Reads now fall back to defaults, the store is rebuilt via
   `ReplaceFileCorruptionHandler`, the user is told their settings were reset, and every
   write is guarded so an IO failure costs one unsaved change instead of the process.
@@ -321,7 +329,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The 19.7 MB debug APK is no longer tracked in git. `dist/SHA256SUMS.txt` stays tracked so a
   downloaded artifact can still be verified.
 
-- The audit-state capture harness moved into variant source sets. `app/src/debug` holds the
+- The audit-state capture tooling moved into variant source sets. `app/src/debug` holds the
   state table and the intent-extra reader; `app/src/release` links a no-op twin. The release
   DEX no longer contains the `replica_state` extra or any capture id, so production behaviour
   cannot depend on QA scaffolding.
@@ -344,7 +352,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   for a suite that ran.
 - `ListenerHealthTest` covers the published connection state, including that it starts
   `UNKNOWN` rather than claiming to be connected.
-- `AuditStatesTest` pins the debug capture harness, including that 033 resolves to the
+- `AuditStatesTest` pins the debug capture setup, including that 033 resolves to the
   condition chooser and 034/041 to the text input, so the source-set split cannot silently
   break state reproduction.
 - `model/RuleOperations.kt` holds the rule-list algebra as pure functions, and
@@ -358,13 +366,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `SignalPreferencesTest` covers healthy round-trip, recovery from a deliberately corrupted
   file, writability after recovery, and the view model's read guard.
 
-## Roadmap archive — 2026-08-10 — ROADMAP.md
+## Roadmap archive (2026-08-10): ROADMAP.md
 
 <details>
 <summary>Original roadmap snapshot</summary>
 
 ```markdown
-# Roadmap — ANM / Signal Rules
+# Roadmap: ANM / Signal Rules
 
 Only incomplete work is listed here. This file was normalized on 2026-08-02: completed entries were removed, residual acceptance gaps were retained under their original IDs, and new research-driven items continue at R-042. Every item is traceable to `RESEARCH.md` and the cited repository evidence.
 

@@ -6,15 +6,15 @@ plugins {
 }
 
 android {
-    namespace 'com.anm.signalrules.reconstruction'
+    namespace 'com.sysadmindoc.nono'
     compileSdk 37
 
     defaultConfig {
-        applicationId 'com.anm.signalrules.reconstruction'
+        applicationId 'com.sysadmindoc.nono'
         minSdk 24
         targetSdk 36
-        versionCode 6
-        versionName '1.3.2-reconstruction'
+        versionCode 7
+        versionName '1.3.3-reconstruction'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true

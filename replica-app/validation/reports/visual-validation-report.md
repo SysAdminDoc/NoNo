@@ -1,17 +1,18 @@
 # Visual validation report
 
 - Compared: 76
-- Passed configured threshold: 67
-- Below threshold: 9
+- Passed configured threshold: 68
+- Below threshold: 8
+- Operational failures: 0
 - Missing or invalid result: 0
 - Matrix: validation/screen-validation-matrix.csv
 - Detailed metrics and comparison images: validation/diffs
 
 | Screen | Group | Similarity | Threshold | Result |
 |---|---|---:|---:|---|
-| 002_welcome_default | onboarding_welcome | 0.77191235 | 0.85 | FAIL |
-| 004_welcome_notifications_granted | onboarding_welcome | 0.77637314 | 0.85 | FAIL |
-| 006_welcome_background_allowed | onboarding_welcome | 0.80029209 | 0.85 | FAIL |
+| 002_welcome_default | onboarding_welcome | 0.66353446 | 0.85 | THRESHOLD_MISS |
+| 004_welcome_notifications_granted | onboarding_welcome | 0.79664851 | 0.85 | THRESHOLD_MISS |
+| 006_welcome_background_allowed | onboarding_welcome | 0.86254265 | 0.85 | PASS |
 | 010_home_empty | rules_home | 0.93864466 | 0.85 | PASS |
 | 011_explore_default | explore | 0.88239344 | 0.85 | PASS |
 | 013_history_empty | history | 0.93686402 | 0.85 | PASS |
@@ -21,7 +22,7 @@
 | 017_settings_scrolled_1 | settings | 0.92320062 | 0.85 | PASS |
 | 018_settings_scrolled_2 | settings | 0.93757147 | 0.85 | PASS |
 | 019_settings_scrolled_3 | settings | 0.92639955 | 0.85 | PASS |
-| 020_settings_scrolled_4 | settings | 0.91539782 | 0.85 | PASS |
+| 020_settings_scrolled_4 | settings | 0.91805727 | 0.85 | PASS |
 | 021_mute_mode_dialog | mute_mode_dialog | 0.93518899 | 0.85 | PASS |
 | 022_mute_importance_dialog | mute_importance_dialog | 0.93264651 | 0.85 | PASS |
 | 023_notification_history_dialog | history_storage_dialog | 0.92225164 | 0.85 | PASS |
@@ -30,20 +31,20 @@
 | 027_theme_dialog | theme_dialog | 0.93417287 | 0.85 | PASS |
 | 028_language_system | language_dialog | 0.9302768 | 0.85 | PASS |
 | 029_rule_builder_default | rule_builder | 0.88404493 | 0.85 | PASS |
-| 030_app_selector | app_selector | 0.89592562 | 0.85 | PASS |
-| 031_app_selector_search | app_selector | 0.9377151 | 0.85 | PASS |
+| 030_app_selector | app_selector | 0.91817764 | 0.85 | PASS |
+| 031_app_selector_search | app_selector | 0.93563517 | 0.85 | PASS |
 | 032_condition_match_type_dialog | condition_builder | 0.85909472 | 0.85 | PASS |
 | 033_phrase_filter_editor | condition_builder | 0.91842369 | 0.85 | PASS |
 | 034_phrase_filter_input | phrase_editor | 0.91486708 | 0.85 | PASS |
-| 035_filter_with_phrase | condition_builder | 0.866317 | 0.85 | PASS |
+| 035_filter_with_phrase | condition_builder | 0.87341457 | 0.85 | PASS |
 | 036_extras_filter_selector | condition_extras_menu | 0.86311674 | 0.85 | PASS |
 | 037_extras_filter_selector_scrolled | condition_extras_menu | 0.86415477 | 0.85 | PASS |
 | 038_extras_filter_selector_bottom | condition_extras_menu | 0.86415477 | 0.85 | PASS |
 | 039_filter_group_default | nested_filter_group | 0.87876324 | 0.85 | PASS |
 | 040_filter_operator_dialog | filter_operator_menu | 0.85796284 | 0.85 | PASS |
 | 041_phrase_input_filled | phrase_editor | 0.91500283 | 0.85 | PASS |
-| 042_filter_phrase_added | condition_builder | 0.86986219 | 0.85 | PASS |
-| 043_rule_builder_filtered | rule_builder | 0.87119497 | 0.85 | PASS |
+| 042_filter_phrase_added | condition_builder | 0.87663839 | 0.85 | PASS |
+| 043_rule_builder_filtered | rule_builder | 0.87915762 | 0.85 | PASS |
 | 044_add_filter_menu | condition_builder | 0.85833245 | 0.85 | PASS |
 | 045_action_selector_top | phrase_editor | 0.91066373 | 0.85 | PASS |
 | 046_action_selector_top | phrase_editor | 0.91481848 | 0.85 | PASS |
@@ -60,9 +61,9 @@
 | 057_action_selector_bottom | action_selector | 0.88356412 | 0.85 | PASS |
 | 058_action_selector_bottom_2 | action_selector | 0.88242277 | 0.85 | PASS |
 | 059_rule_builder_validation_missing | rule_builder | 0.86937944 | 0.85 | PASS |
-| 060_rule_builder_filter_restored | rule_builder | 0.87117906 | 0.85 | PASS |
+| 060_rule_builder_filter_restored | rule_builder | 0.87912737 | 0.85 | PASS |
 | 061_action_selector_mute_selected | action_selector | 0.88862801 | 0.85 | PASS |
-| 062_rule_builder_complete | rule_builder | 0.87249822 | 0.85 | PASS |
+| 062_rule_builder_complete | rule_builder | 0.8803837 | 0.85 | PASS |
 | 063_rules_populated_test_record | rules_home | 0.88195822 | 0.85 | PASS |
 | 064_rules_test_record_disabled | rules_home | 0.91797663 | 0.85 | PASS |
 | 065_rule_overflow_menu | rule_overflow_menu | 0.89505002 | 0.85 | PASS |

@@ -1,12 +1,13 @@
-# Signal Rules
+# NoNo
 
-Signal Rules is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
+NoNo is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
 
 ## Project identity
 
-- Display name: **Signal Rules**
-- Application ID: `com.anm.signalrules.reconstruction`
-- Debug package: `com.anm.signalrules.reconstruction.debug`
+- Display name: **NoNo**
+- Product descriptor: **Notification rule manager**
+- Application ID: `com.sysadmindoc.nono`
+- Debug package: `com.sysadmindoc.nono.debug`
 - Android support: API 24 and newer; target SDK 36; compiled with SDK 37
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
@@ -39,7 +40,7 @@ From the `replica-app` directory of your clone:
 .\scripts\launch-replica.ps1 -Serial emulator-5554
 ```
 
-The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. `build-debug.ps1` also freezes it as `dist\SignalRules-v<version>.apk`, clearing any earlier APK from that directory first so the version in the file name is always the one `dist\SHA256SUMS.txt` describes. The APK itself is not tracked in git, but `SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
+The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. `build-debug.ps1` also freezes it as `dist\NoNo-v<version>.apk`, clearing any earlier APK from that directory first so the version in the file name is always the one `dist\SHA256SUMS.txt` describes. The APK itself is not tracked in git, but `SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
 
 ## Tests and validation
 

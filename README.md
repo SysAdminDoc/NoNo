@@ -1,17 +1,17 @@
-# Android Notification Manager clean-room project
+# NoNo
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
 This repository contains two strictly separated deliverables:
 
 - `app-audit/` contains the preserved black-box audit, reconstruction specification, and captured evidence.
-- `replica-app/` contains the independent Android implementation named **Signal Rules**, its tests, validation tooling, and comparison artifacts.
+- `replica-app/` contains the independent Android implementation named **NoNo**, its tests, validation tooling, and comparison artifacts.
 
-The reconstructed app uses the independent package identity `com.anm.signalrules.reconstruction` (`.debug` for the supplied APK). It does not contain the audited app's source, package identity, branding, proprietary illustrations, signing material, or extracted APK assets.
+The reconstructed app uses the independent package identity `com.sysadmindoc.nono` (`.debug` for the supplied APK). It does not contain the audited app's source, package identity, branding, proprietary illustrations, signing material, or extracted APK assets.
 
-**Signal Rules is a local, metadata-only notification reconstruction.** The listener persists
+**NoNo is a local notification rule manager built around redacted metadata.** The listener persists
 bounded package, channel, grouping, timestamp, and content-provenance metadata; a pure dry-run
 evaluator explains how saved rules would treat a selected history record. Live notification
 mutation and action execution remain intentionally absent, and unavailable controls are shown

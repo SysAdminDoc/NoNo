@@ -1,5 +1,5 @@
 asset_id,asset_or_category,source,rights_status,replica_treatment,notes
-AR-001,Product name and wordmark,Independent reconstruction,AUTHORIZED_ORIGINAL,Use Signal Rules text only,Does not reuse BuzzKill branding
+AR-001,Product name and wordmark,Independent reconstruction,AUTHORIZED_ORIGINAL,Use NoNo text only,Does not reuse BuzzKill branding
 AR-002,Launcher icon,Code-native vector authored for this project,AUTHORIZED_ORIGINAL,Use abstract signal rings,No copied logo geometry
 AR-003,Material/system icons,AndroidX Material Icons library,AUTHORIZED_DEPENDENCY,Use under dependency license,Semantically equivalent generic icons
 AR-004,Onboarding illustrations,Code-native Compose shapes,AUTHORIZED_ORIGINAL,Use abstract notification/privacy shapes,Preserve hierarchy not copyrighted pixels

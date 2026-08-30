@@ -13,7 +13,7 @@ Use PowerShell 5.1 or newer from the `replica-app` directory. Supply `-Serial em
 5. Run `scripts\run-visual-validation.ps1 -Serial emulator-5554` for all 76 native audit states.
 6. Run `scripts\run-full-validation.ps1 -Serial emulator-5554` to execute the complete sequence and write a timestamped JSON log.
 
-The visual gate is expected to return nonzero for the nine documented identity/editorial states. This is not a capture failure: inspect each metrics JSON and the final coverage report.
+The visual gate is expected to return nonzero for the eight documented identity/editorial states. This is not a capture failure. Inspect each metrics JSON and the final coverage report.
 
 ## Debug state reproduction
 
@@ -44,4 +44,4 @@ To compare it:
 
 ## Safe reset
 
-`scripts\reset-replica.ps1 -Serial emulator-5554 -Force` clears only `com.anm.signalrules.reconstruction.debug`. It never touches the audited package. Permission-flow validation changes were app-specific and were restored after testing.
+`scripts\reset-replica.ps1 -Serial emulator-5554 -Force` clears only `com.sysadmindoc.nono.debug`. It never touches the audited package. Permission-flow validation changes were app-specific and were restored after testing.

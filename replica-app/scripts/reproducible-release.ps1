@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
-    [string]$OutputRoot = (Join-Path ([System.IO.Path]::GetTempPath()) ("signal-rules-repro-" + [Guid]::NewGuid().ToString('N'))),
+    [string]$OutputRoot = (Join-Path ([System.IO.Path]::GetTempPath()) ("nono-repro-" + [Guid]::NewGuid().ToString('N'))),
     [long]$SourceDateEpoch = 0
 )
 

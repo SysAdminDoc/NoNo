@@ -2,7 +2,7 @@
 
 ## Release-blocking behavior questions
 
-1. `UNKNOWN`: What is the intended selected action for a new rule before the user chooses one—does “do nothing” represent a real action or only a missing-field placeholder?
+1. `UNKNOWN`: What is the intended selected action for a new rule before the user chooses one:does “do nothing” represent a real action or only a missing-field placeholder?
 2. `UNKNOWN`: Exact configuration fields/defaults for every action.
 3. `UNKNOWN`: Rule evaluation precedence when multiple enabled rules match.
 4. `UNKNOWN`: Set priority values and whether priority changes evaluation order or only display order.

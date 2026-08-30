@@ -13,7 +13,7 @@
 | Rule disabled | Gray card/switch and sentence strike-through | `064`, `085` |
 | History filtered empty | Existing record excluded by rule-triggered or dismissed segment | `075`, `076` |
 | Activity empty | “No activity recorded” and 24-hour retention explanation | `073` |
-| Settings selection | Radio dialogs with selected rows | `021`–`024`, `027`, `028` |
+| Settings selection | Radio dialogs with selected rows | `021`-`024`, `027`, `028` |
 
 ## Not observed
 

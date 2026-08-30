@@ -6,7 +6,7 @@ BuzzKill is an Android notification automation product organized around natural-
 
 The observable product is predominantly local/device-integrated. Backend, database, and network implementation are `UNKNOWN` and must not be treated as original-architecture facts.
 
-Evidence anchors: onboarding `002`–`010`; root pages `010`, `013`, `011`, `016`; complete package identity `app/application-identity.md`.
+Evidence anchors: onboarding `002`-`010`; root pages `010`, `013`, `011`, `016`; complete package identity `app/application-identity.md`.
 
 ## 2. Complete native screen inventory
 
@@ -66,8 +66,8 @@ Acceptance criteria:
 
 - Render the rule as wrapping natural language with separately actionable inline tokens and yellow wavy underlines (`029`, `043`).
 - App token opens searchable selector (`030`, `031`).
-- Content token opens recursive composer (`032`–`044`).
-- Action token opens categorized catalog (`049`–`061`).
+- Content token opens recursive composer (`032`-`044`).
+- Action token opens categorized catalog (`049`-`061`).
 - `+ Filter` supports adding/returning to contextual conditions; suggestion evidence proves multiple clauses (`082`).
 - Save validation uses exact visible red state/warning from `059`.
 - Recent matching notifications occupies a separated lower section and can render empty copy or history cards.
@@ -81,15 +81,15 @@ Acceptance criteria:
 
 ### Explore
 
-- Article cards at top; Suggestions below. Preserve observed scroll order in `011`, `077`–`081` unless product content changes.
+- Article cards at top; Suggestions below. Preserve observed scroll order in `011`, `077`-`081` unless product content changes.
 - Article taps use external browser intents.
 - Add to my rules opens a populated draft; no immediate save (`082`).
 - All illustrations/icons must be authorized or original replacements.
 
 ### Settings
 
-- Preserve group/order and captured defaults from `016`–`020` and `behavior/behavior-specification.md`.
-- Native selection/text dialogs match `021`–`024`, `027`, `028`, `068`, `069`.
+- Preserve group/order and captured defaults from `016`-`020` and `behavior/behavior-specification.md`.
+- Native selection/text dialogs match `021`-`024`, `027`, `028`, `068`, `069`.
 - Automatic backups invoke Android folder picker; do not emulate DocumentsUI (`026`).
 - External support/guide/community/help uses outbound intents.
 
@@ -195,7 +195,7 @@ Follow `implementation-backlog.md`: assets/decisions → design foundation → m
 5. Action catalog contains every observed action/category/description and selected state.
 6. Save-with-missing-action reproduces exact warning and red token.
 7. Saved rule appears enabled; disabling produces strike-through and persists after process death.
-8. History reproduces empty/populated/search/filter/menu/activity states from `013`–`076`.
+8. History reproduces empty/populated/search/filter/menu/activity states from `013`-`076`.
 9. Explore suggestion opens populated unsaved builder.
 10. Settings order/defaults/dialog options match evidence.
 11. Permissions are launched through Android and rechecked on resume.

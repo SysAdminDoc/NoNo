@@ -18,11 +18,11 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="Signal Rules"
+        android:label="NoNo"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:enableOnBackInvokedCallback="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SignalRules">
+        android:theme="@style/Theme.NoNo">
         <!--
             No screenOrientation lock: targetSdk 36 ignores it on displays >= 600dp anyway,
             and the temporary opt-out property stops working at API 37.
@@ -39,7 +39,7 @@
         <service
             android:name=".runtime.SignalNotificationListener"
             android:exported="false"
-            android:label="Signal Rules notification access"
+            android:label="NoNo notification access"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -63,7 +63,7 @@
         <receiver
             android:name=".runtime.SignalWidgetProvider"
             android:exported="true"
-            android:label="Signal Rules metadata">
+            android:label="NoNo metadata">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

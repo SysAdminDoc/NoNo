@@ -30,8 +30,8 @@ if ($landscape) {
     Start-Sleep -Milliseconds 800
 }
 $captured = $false
-$remote = "/sdcard/signal-rules-$ScreenId.png"
-$remoteUi = "/sdcard/signal-rules-$ScreenId-capture.xml"
+$remote = "/sdcard/nono-$ScreenId.png"
+$remoteUi = "/sdcard/nono-$ScreenId-capture.xml"
 $requiresKeyboard = $ScreenId -match '^(014|015|031|041|046|047|048|068|069)_'
 try {
     & (Join-Path $PSScriptRoot 'launch-replica.ps1') -Serial $target -State $ScreenId

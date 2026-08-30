@@ -1,8 +1,8 @@
 {
   "screen_id": "042_filter_phrase_added",
-  "baseline": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\baseline\\042_filter_phrase_added.png",
-  "current": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\current\\042_filter_phrase_added.png",
-  "mask": "\\\\DESKTOP-OHHLOG3\\Users\\--\\repos\\ANM-Android_Notification_Manager\\replica-app\\validation\\masks\\system-bars.json",
+  "baseline": "C:\\repos\\NoNo\\replica-app\\validation\\baseline\\042_filter_phrase_added.png",
+  "current": "C:\\repos\\NoNo\\replica-app\\validation\\current\\042_filter_phrase_added.png",
+  "mask": "C:\\repos\\NoNo\\replica-app\\validation\\masks\\system-bars.json",
   "baseline_dimensions": [
     1080,
     2400
@@ -13,10 +13,10 @@
   ],
   "dimensions_match": true,
   "compared_pixel_ratio": 0.93,
-  "mean_absolute_error": 33.185143,
-  "root_mean_square_error": 80.09082,
-  "pixel_similarity": 0.86986219,
-  "global_structural_similarity": 0.23112214,
+  "mean_absolute_error": 31.457211,
+  "root_mean_square_error": 77.780289,
+  "pixel_similarity": 0.87663839,
+  "windowed_structural_similarity": 0.73241091,
   "threshold": 0.85,
   "result": "PASS"
 }

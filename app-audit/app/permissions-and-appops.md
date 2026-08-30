@@ -8,9 +8,9 @@
 
 ## Requested permissions reported by Android
 
-`POST_NOTIFICATIONS`, fine/coarse/background location, notification policy access, foreground service and foreground-service special use, boot completed, high-sampling-rate sensors, Bluetooth/Connect, ignore battery optimizations, write secure settings, full-screen intent, network/Wi-Fi state, promoted notifications, fingerprint/biometric, exact alarm, vibrate, Tasker run-tasks, query all packages, wake lock, and the app's signature-only dynamic-receiver permission. Evidence: `dumpsys-package-20260801-140502.txt` lines 148–173.
+`POST_NOTIFICATIONS`, fine/coarse/background location, notification policy access, foreground service and foreground-service special use, boot completed, high-sampling-rate sensors, Bluetooth/Connect, ignore battery optimizations, write secure settings, full-screen intent, network/Wi-Fi state, promoted notifications, fingerprint/biometric, exact alarm, vibrate, Tasker run-tasks, query all packages, wake lock, and the app's signature-only dynamic-receiver permission. Evidence: `dumpsys-package-20260801-140502.txt` lines 148-173.
 
-`CONFIRMED`: At final capture, `POST_NOTIFICATIONS` was granted. Fine, coarse, and background location and `BLUETOOTH_CONNECT` remained denied. Evidence: package dump lines 203–208.
+`CONFIRMED`: At final capture, `POST_NOTIFICATIONS` was granted. Fine, coarse, and background location and `BLUETOOTH_CONNECT` remained denied. Evidence: package dump lines 203-208.
 
 ## AppOps snapshot
 

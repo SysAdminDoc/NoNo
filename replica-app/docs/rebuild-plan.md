@@ -1,8 +1,8 @@
-# Signal Rules reconstruction plan
+# NoNo reconstruction plan
 
 Status: implementation authorized by `BEGIN REBUILD` on 2026-08-01.
 
-This project is an independent, clean-room reconstruction of the observable native behavior documented in `../app-audit`. The product name is **Signal Rules** and the application ID is `com.anm.signalrules.reconstruction`. The original BuzzKill package name, logo, illustrations, fonts, and distribution overlays are not used.
+This project is an independent, clean-room reconstruction of the observable native behavior documented in `../app-audit`. The product name is **NoNo** and the application ID is `com.sysadmindoc.nono`. The original BuzzKill package name, logo, illustrations, fonts, and distribution overlays are not used.
 
 ## Evidence baseline
 

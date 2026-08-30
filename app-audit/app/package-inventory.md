@@ -12,23 +12,23 @@ The following are components directly reported by Android resolver tables. They 
 
 ### Activities
 
-- `.ui.MainActivity` — launcher (`MAIN`/`LAUNCHER`).
-- `androidx.core.google.shortcuts.TrampolineActivity` — shortcut listener action.
-- `.plugins.macrodroid.NotificationEventRunner$NotificationEventActivity` — Locale/MacroDroid condition-edit action.
-- `.integrations.ToggleRuleConfigurationActivity` — Locale/Tasker setting-edit action.
+- `.ui.MainActivity`: launcher (`MAIN`/`LAUNCHER`).
+- `androidx.core.google.shortcuts.TrampolineActivity`: shortcut listener action.
+- `.plugins.macrodroid.NotificationEventRunner$NotificationEventActivity`: Locale/MacroDroid condition-edit action.
+- `.integrations.ToggleRuleConfigurationActivity`: Locale/Tasker setting-edit action.
 
 ### Receivers
 
-- `.background.receivers.BootReceiver` — `BOOT_COMPLETED`.
+- `.background.receivers.BootReceiver`: `BOOT_COMPLETED`.
 - Tasker/Locale action and condition receivers.
 - AndroidX profile installer receiver actions.
 
 ### Services
 
-- `.background.service.NotificationService` — notification-listener service requiring `BIND_NOTIFICATION_LISTENER_SERVICE`; live and foreground during the audit.
-- `.background.accessibility.WorkaroundAccessibilityService` — accessibility service requiring `BIND_ACCESSIBILITY_SERVICE`; not enabled as a user accessibility service in the baseline.
-- `.background.wear.MessageListenerService` — wearable message listener with `wear:` scheme.
-- `.integrations.shortcuts.TriggerTileService` and `.integrations.shortcuts.RestoreBatchTileService` — Quick Settings tiles.
+- `.background.service.NotificationService`: notification-listener service requiring `BIND_NOTIFICATION_LISTENER_SERVICE`; live and foreground during the audit.
+- `.background.accessibility.WorkaroundAccessibilityService`: accessibility service requiring `BIND_ACCESSIBILITY_SERVICE`; not enabled as a user accessibility service in the baseline.
+- `.background.wear.MessageListenerService`: wearable message listener with `wear:` scheme.
+- `.integrations.shortcuts.TriggerTileService` and `.integrations.shortcuts.RestoreBatchTileService`: Quick Settings tiles.
 - Tasker/Locale action and condition intent services.
 
 ### Providers

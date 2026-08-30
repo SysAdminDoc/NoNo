@@ -1,11 +1,11 @@
 {
-    "suite":  "unit",
-    "source":  "C:\\repos\\ANM-Android_Notification_Manager\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
-    "generated_at":  "2026-08-29T16:10:47-04:00",
-    "tests":  116,
-    "failures":  0,
-    "errors":  0,
-    "skipped":  0,
-    "suite_files":  20,
-    "status":  "PASS"
+  "suite": "unit",
+  "source": "C:\\repos\\NoNo\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
+  "generated_at": "2026-08-29T20:59:19-04:00",
+  "tests": 131,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "suite_files": 23,
+  "status": "PASS"
 }

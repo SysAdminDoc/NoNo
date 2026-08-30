@@ -14,7 +14,7 @@
 - Returning from Android settings advances to Rules when all requirements are satisfied.
 - Denial branches were not selected; behavior is `UNKNOWN`.
 
-Evidence: `002`–`010`.
+Evidence: `002`-`010`.
 
 ## Rules
 
@@ -28,7 +28,7 @@ Evidence: `002`–`010`.
 - Enable for menu values: 10 mins, 30 mins, 1 hours, 6 hours, 8 hours, 12 hours, 1 days, 7 days.
 - Set folder and Rename use title/input/Done/Cancel dialogs.
 
-Evidence: `010`, `063`–`070`.
+Evidence: `010`, `063`-`070`.
 
 ### Rule builder
 
@@ -42,7 +42,7 @@ Evidence: `010`, `063`–`070`.
 - Save returns to Rules and initially enables the rule.
 - Recent matching notifications appears below builder, with either explanatory no-match copy or history cards.
 
-Evidence: `029`–`062`, `082`.
+Evidence: `029`-`062`, `082`.
 
 ### Action catalog
 
@@ -58,7 +58,7 @@ Categorized sequence observed:
 - System actions: Remove from history, Restore after reboot, Set ringer, Trigger MacroDroid, Trigger Tasker.
 - Advanced actions: Multi-tool.
 
-Experimental badges were visible for some actions. Exact configuration subflows and execution semantics remain `UNKNOWN`. Evidence: `049`–`058`.
+Experimental badges were visible for some actions. Exact configuration subflows and execution semantics remain `UNKNOWN`. Evidence: `049`-`058`.
 
 ## History
 
@@ -70,7 +70,7 @@ Experimental badges were visible for some actions. Exact configuration subflows 
 - Tapping a history card opens menu: Restore, Open notification, View activity, Copy, Create rule, Delete.
 - View activity has Rules and Changes tabs. Rules shows rule actions; if none, explicit 24-hour retention copy. Changes explains notification updates and shows the record.
 
-Evidence: `013`–`015`, `071`–`076`.
+Evidence: `013`-`015`, `071`-`076`.
 
 ## Explore
 
@@ -79,7 +79,7 @@ Evidence: `013`–`015`, `071`–`076`.
 - Add to my rules opens a prepopulated rule builder; it does not save immediately.
 - Observed examples include copy verification code + dismiss for Messages, mute while screen on, cooldown, pocket check, secret transaction content, adaptive charging, and face-down flashlight.
 
-Evidence: `011`, `077`–`082`. Article content itself is external/untested.
+Evidence: `011`, `077`-`082`. Article content itself is external/untested.
 
 ## Settings
 
@@ -96,7 +96,7 @@ Observed preference sequence:
 
 Default values captured: Mute mode Default; fixed-notification dismissal on; mute importance All important notifications; ringer-call adjustment off; history All notifications; retention 30 days; Privacy mode off; Theme Dark; batch restore off; icon and grouping workarounds on.
 
-Evidence: `016`–`028`.
+Evidence: `016`-`028`.
 
 ## Motion, haptics, and loading
 

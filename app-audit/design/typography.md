@@ -12,17 +12,17 @@ Screenshot-derived estimates at density 2.625; confidence MEDIUM:
 
 | Role | Approx. sp | Weight | Behavior |
 |---|---:|---:|---|
-| History count | 48 | 700–800 | Single line, left aligned |
-| Rule-builder hero sentence | 26–28 | 700–800 | Wraps freely; token-level colors/underlines |
-| Page title | 24–26 | 700–800 | Center or left by surface |
-| Section title | 20–22 | 700–800 | Left aligned |
-| Card title/body large | 18–20 | 700 | Multi-line |
-| Standard body | 16–18 | 600–700 | Secondary text uses gray |
-| Navigation/label | 13–15 | 700–800 | Selected label yellow |
+| History count | 48 | 700-800 | Single line, left aligned |
+| Rule-builder hero sentence | 26-28 | 700-800 | Wraps freely; token-level colors/underlines |
+| Page title | 24-26 | 700-800 | Center or left by surface |
+| Section title | 20-22 | 700-800 | Left aligned |
+| Card title/body large | 18-20 | 700 | Multi-line |
+| Standard body | 16-18 | 600-700 | Secondary text uses gray |
+| Navigation/label | 13-15 | 700-800 | Selected label yellow |
 
 ## Line and wrapping behavior
 
-- Rule sentences use generous line height, approximately 1.35–1.45×, with no ellipsis in observed states.
+- Rule sentences use generous line height, approximately 1.35-1.45×, with no ellipsis in observed states.
 - History card body can wrap; app/time remain on one row.
 - Settings summaries wrap to multiple lines and determine row height.
 - Dialog options are sentence case except `CANCEL`, which is uppercase.
