@@ -1,6 +1,7 @@
 package com.sysadmindoc.nono.audit
 
 import android.content.Intent
+import com.sysadmindoc.nono.data.CatalogedApp
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
@@ -60,6 +61,21 @@ private val designHistoryRecords = listOf(
     ),
 )
 
+/**
+ * A fixed picker catalog for the app-selector captures.
+ *
+ * Two entries share the label "Messages" on purpose: that is the case the picker has to
+ * disambiguate, and it is the one a device might not happen to provide.
+ */
+private val designAppCatalog = listOf(
+    CatalogedApp("Calendar", "com.google.android.calendar"),
+    CatalogedApp("Clock", "com.google.android.deskclock"),
+    CatalogedApp("Messages", "com.google.android.apps.messaging", duplicateLabel = true),
+    CatalogedApp("Messages", "com.example.othermessenger", duplicateLabel = true),
+    CatalogedApp("Phone", "com.google.android.dialer"),
+    CatalogedApp("Retired app", "com.example.retired", installed = false),
+)
+
 fun readAuditState(intent: Intent): String = intent.getStringExtra(AUDIT_STATE_EXTRA).orEmpty()
 
 fun auditStateFor(base: UiState, id: String): UiState? = when {
@@ -85,7 +101,13 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         id.startsWith("027_") -> base.copy(route = Route.ROOT, rootTab = RootTab.SETTINGS, overlay = Overlay.THEME)
         id.startsWith("028_") -> base.copy(route = Route.ROOT, rootTab = RootTab.SETTINGS, overlay = Overlay.LANGUAGE)
         id.startsWith("029_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "New rule"))
-        id.startsWith("030_") || id.startsWith("031_") -> base.copy(route = Route.APP_SELECTOR, appSearch = if (id.startsWith("031_")) "NoNo" else "")
+        // The picker reads the device now, so the catalog is seeded here to keep the capture
+        // reproducible on any machine.
+        id.startsWith("030_") || id.startsWith("031_") -> base.copy(
+            route = Route.APP_SELECTOR,
+            appSearch = if (id.startsWith("031_")) "mess" else "",
+            appCatalog = designAppCatalog,
+        )
         id.startsWith("032_") -> base.copy(route = Route.RULE_BUILDER, overlay = Overlay.CONDITION_TYPE)
         id.startsWith("033_") || id.startsWith("034_") || id.startsWith("041_") || id.startsWith("045_") || id.startsWith("046_") || id.startsWith("047_") || id.startsWith("048_") -> base.copy(
             route = Route.PHRASE_EDITOR,

@@ -218,6 +218,15 @@ interface NotificationDao {
     @Query("SELECT matchedRuleIds FROM notification_history WHERE matchedRuleIds IS NOT NULL AND matchedRuleIds != ''")
     fun observeMatchedRuleIds(): Flow<List<String>>
 
+    /**
+     * Every package history has seen, for the app picker.
+     *
+     * The launcher query misses apps with no launcher activity, and those post notifications too.
+     * It also misses an app the user has since uninstalled, whose rules should stay editable.
+     */
+    @Query("SELECT DISTINCT packageName FROM notification_history ORDER BY packageName")
+    fun observeObservedPackages(): Flow<List<String>>
+
     @Query("SELECT * FROM ingestion_diagnostics WHERE singletonId = 1 LIMIT 1")
     fun observeIngestionDiagnostics(): Flow<IngestionDiagnosticsEntity?>
 

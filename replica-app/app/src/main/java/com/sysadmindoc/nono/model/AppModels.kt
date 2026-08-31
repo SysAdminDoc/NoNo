@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.model
 
+import com.sysadmindoc.nono.data.CatalogedApp
 import kotlinx.serialization.Serializable
 
 enum class RootTab(val label: String) {
@@ -332,6 +333,8 @@ data class UiState(
     val phraseDraft: String = "",
     val phraseInputVisible: Boolean = false,
     val appSearch: String = "",
+    /** Apps the picker offers: launchable ones merged with everything history has seen. */
+    val appCatalog: List<CatalogedApp> = emptyList(),
     val renameDraft: String = "",
     val folderDraft: String = "",
     val settings: Map<String, String> = defaultSettings,

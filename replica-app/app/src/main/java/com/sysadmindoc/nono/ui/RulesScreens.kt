@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,14 +68,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import com.sysadmindoc.nono.MainViewModel
+import com.sysadmindoc.nono.data.CatalogedApp
+import com.sysadmindoc.nono.data.matches
 import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.UNSUPPORTED_ACTION_MESSAGE
 import com.sysadmindoc.nono.model.isExecutableAction
@@ -86,7 +94,8 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.actionCatalog
-import com.sysadmindoc.nono.model.appOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun RulesHomeScreen(state: UiState, model: MainViewModel) {
@@ -364,9 +373,7 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
     if (state.auditState.startsWith("031_")) {
         LaunchedEffect(state.auditState) { requestKeyboardFocus(focusRequester, keyboard) }
     }
-    val filteredApps = appOptions.filter {
-        it.label.contains(state.appSearch, ignoreCase = true) || it.packageName.contains(state.appSearch, ignoreCase = true)
-    }
+    val filteredApps = state.appCatalog.filter { it.matches(state.appSearch) }
     Column(Modifier.fillMaxSize()) {
         SignalTopBar("Choose apps", onBack = { model.navigate(Route.RULE_BUILDER) })
         OutlinedTextField(
@@ -386,7 +393,14 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
             Modifier.fillMaxWidth().padding(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("1 selected", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(
+                if (state.draft.appPackageName == null) "Any app" else state.draft.app,
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
             Text(
                 "Use any app",
                 color = SignalColors.Yellow,
@@ -404,15 +418,32 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
                         model.updateDraft { it.copy(app = "any app", appPackageName = null) }
                     }
                     if (filteredApps.isNotEmpty()) SignalDivider()
-                    filteredApps.forEachIndexed { index, app ->
-                        SignalListRow(
-                            Icons.Rounded.Notifications,
-                            app.label,
-                            app.packageName,
-                            selected = state.draft.app == app.label,
-                            onClick = { model.updateDraft { it.copy(app = app.label, appPackageName = app.packageName) } },
+                }
+            }
+            if (filteredApps.isEmpty()) {
+                item {
+                    SignalStatusPanel(
+                        if (state.appSearch.isBlank()) "No apps to choose from yet" else "No app matches that",
+                        if (state.appSearch.isBlank()) {
+                            "Apps appear here once they can be launched or have posted a notification."
+                        } else {
+                            "Search covers app names and package names."
+                        },
+                        icon = Icons.Rounded.Apps,
+                    )
+                }
+            } else {
+                items(filteredApps, key = { it.packageName }) { app ->
+                    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                        AppCatalogRow(
+                            app = app,
+                            // Matching on the package, not the label: two apps can share a label,
+                            // and an app can rename itself.
+                            selected = state.draft.appPackageName == app.packageName,
+                            onClick = {
+                                model.updateDraft { it.copy(app = app.label, appPackageName = app.packageName) }
+                            },
                         )
-                        if (index != filteredApps.lastIndex) SignalDivider()
                     }
                 }
             }
@@ -422,6 +453,65 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
             { model.navigate(Route.RULE_BUILDER) },
             modifier = Modifier.padding(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
         )
+    }
+}
+
+/**
+ * One app in the picker, with its real icon where the system will give us one.
+ *
+ * The icon is loaded off the main thread and only for rows that are actually on screen: an
+ * eager pass over every launchable app would decode a few hundred bitmaps to show a dozen.
+ */
+@Composable
+private fun AppCatalogRow(app: CatalogedApp, selected: Boolean, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val icon by produceState<ImageBitmap?>(initialValue = null, app.packageName) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                context.packageManager.getApplicationIcon(app.packageName)
+                    .toBitmap(width = 96, height = 96)
+                    .asImageBitmap()
+            }.getOrNull()
+        }
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button, onClick = onClick)
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(40.dp).background(SignalColors.Background, RoundedCornerShape(10.dp))
+                .border(1.dp, SignalColors.Border, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            val bitmap = icon
+            if (bitmap != null) {
+                Image(bitmap, contentDescription = null, modifier = Modifier.size(26.dp))
+            } else {
+                Icon(
+                    Icons.Rounded.Notifications,
+                    contentDescription = null,
+                    tint = if (app.installed) SignalColors.White else SignalColors.Muted,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        }
+        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                app.detail,
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (selected) {
+            Icon(Icons.Rounded.Check, contentDescription = "Selected", tint = SignalColors.Yellow, modifier = Modifier.size(24.dp))
+        }
     }
 }
 

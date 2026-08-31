@@ -16,6 +16,8 @@ import androidx.lifecycle.viewModelScope
 import com.sysadmindoc.nono.audit.auditStateFor
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.BoundedReadResult
+import com.sysadmindoc.nono.data.loadLaunchableApps
+import com.sysadmindoc.nono.data.mergeAppCatalog
 import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.data.ImportRejection
 import com.sysadmindoc.nono.data.RuleImportResult
@@ -157,6 +159,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     PseudonymKeyStore.get(application.noBackupFilesDir),
                 )
             }
+        }
+        viewModelScope.launch {
+            // The launcher query is a one-off; the observed packages change as history does.
+            val launchable = withContext(Dispatchers.IO) {
+                loadLaunchableApps(application.packageManager)
+            }
+            historyDatabase.notificationDao().observeObservedPackages()
+                .catch { emit(emptyList()) }
+                .collect { observed ->
+                    val catalog = withContext(Dispatchers.Default) {
+                        mergeAppCatalog(launchable, observed, application.packageName)
+                    }
+                    _state.value = _state.value.copy(appCatalog = catalog)
+                }
         }
         viewModelScope.launch {
             CaptureGate.load(application)

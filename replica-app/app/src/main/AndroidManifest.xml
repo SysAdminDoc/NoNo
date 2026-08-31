@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!--
-        Package visibility for opening the app a history record came from. Android 11 and newer
-        hide other packages by default, and getLaunchIntentForPackage returns null for anything
-        not visible. This declares the narrow shape actually needed, a launchable activity, rather
-        than QUERY_ALL_PACKAGES: the app looks up only packages the user already has history for.
+        Package visibility for the app picker and for opening the app a history record came from.
+        Android 11 and newer hide other packages by default: getLaunchIntentForPackage returns null
+        and queryIntentActivities returns nothing for anything not visible. This declares the
+        narrow shape actually needed, a launchable activity, rather than QUERY_ALL_PACKAGES, which
+        is a policy-restricted permission. This app declares no permissions at all.
+
+        Apps with no launcher activity stay invisible to this query. The picker covers them from
+        notification history instead, which needs no visibility at all.
     -->
     <queries>
         <intent>
