@@ -375,7 +375,7 @@ control rather than leaving the reader to infer it:
 
 The runtime boundary records metadata in a bounded Room queue. Android publishes no supported flag
 that proves sensitive content was redacted, so a new callback with no text is recorded as content
-unavailable and is never matchable as real text. Preferences and history live under the no-backup boundary; listener diagnostics restore
+unavailable and is never matchable as real text. Preferences and history live under the no-backup boundary, and that boundary has been checked against the platform rather than assumed. On 2026-08-31, on an API 36 device, a real `bmgr` backup and restore cycle ran against a build holding captured history. A control file placed in the ordinary files directory came back afterwards with its contents intact, so the transfer itself worked. The history database, the preference store that holds rules, the pseudonym key and the listener's scratch preferences did not come back at all. Listener diagnostics restore
 after process restart. Companion-device listener exemptions are not implemented in this local
 reconstruction, and no companion association or exemption is requested. The optional self-test is
 the only feature that asks to post a notification, and it does so only after the user starts it.
