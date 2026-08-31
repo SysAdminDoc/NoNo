@@ -8,6 +8,7 @@ local.properties
 # Build artifacts are published as release assets, not tracked blobs.
 # SHA256SUMS.txt stays tracked so a downloaded artifact can still be verified.
 replica-app/dist/*.apk
+replica-app/dist/*.apk.idsig
 replica-app/dist/reproducibility-*.json
 replica-app/validation/reports/build-manifest.json
 
@@ -31,4 +32,3 @@ Thumbs.db
 /Roadmap_Blocked.md
 /CODEX_CHANGELOG.md
 .claude/
-

@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.4.0] (2026-08-31)
+
+### Added
+
+- Added full-page visual references for onboarding, all four root tabs, and every rule editing flow.
+- Added side-by-side design QA evidence for twelve pages, plus light theme and large text captures.
+
+### Changed
+
+- Reworked the app around an AMOLED black, graphite, and citron visual system with tighter spacing, low corner radii, clearer hierarchy, and consistent selected states.
+- Rebuilt onboarding, Rules, History, Explore, Settings, the rule builder, app selection, phrase matching, extra filters, action selection, activity details, and shortcut previews.
+- Added realistic deterministic design states so every page can be reproduced and checked without changing live user data.
+
+### Fixed
+
+- Fixed a shortcut preview crash caused by loading the adaptive launcher icon through the drawable painter.
+- Removed transient listener warnings from deterministic captures and kept audit data stable while a page is open.
+
 ## [1.3.3] (2026-08-29)
 
 ### Changed
@@ -168,7 +186,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   from entering future rule matching and marking history as content hidden by the system.
 - Added bounded listener ingestion, Room-backed metadata history, transactional retention pruning,
   drop/failure diagnostics, and 30-day/3-month/6-month boundary tests. Companion-device listener
-  exemptions remain intentionally out of scope for this reconstruction.
+  exemptions are not implemented in this reconstruction.
 - Added a reproducible-release gate that builds two clean checkouts with a pinned JDK, honors
   `SOURCE_DATE_EPOCH`, and compares the unsigned release APK hashes outside the repository.
 - Added a pure dry-run rule evaluator with redaction-aware condition traces, deterministic

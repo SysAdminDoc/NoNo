@@ -2,6 +2,12 @@
 
 NoNo is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
 
+Version 1.4.0 applies a new AMOLED black, graphite, and citron interface across every page. The
+reference mockups, implementation captures, accessibility checks, and side-by-side comparisons are
+listed in [`../design-qa.md`](../design-qa.md).
+
+![NoNo rules screen](docs/screenshots/nono-rules-v1.4.0.png)
+
 ## Project identity
 
 - Display name: **NoNo**
@@ -11,7 +17,7 @@ NoNo is an independent clean-room Android reconstruction of the native interface
 - Android support: API 24 and newer; target SDK 36; compiled with SDK 37
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
-  The current Room history schema is version 4; the DataStore rule payload is version 3.
+  The current Room history schema is version 7; the DataStore rule payload is version 3.
 
 ## Requirements
 
@@ -59,7 +65,7 @@ records SHA-256 hashes for the resolved artifacts. Refresh it only after reviewi
 diff with `gradlew --write-verification-metadata sha256 help`; PGP key verification is not enabled
 until the project owner reviews and approves the required signer keys. Run
 `.\gradlew.bat verifyBuildPolicy` from `replica-app` to validate repository, wrapper, catalog,
-and hash-coverage policy locally; the same policy and strict verification run in CI.
+and hash-coverage policy locally. Run the strict verification before every release.
 
 ## Reproducing audited states
 
@@ -100,8 +106,8 @@ control rather than leaving the reader to infer it:
 The runtime boundary records metadata in a bounded Room queue. Android 15 sensitive-notification
 redaction is treated as provenance (`content hidden by system`) and is never matchable as real
 text. Preferences and history live under the no-backup boundary; listener diagnostics restore
-after process restart. Companion-device listener exemptions are intentionally out of scope for
-this local reconstruction; no special permission or companion association is requested.
+after process restart. Companion-device listener exemptions are not implemented in this local
+reconstruction, and no special permission or companion association is requested.
 Notification capture can be paused from the Quick Settings tile or Settings without revoking
 listener access; paused callbacks are ignored before sanitization and the gate survives restart.
 The optional home-screen widget shows only the bounded metadata count, latest timestamp,

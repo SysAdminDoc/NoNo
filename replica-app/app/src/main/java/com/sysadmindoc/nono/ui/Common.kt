@@ -16,11 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,12 +47,12 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.focus.FocusRequester
 
 object SignalMetrics {
-    val pageHorizontal = 24.dp
+    val pageHorizontal = 16.dp
     val sectionGap = 24.dp
     val rowGap = 8.dp
     val rowMinHeight = 56.dp
-    val controlRadius = 12.dp
-    val cardRadius = 16.dp
+    val controlRadius = 10.dp
+    val cardRadius = 12.dp
 }
 
 @Composable
@@ -70,7 +74,7 @@ fun SignalTopBar(
         } else {
             Spacer(Modifier.size(12.dp))
         }
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).padding(start = if (onBack == null) 12.dp else 4.dp))
+        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).padding(start = if (onBack == null) 4.dp else 4.dp))
         if (actionIcon != null && onAction != null) {
             IconButton(onClick = onAction, modifier = Modifier.size(48.dp)) {
                 Icon(actionIcon, contentDescription = actionDescription)
@@ -81,7 +85,7 @@ fun SignalTopBar(
 
 @Composable
 fun HeroTitle(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
-    Column(modifier.padding(horizontal = 24.dp)) {
+    Column(modifier.padding(horizontal = SignalMetrics.pageHorizontal)) {
         Text(title, style = MaterialTheme.typography.headlineLarge)
         if (subtitle != null) {
             Spacer(Modifier.height(8.dp))
@@ -91,14 +95,26 @@ fun HeroTitle(title: String, subtitle: String? = null, modifier: Modifier = Modi
 }
 
 @Composable
-fun SignalPrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun SignalPrimaryButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
-        shape = RoundedCornerShape(14.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
+        shape = RoundedCornerShape(SignalMetrics.controlRadius),
         colors = ButtonDefaults.buttonColors(containerColor = SignalColors.Yellow, contentColor = SignalColors.Background),
-    ) { Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(10.dp))
+        }
+        Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    }
 }
 
 @Composable
@@ -120,7 +136,7 @@ fun SettingRow(
         modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 20.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(44.dp).background(SignalColors.Surface, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).background(SignalColors.Surface, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = if (enabled) SignalColors.White else SignalColors.Muted, modifier = Modifier.size(22.dp))
         }
         Column(Modifier.weight(1f).padding(start = 16.dp)) {
@@ -132,7 +148,14 @@ fun SettingRow(
 
 @Composable
 fun SectionLabel(label: String) {
-    Text(label, color = SignalColors.Yellow, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp))
+    Text(
+        label.uppercase(),
+        color = SignalColors.Secondary,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(start = SignalMetrics.pageHorizontal, top = 24.dp, bottom = 10.dp),
+    )
 }
 
 @Composable
@@ -154,7 +177,141 @@ fun TokenButton(label: String, error: Boolean = false, onClick: () -> Unit) {
 
 @Composable
 fun SurfaceCard(modifier: Modifier = Modifier, contentPadding: PaddingValues = PaddingValues(18.dp), content: @Composable () -> Unit) {
-    Box(modifier.background(SignalColors.Surface, RoundedCornerShape(18.dp)).padding(contentPadding)) { content() }
+    Box(
+        modifier
+            .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+            .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius))
+            .padding(contentPadding),
+    ) { content() }
+}
+
+@Composable
+fun SignalPageHeader(
+    title: String,
+    subtitle: String? = null,
+    actionIcon: ImageVector? = null,
+    actionDescription: String = "Action",
+    onAction: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.fillMaxWidth().padding(horizontal = SignalMetrics.pageHorizontal, vertical = 8.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = MaterialTheme.typography.headlineLarge, modifier = Modifier.weight(1f))
+            if (actionIcon != null && onAction != null) {
+                SignalIconButton(actionIcon, actionDescription, onAction)
+            }
+        }
+        if (subtitle != null) {
+            Text(subtitle, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+fun SignalStatusPanel(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Rounded.Shield,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+            .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = SignalColors.Yellow, modifier = Modifier.size(28.dp))
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(description, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
+        }
+    }
+}
+
+@Composable
+fun SignalSectionHeading(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth()) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        if (subtitle != null) {
+            Text(subtitle, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        }
+    }
+}
+
+@Composable
+fun SignalGroupedSurface(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Column(
+        modifier
+            .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+            .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius)),
+    ) { content() }
+}
+
+@Composable
+fun SignalDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier = modifier.padding(start = 64.dp), color = SignalColors.Border, thickness = 1.dp)
+}
+
+@Composable
+fun SignalListRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String? = null,
+    value: String? = null,
+    selected: Boolean = false,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
+    val clickModifier = if (onClick != null) Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick) else Modifier
+    Row(
+        modifier.fillMaxWidth().then(clickModifier).heightIn(min = 64.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(40.dp).background(SignalColors.Background, RoundedCornerShape(10.dp)).border(1.dp, SignalColors.Border, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = if (selected) SignalColors.Yellow else if (enabled) SignalColors.White else SignalColors.Muted, modifier = Modifier.size(22.dp))
+        }
+        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Text(title, color = if (enabled) SignalColors.White else SignalColors.Muted, style = MaterialTheme.typography.titleMedium)
+            if (subtitle != null) Text(subtitle, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
+        }
+        if (value != null) Text(value, color = if (selected) SignalColors.Yellow else SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium)
+        when {
+            selected -> Icon(Icons.Rounded.Check, contentDescription = "Selected", tint = SignalColors.Yellow, modifier = Modifier.size(24.dp))
+            onClick != null -> Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = SignalColors.Secondary, modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
+fun SignalOutlineButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    Row(
+        modifier
+            .heightIn(min = 48.dp)
+            .border(1.dp, SignalColors.Yellow, RoundedCornerShape(SignalMetrics.controlRadius))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        if (icon != null) Icon(icon, contentDescription = null, tint = SignalColors.Yellow, modifier = Modifier.size(20.dp))
+        Text(label, color = SignalColors.Yellow, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = if (icon != null) 8.dp else 0.dp))
+    }
+}
+
+@Composable
+fun SignalStepNumber(step: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(40.dp).border(1.dp, SignalColors.Border, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(step.toString(), color = SignalColors.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    }
 }
 
 @Composable

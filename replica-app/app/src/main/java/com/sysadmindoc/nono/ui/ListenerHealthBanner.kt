@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -75,7 +76,7 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     if (!problem) return
 
     val detail = if (!state.listenerAccessGranted) {
-        "Notification access is off, so no rule can run. Tap to turn it back on."
+        "Notification access is off, so NoNo cannot capture metadata or preview matches. Tap to review access."
     } else if (dropped > 0L || failed > 0L) {
         val failure = durableMetrics.lastFailureAtEpochMillis?.let { " Last failure: ${describeWallClock(it)}." }.orEmpty()
         "Listener queue diagnostics: $dropped dropped, $failed failed.$failure " +
@@ -94,7 +95,8 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(SignalColors.Surface, RoundedCornerShape(16.dp))
+            .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+            .border(1.dp, SignalColors.Error, RoundedCornerShape(SignalMetrics.cardRadius))
             .clickable(role = Role.Button) {
                 SignalNotificationListener.requestRebindIfPossible(context)
                 openListenerSettings(context)
@@ -110,7 +112,7 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
             modifier = Modifier.size(24.dp),
         )
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text("Rules are not running", color = SignalColors.Error, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Metadata capture needs attention", color = SignalColors.Error, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(detail, color = SignalColors.Secondary, fontSize = 14.sp, lineHeight = 19.sp)
         }
     }

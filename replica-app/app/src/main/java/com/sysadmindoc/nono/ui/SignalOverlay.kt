@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.os.Build
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -300,9 +301,12 @@ internal fun sensitiveNotificationsAppOpsCommand(packageName: String): String =
 private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(20.dp)
+            Modifier.fillMaxWidth()
+                .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+                .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius))
+                .padding(20.dp)
         ) {
-            Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
+            Text(title, style = androidx.compose.material3.MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
             content()
             Text("Cancel", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.End).clickable(onClick = onDismiss).padding(12.dp))
         }
@@ -325,7 +329,10 @@ private fun CatalogDialog(title: String, choices: List<String>, initialIndex: In
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex.coerceAtMost(choices.lastIndex))
     Dialog(onDismissRequest = onDismiss) {
         LazyColumn(
-            Modifier.width(205.dp).heightIn(max = 560.dp).background(Color(0xFF3D3F44), RoundedCornerShape(4.dp)).padding(vertical = 4.dp),
+            Modifier.width(244.dp).heightIn(max = 560.dp)
+                .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.controlRadius))
+                .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius))
+                .padding(vertical = 4.dp),
             state = listState,
         ) {
             items(choices) { choice ->
@@ -365,7 +372,10 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
         requestKeyboardFocus(focusRequester, keyboard)
     }
     Dialog(onDismissRequest = { keyboard?.hide(); onDismiss() }) {
-        Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
+        Column(
+            Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+                .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius)).padding(22.dp),
+        ) {
             Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = value,
@@ -373,10 +383,10 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
                 placeholder = { Text("Start typing…") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF4A4C56),
-                    unfocusedContainerColor = Color(0xFF4A4C56),
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = SignalColors.Background,
+                    unfocusedContainerColor = SignalColors.Background,
+                    focusedBorderColor = SignalColors.Yellow,
+                    unfocusedBorderColor = SignalColors.Border,
                 ),
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp).focusRequester(focusRequester),
             )
@@ -395,7 +405,10 @@ private fun TransferPassphraseDialog(
 ) {
     var passphrase by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
+        Column(
+            Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
+                .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.cardRadius)).padding(22.dp),
+        ) {
             Text(title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Text(explanation, color = SignalColors.Secondary, lineHeight = 21.sp, modifier = Modifier.padding(top = 10.dp))
             OutlinedTextField(
@@ -406,10 +419,10 @@ private fun TransferPassphraseDialog(
                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF4A4C56),
-                    unfocusedContainerColor = Color(0xFF4A4C56),
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = SignalColors.Background,
+                    unfocusedContainerColor = SignalColors.Background,
+                    focusedBorderColor = SignalColors.Yellow,
+                    unfocusedBorderColor = SignalColors.Border,
                 ),
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
             )

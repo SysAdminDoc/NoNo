@@ -1,10 +1,12 @@
 package com.sysadmindoc.nono.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,25 +17,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.BatteryChargingFull
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FilterAlt
-import androidx.compose.material.icons.rounded.FlashlightOn
+import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Save
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,249 +54,299 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.Overlay
+import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.actionCatalog
 import com.sysadmindoc.nono.model.appOptions
-import com.sysadmindoc.nono.model.renderRuleCardSentence
-import kotlinx.coroutines.delay
 
 @Composable
 fun RulesHomeScreen(state: UiState, model: MainViewModel) {
-    if (state.rules.isEmpty()) {
-        Column(Modifier.fillMaxSize()) {
-            ListenerHealthBanner(state)
-            Spacer(Modifier.weight(1f))
-            Column(
-                Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).padding(26.dp)
-            ) {
-                Box(Modifier.size(48.dp).background(SignalColors.White, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
-                }
-                Text("Add your first rule", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 24.dp))
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { ListenerHealthBanner(state) }
+        item {
+            SignalPageHeader(
+                title = "Rules",
+                actionIcon = Icons.Rounded.Search,
+                actionDescription = "Search rules",
+                onAction = { model.showMessage("Rule search is not available yet.") },
+            )
+        }
+        item {
+            SignalStatusPanel(
+                title = "On-device",
+                description = "Metadata only · Preview mode",
+                icon = Icons.Rounded.Shield,
+            )
+        }
+        item {
+            SignalSectionHeading(
+                title = "Notification rules",
+                subtitle = "Preview what each rule would do. Nothing is executed.",
+            )
+        }
+        if (state.rules.isEmpty()) {
+            item { EmptyRules(onCreate = model::newRule, onExplore = { model.selectRoot(RootTab.EXPLORE) }) }
+        } else {
+            items(state.rules, key = { it.id }) { rule ->
+                key(rule.id) { RuleCard(rule, model, state.ruleMatchCounts[rule.id] ?: 0) }
+            }
+            item {
                 Text(
-                    "Tap the + button to create a rule that will be triggered when you get a new notification, or check out Suggestions on the Explore page.",
-                    color = Color(0xFFD5D5E0), fontSize = 17.sp, lineHeight = 25.sp, modifier = Modifier.padding(top = 12.dp)
+                    if (state.rules.count { it.enabled } == 1) "1 active rule" else "${state.rules.count { it.enabled }} active rules",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
-                Row(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.End) {
-                    CreateRuleButton(model::newRule)
-                }
             }
         }
-    } else {
-        Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-            ListenerHealthBanner(state)
-            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                SignalIconButton(Icons.Rounded.Search, "Search rules", onClick = { model.showMessage("Rule search is not reconstructed.") })
+        item { CreateRuleButton(model::newRule) }
+        item { Spacer(Modifier.height(8.dp)) }
+    }
+}
+
+@Composable
+private fun EmptyRules(onCreate: () -> Unit, onExplore: () -> Unit) {
+    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Box(
+                Modifier.size(44.dp).background(SignalColors.Background, RoundedCornerShape(10.dp)).border(1.dp, SignalColors.Border, RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Yellow)
             }
-            Box(Modifier.size(48.dp).align(Alignment.CenterHorizontally).background(SignalColors.White, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
-            }
-            Text("Notification rules", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 24.dp))
+            Text("Add your first rule", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 16.dp))
             Text(
-                "When you get a notification, if it matches any of the following rules it will perform the chosen action.",
-                color = SignalColors.Secondary, fontSize = 17.sp, lineHeight = 23.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = 20.dp, vertical = 12.dp)
+                "Choose an app, a match, and an action to preview. No notification is changed.",
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 6.dp),
             )
-            state.rules.forEach { rule -> key(rule.id) { RuleCard(rule, model, state.ruleMatchCounts[rule.id] ?: 0) } }
-            Spacer(Modifier.weight(1f))
-            Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), horizontalArrangement = Arrangement.End) { CreateRuleButton(model::newRule) }
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SignalOutlineButton("Browse ideas", onExplore, Modifier.weight(1f))
+                SignalOutlineButton("Start a rule", onCreate, Modifier.weight(1f), Icons.Rounded.Add)
+            }
         }
     }
 }
 
 @Composable
 private fun CreateRuleButton(onClick: () -> Unit) {
-    Row(
-        Modifier.background(SignalColors.Yellow, RoundedCornerShape(40.dp)).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Rounded.Add, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(28.dp))
-        Text("Create rule", color = SignalColors.Background, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(start = 8.dp))
-    }
+    SignalPrimaryButton("Create rule", onClick, icon = Icons.Rounded.Add)
 }
 
 @Composable
-private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int = 0) {
-    val accent = if (rule.enabled) SignalColors.RuleBlue else SignalColors.RuleDisabled
-    Column(
-        Modifier.fillMaxWidth().padding(top = 20.dp).background(accent, RoundedCornerShape(18.dp)).padding(5.dp)
-    ) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { model.showRuleOverlay(Overlay.RULE_MORE, rule.id) }, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "Rule options", tint = SignalColors.Background)
+private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
+    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 16.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(rule.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(if (rule.enabled) "Enabled" else "Disabled", color = if (rule.enabled) SignalColors.Yellow else SignalColors.Muted, style = MaterialTheme.typography.bodyMedium)
             }
-            Spacer(Modifier.weight(1f))
-            Text(if (rule.enabled) "Enabled" else "Disabled", color = SignalColors.Background, fontWeight = FontWeight.Bold)
             Switch(
                 checked = rule.enabled,
                 onCheckedChange = { model.toggleRule(rule.id) },
-                colors = SwitchDefaults.colors(checkedTrackColor = SignalColors.Background, checkedThumbColor = SignalColors.White, uncheckedTrackColor = SignalColors.Background, uncheckedThumbColor = SignalColors.Secondary),
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = SignalColors.Yellow,
+                    checkedThumbColor = SignalColors.Background,
+                    uncheckedTrackColor = SignalColors.Border,
+                    uncheckedThumbColor = SignalColors.Secondary,
+                ),
             )
-        }
-        Column(
-            Modifier.fillMaxWidth().background(SignalColors.Background, RoundedCornerShape(16.dp)).clickable { model.editRule(rule) }.padding(20.dp)
-        ) {
-            Text(rule.name, color = SignalColors.Secondary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            rule.enabledFor?.let { duration ->
-                Text("Enabled for $duration", color = SignalColors.Yellow, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = { model.showRuleOverlay(Overlay.RULE_MORE, rule.id) }, modifier = Modifier.size(48.dp)) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "Rule options", tint = SignalColors.Secondary)
             }
-            Text(
-                renderRuleCardSentence(rule),
-                color = SignalColors.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 19.sp,
-                lineHeight = 27.sp,
-                textDecoration = if (rule.enabled) TextDecoration.None else TextDecoration.LineThrough,
-                modifier = Modifier.padding(top = 6.dp),
-            )
+        }
+        HorizontalDivider(color = SignalColors.Border)
+        Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { model.editRule(rule) }.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            RuleFlowRow(1, Icons.Rounded.Apps, "APP", rule.app.replaceFirstChar { it.uppercase() })
+            RuleConnector()
+            RuleFlowRow(2, Icons.Rounded.Search, "MATCH", "${rule.matchType.replaceFirstChar { it.uppercase() }} ${rule.phrase}")
+            RuleConnector()
+            RuleFlowRow(3, actionIcon(rule.action), "ACTION", rule.action.replaceFirstChar { it.uppercase() })
+            if (rule.extras.isNotEmpty()) {
+                Text("Filters: ${rule.extras.joinToString()}", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
+            }
             if (matchCount > 0) {
-                // Counted over the history currently loaded, and nothing was executed.
                 Text(
-                    if (matchCount == 1) "Would have matched 1 stored notification" else "Would have matched $matchCount stored notifications",
-                    color = SignalColors.Secondary,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 4.dp),
+                    if (matchCount == 1) "Would match 1 stored notification" else "Would match $matchCount stored notifications",
+                    color = SignalColors.Yellow,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 10.dp),
                 )
             }
         }
     }
+}
+
+@Composable
+private fun RuleFlowRow(step: Int, icon: ImageVector, label: String, value: String) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier.size(40.dp).background(SignalColors.Background, RoundedCornerShape(10.dp)).border(1.dp, SignalColors.Border, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = if (step == 3) SignalColors.Yellow else SignalColors.White, modifier = Modifier.size(22.dp))
+        }
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(label, color = SignalColors.Muted, style = MaterialTheme.typography.labelMedium)
+            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun RuleConnector() {
+    Box(Modifier.padding(start = 19.dp).width(1.dp).height(12.dp).background(SignalColors.Border))
 }
 
 @Composable
 fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
-    if (state.auditState.startsWith("082_")) {
-        SuggestionRulePreview(model)
-        return
-    }
+    val editing = state.draft.id != UNSAVED_RULE_ID && state.rules.any { it.id == state.draft.id }
     val missing = state.validationError != null
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 4.dp)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { model.selectRoot(com.sysadmindoc.nono.model.RootTab.RULES) }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                }
-                Spacer(Modifier.weight(1f))
-                val editingId = state.draft.id
-                if (state.rules.any { it.id == editingId }) {
-                    IconButton(onClick = { model.showRuleOverlay(Overlay.RULE_MORE, editingId) }) { Icon(Icons.Rounded.MoreVert, "More") }
-                }
-            }
-            Text("When I get a notification", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("from ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                TokenButton(state.draft.app) { model.navigate(Route.APP_SELECTOR) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("that ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                TokenButton(state.draft.matchType) { model.showOverlay(Overlay.CONDITION_TYPE) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TokenButton(state.draft.phrase) { model.setPhraseDraft(if (state.draft.phrase == "anything") "" else state.draft.phrase); model.navigate(Route.PHRASE_EDITOR) }
-                Spacer(Modifier.width(8.dp))
-                Row(
-                    Modifier.background(SignalColors.Yellow, RoundedCornerShape(13.dp)).clickable { model.showOverlay(Overlay.ADD_FILTER) }.padding(horizontal = 12.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, tint = SignalColors.Background)
-                    Text("Filter", color = SignalColors.Background, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                }
-            }
-            if (state.draft.extras.isNotEmpty()) {
-                Text(
-                    "with " + state.draft.extras.joinToString(", "),
-                    color = SignalColors.Secondary,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("then ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                TokenButton(if (missing) "missing action" else "do ${state.draft.action}", onClick = { model.navigate(Route.ACTION_SELECTOR) }, error = missing)
-            }
-            if (missing) {
-                Row(Modifier.fillMaxWidth().padding(vertical = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(28.dp).background(SignalColors.Error, CircleShape), contentAlignment = Alignment.Center) {
-                        Text("!", color = SignalColors.Background, fontWeight = FontWeight.Bold)
-                    }
-                    Text(
-                        "You have a missing field. Please tap to fill it in to complete the rule.",
-                        color = SignalColors.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 20.sp,
-                        modifier = Modifier.weight(1f).padding(start = 14.dp),
-                    )
-                }
-            }
-            SignalPrimaryButton("Save rule", model::saveRule, modifier = Modifier.padding(top = if (missing) 0.dp else 18.dp))
-            HorizontalDivider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 42.dp))
-            Text("Recent matching notifications", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "No recent notifications match this rule. This may be because the rule is very specific or the notifications arrived before NoNo was installed.",
-                color = SignalColors.Secondary, fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(top = 10.dp, bottom = 80.dp)
+            SignalTopBar(
+                title = if (editing) "Edit rule" else "New rule",
+                onBack = { model.selectRoot(RootTab.RULES) },
+                actionIcon = if (editing) Icons.Rounded.MoreVert else null,
+                actionDescription = "Rule options",
+                onAction = if (editing) ({ model.showRuleOverlay(Overlay.RULE_MORE, state.draft.id) }) else null,
             )
         }
+        item { Text("Build a preview from three clear steps.", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyLarge) }
+        item {
+            BuilderStep(
+                step = 1,
+                label = "FROM",
+                value = state.draft.app.replaceFirstChar { it.uppercase() },
+                icon = Icons.Rounded.Apps,
+                action = "Change",
+                onAction = { model.navigate(Route.APP_SELECTOR) },
+            )
+        }
+        item {
+            BuilderStep(
+                step = 2,
+                label = "WHEN",
+                value = "${state.draft.matchType.replaceFirstChar { it.uppercase() }} ${state.draft.phrase}",
+                icon = Icons.Rounded.Search,
+                action = "Edit match",
+                onAction = {
+                    model.setPhraseDraft(if (state.draft.phrase == "anything") "" else state.draft.phrase)
+                    model.navigate(Route.PHRASE_EDITOR)
+                },
+                secondaryAction = "Add filter",
+                onSecondaryAction = { model.showOverlay(Overlay.ADD_FILTER) },
+            )
+        }
+        if (state.draft.extras.isNotEmpty()) {
+            item {
+                SignalStatusPanel("Extra filters", state.draft.extras.joinToString(), icon = Icons.Rounded.FilterAlt)
+            }
+        }
+        item {
+            BuilderStep(
+                step = 3,
+                label = "THEN",
+                value = state.draft.action.replaceFirstChar { it.uppercase() },
+                icon = actionIcon(state.draft.action),
+                action = "Choose action",
+                onAction = { model.navigate(Route.ACTION_SELECTOR) },
+                error = missing,
+            )
+        }
+        item {
+            SignalStatusPanel(
+                title = "Preview only",
+                description = "No action is executed by this build.",
+                icon = Icons.Rounded.Shield,
+            )
+        }
+        if (missing) {
+            item { SignalStatusPanel("Rule needs attention", state.validationError.orEmpty(), icon = Icons.Rounded.Info) }
+        }
+        item { SignalPrimaryButton("Save rule", model::saveRule, icon = Icons.Rounded.Save) }
+        item {
+            Text(
+                "Discard changes",
+                color = SignalColors.Yellow,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { model.selectRoot(RootTab.RULES) }.padding(vertical = 14.dp),
+            )
+        }
+        item { HorizontalDivider(color = SignalColors.Border) }
+        item { SignalSectionHeading("Recent matching metadata", "No stored metadata matches this draft.") }
+        item { Spacer(Modifier.height(20.dp)) }
     }
 }
 
 @Composable
-private fun SuggestionRulePreview(model: MainViewModel) {
-    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
-        Text("When I get a notification", fontSize = 27.sp, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("from ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-            Text("any app", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
-            Text(" that ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        }
-        Text("contains", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
-        Text("anything and device is in", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, modifier = Modifier.padding(top = 12.dp))
-        Text("pocket/face down and device", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, modifier = Modifier.padding(top = 8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-            Text("is on table", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
-            Row(Modifier.padding(start = 10.dp).background(SignalColors.Yellow, RoundedCornerShape(13.dp)).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.Add, contentDescription = null, tint = SignalColors.Background)
-                Text("Filter", color = SignalColors.Background, fontWeight = FontWeight.Bold)
+private fun BuilderStep(
+    step: Int,
+    label: String,
+    value: String,
+    icon: ImageVector,
+    action: String,
+    onAction: () -> Unit,
+    secondaryAction: String? = null,
+    onSecondaryAction: (() -> Unit)? = null,
+    error: Boolean = false,
+) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        SignalStepNumber(step)
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(label, color = if (error) SignalColors.Error else SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(44.dp).background(SignalColors.Surface, RoundedCornerShape(10.dp)).border(1.dp, SignalColors.Border, RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(icon, contentDescription = null, tint = if (error) SignalColors.Error else SignalColors.White) }
+                Text(value, style = MaterialTheme.typography.headlineSmall, color = if (error) SignalColors.Error else SignalColors.White, modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
             }
-            Text(" then", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 14.dp)) {
-            Box(Modifier.size(28.dp).background(SignalColors.SuggestionGreen, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.FlashlightOn, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(18.dp))
-            }
-            Text(" flashlight", color = SignalColors.Yellow, fontSize = 25.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
-            Text(" with ", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-            Box(Modifier.size(36.dp).background(SignalColors.Yellow))
-        }
-        SignalPrimaryButton("Save rule", { model.updateDraft { it.copy(action = "Flashlight") }; model.saveRule() }, modifier = Modifier.padding(top = 24.dp))
-        HorizontalDivider(color = SignalColors.Surface, thickness = 3.dp, modifier = Modifier.padding(vertical = 40.dp))
-        Text("Recent matching notifications", style = MaterialTheme.typography.headlineMedium)
-        Text("These recent notifications from your local history may have triggered this rule.", color = SignalColors.Secondary, fontWeight = FontWeight.Bold, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp))
-        Row(Modifier.fillMaxWidth().padding(top = 24.dp).background(SignalColors.Surface, RoundedCornerShape(18.dp)).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Notifications, contentDescription = null, tint = SignalColors.White)
-            Column(Modifier.padding(start = 14.dp)) {
-                Text("Shell    Now", fontWeight = FontWeight.Bold)
-                Text("Sanitized audit notice", color = SignalColors.Secondary)
+            Row(
+                Modifier.fillMaxWidth().padding(top = 10.dp),
+                horizontalArrangement = if (secondaryAction != null) Arrangement.spacedBy(10.dp) else Arrangement.End,
+            ) {
+                if (secondaryAction != null && onSecondaryAction != null) {
+                    SignalOutlineButton(action, onAction, Modifier.weight(1f))
+                    SignalOutlineButton(secondaryAction, onSecondaryAction, Modifier.weight(1f), Icons.Rounded.Add)
+                } else {
+                    SignalOutlineButton(action, onAction)
+                }
             }
         }
     }
@@ -296,61 +356,66 @@ private fun SuggestionRulePreview(model: MainViewModel) {
 fun AppSelectorScreen(state: UiState, model: MainViewModel) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
-    val searching = state.auditState.startsWith("031_")
-    if (searching) LaunchedEffect(state.auditState) {
-        requestKeyboardFocus(focusRequester, keyboard)
+    if (state.auditState.startsWith("031_")) {
+        LaunchedEffect(state.auditState) { requestKeyboardFocus(focusRequester, keyboard) }
+    }
+    val filteredApps = appOptions.filter {
+        it.label.contains(state.appSearch, ignoreCase = true) || it.packageName.contains(state.appSearch, ignoreCase = true)
     }
     Column(Modifier.fillMaxSize()) {
-        Spacer(Modifier.height(46.dp))
-        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalAlignment = Alignment.Bottom) {
-            Text("When notification ", fontSize = 27.sp, fontWeight = FontWeight.Bold)
-            Text("is from", color = SignalColors.Yellow, fontSize = 27.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
-        }
+        SignalTopBar("Choose apps", onBack = { model.navigate(Route.RULE_BUILDER) })
         OutlinedTextField(
             value = state.appSearch,
             onValueChange = model::setAppSearch,
-            placeholder = { Text("Search…") },
-            leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = SignalColors.Yellow) },
+            placeholder = { Text("Search installed apps") },
+            leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+            trailingIcon = if (state.appSearch.isNotEmpty()) ({
+                IconButton(onClick = { model.setAppSearch("") }) { Icon(Icons.Rounded.Close, contentDescription = "Clear search") }
+            }) else null,
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SignalColors.Surface,
-                unfocusedContainerColor = SignalColors.Surface,
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-            ),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 18.dp).focusRequester(focusRequester),
+            shape = RoundedCornerShape(SignalMetrics.controlRadius),
+            colors = signalTextFieldColors(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = SignalMetrics.pageHorizontal).focusRequester(focusRequester),
         )
-        val apps = appOptions.filter { it.label.contains(state.appSearch, ignoreCase = true) }
-        LazyColumn(Modifier.weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp)) {
-            items((apps.size + 1) / 2) { rowIndex ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    for (column in 0..1) {
-                        val index = rowIndex * 2 + column
-                        if (index >= apps.size) { Spacer(Modifier.weight(1f)); continue }
-                        val app = apps[index]
-                        Column(
-                            Modifier.weight(1f).height(104.dp).padding(bottom = 10.dp).background(SignalColors.Surface, RoundedCornerShape(16.dp)).clickable {
-                                model.updateDraft { it.copy(app = app.label, appPackageName = app.packageName) }
-                                model.navigate(Route.RULE_BUILDER)
-                            }.padding(14.dp),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Box(Modifier.size(30.dp).background(actionColor(index), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Rounded.Notifications, contentDescription = null, tint = SignalColors.Background, modifier = Modifier.size(18.dp))
-                            }
-                            Text(app.label, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                        }
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("1 selected", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(
+                "Use any app",
+                color = SignalColors.Yellow,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.clickable(role = Role.Button) { model.updateDraft { it.copy(app = "any app", appPackageName = null) } }.padding(12.dp),
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.weight(1f).padding(horizontal = SignalMetrics.pageHorizontal),
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
+            item {
+                SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                    SignalListRow(Icons.Rounded.Apps, "Any app", "Match every installed app", selected = state.draft.app == "any app") {
+                        model.updateDraft { it.copy(app = "any app", appPackageName = null) }
+                    }
+                    if (filteredApps.isNotEmpty()) SignalDivider()
+                    filteredApps.forEachIndexed { index, app ->
+                        SignalListRow(
+                            Icons.Rounded.Notifications,
+                            app.label,
+                            app.packageName,
+                            selected = state.draft.app == app.label,
+                            onClick = { model.updateDraft { it.copy(app = app.label, appPackageName = app.packageName) } },
+                        )
+                        if (index != filteredApps.lastIndex) SignalDivider()
                     }
                 }
             }
         }
         SignalPrimaryButton(
-            "Pick all apps",
-            {
-                model.updateDraft { it.copy(app = "any app", appPackageName = null) }
-                model.navigate(Route.RULE_BUILDER)
-            },
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp),
+            "Use selected app",
+            { model.navigate(Route.RULE_BUILDER) },
+            modifier = Modifier.padding(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
         )
     }
 }
@@ -359,159 +424,231 @@ fun AppSelectorScreen(state: UiState, model: MainViewModel) {
 fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
-    val showPhraseInput = state.phraseInputVisible
-    val requestKeyboard = showPhraseInput
-    if (requestKeyboard) LaunchedEffect(requestKeyboard) {
-        requestKeyboardFocus(focusRequester, keyboard)
-    }
-
-    Column(Modifier.fillMaxSize()) {
-        Spacer(Modifier.height(56.dp))
-        Text("When notification", color = Color(0xFFB4B4B6), fontSize = 27.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 24.dp))
-        Text("contains any of", color = SignalColors.Yellow, fontSize = 27.sp, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
-        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 46.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ConditionChoice("Phrase", "Filter with a name, word or phrase", true, Modifier.weight(1f)) { model.showPhraseInput() }
-            ConditionChoice("Extras", "Filter by images and more", true, Modifier.weight(1f)) { model.showOverlay(Overlay.CONDITION_EXTRAS) }
-            ConditionChoice("Group", "For more complex filters", false, Modifier.weight(1f)) { model.navigate(Route.FILTER_GROUP) }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { SignalTopBar("Match text", onBack = { model.navigate(Route.RULE_BUILDER) }) }
+        item {
+            SignalSectionHeading(
+                "What should the notification contain?",
+                "This text is checked in memory and is never stored.",
+            )
         }
-        Spacer(Modifier.weight(1f))
-        Column(Modifier.fillMaxWidth().background(SignalColors.Surface).padding(horizontal = 24.dp, vertical = 24.dp)) {
-            Text("When you're done tap apply to set the filter for your notification rule.", color = SignalColors.Secondary, fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
-            SignalPrimaryButton("Apply filter", { model.commitPhrase() }, modifier = Modifier.padding(top = 14.dp))
+        item {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(SignalMetrics.controlRadius))
+                    .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius)),
+            ) {
+                OperatorChoice("Contains", !state.draft.matchType.contains("doesn't", true), Modifier.weight(1f)) {
+                    model.updateDraft { it.copy(matchType = "contains") }
+                }
+                OperatorChoice("Does not contain", state.draft.matchType.contains("doesn't", true), Modifier.weight(1f)) {
+                    model.updateDraft { it.copy(matchType = "doesn't contain") }
+                }
+            }
         }
-    }
-
-    if (showPhraseInput) {
-        Dialog(onDismissRequest = { keyboard?.hide(); model.hidePhraseInput() }) {
-            Column(Modifier.fillMaxWidth().background(SignalColors.Surface, RoundedCornerShape(22.dp)).padding(22.dp)) {
-                Text("Notification contains", color = SignalColors.Yellow, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                OutlinedTextField(
-                    value = state.phraseDraft,
-                    onValueChange = model::setPhraseDraft,
-                    placeholder = { Text("Start typing…") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { keyboard?.hide(); model.commitPhrase() }),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF4A4C56),
-                        unfocusedContainerColor = Color(0xFF4A4C56),
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                    ),
-                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp).focusRequester(focusRequester),
-                )
-                SignalPrimaryButton("Done", { keyboard?.hide(); model.commitPhrase() }, modifier = Modifier.padding(top = 16.dp))
-                Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable { keyboard?.hide(); model.navigate(Route.RULE_BUILDER) }.padding(18.dp))
+        item {
+            OutlinedTextField(
+                value = state.phraseDraft,
+                onValueChange = model::setPhraseDraft,
+                label = { Text("Phrase") },
+                trailingIcon = if (state.phraseDraft.isNotEmpty()) ({
+                    IconButton(onClick = { model.setPhraseDraft("") }) { Icon(Icons.Rounded.Close, contentDescription = "Clear phrase") }
+                }) else null,
+                singleLine = false,
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { keyboard?.hide(); model.commitPhrase() }),
+                shape = RoundedCornerShape(SignalMetrics.controlRadius),
+                colors = signalTextFieldColors(),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            )
+        }
+        item { Text("${state.phraseDraft.length} characters", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium) }
+        item { SignalStatusPanel("Private by design", "Notification title and body are not saved.", icon = Icons.Rounded.Shield) }
+        item { SignalPrimaryButton("Use this phrase", { keyboard?.hide(); model.commitPhrase() }, icon = Icons.Rounded.Check) }
+        item {
+            SignalOutlineButton(
+                "Match anything",
+                { model.setPhraseDraft(""); keyboard?.hide(); model.commitPhrase() },
+                Modifier.fillMaxWidth(),
+                Icons.Rounded.Search,
+            )
+        }
+        item { Text("MATCH PREVIEW", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                SignalListRow(Icons.Rounded.Info, "Current condition", "${state.draft.matchType.replaceFirstChar { it.uppercase() }} ${state.phraseDraft.ifBlank { "anything" }}")
             }
         }
     }
 }
 
 @Composable
-private fun ConditionChoice(title: String, description: String, filled: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(description, color = SignalColors.Secondary, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 18.sp, minLines = 3)
-        Spacer(Modifier.height(24.dp))
-        Box(
-            Modifier.fillMaxWidth().height(82.dp)
-                .background(if (filled) SignalColors.Yellow else SignalColors.Background, RoundedCornerShape(14.dp))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) { Text(title, color = if (filled) SignalColors.Background else SignalColors.White, fontWeight = FontWeight.Bold) }
+private fun OperatorChoice(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Row(
+        modifier
+            .heightIn(min = 56.dp)
+            .background(if (selected) SignalColors.SurfaceSelected else Color.Transparent)
+            .border(if (selected) 1.dp else 0.dp, if (selected) SignalColors.Yellow else Color.Transparent, RoundedCornerShape(0.dp))
+            .clickable(role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        if (selected) Icon(Icons.Rounded.Check, contentDescription = null, tint = SignalColors.Yellow, modifier = Modifier.size(20.dp))
+        Text(label, color = if (selected) SignalColors.Yellow else SignalColors.Secondary, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = if (selected) 6.dp else 0.dp))
     }
 }
 
 @Composable
 fun FilterGroupScreen(state: UiState, model: MainViewModel) {
-    Column(Modifier.fillMaxSize()) {
-        SignalTopBar("Filter group", onBack = { model.navigate(Route.RULE_BUILDER) }, actionIcon = Icons.Rounded.Check, actionDescription = "Use group", onAction = { model.navigate(Route.RULE_BUILDER) })
-        Text("Match", color = SignalColors.Secondary, modifier = Modifier.padding(start = 24.dp, top = 20.dp))
-        Row(Modifier.fillMaxWidth().clickable { model.showOverlay(Overlay.FILTER_OPERATOR) }.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.FilterAlt, contentDescription = null, tint = SignalColors.Yellow)
-            Text("Contains any of these filters", fontSize = 18.sp, modifier = Modifier.padding(start = 16.dp))
-        }
-        SurfaceCard(Modifier.fillMaxWidth().padding(horizontal = 18.dp)) {
-            Column {
-                Text("Notification contains anything", fontWeight = FontWeight.Bold)
-                Text("Tap + to add another condition", color = SignalColors.Secondary, modifier = Modifier.padding(top = 6.dp))
+    val metadataFilters = listOf(
+        Triple("Channel", "Any channel", Icons.Rounded.Notifications),
+        Triple("Importance", "Any importance", Icons.Rounded.Star),
+        Triple("Category", "Any category", Icons.Rounded.Category),
+        Triple("Conversation", "Either", Icons.Rounded.Group),
+    )
+    val systemFilters = listOf(
+        Triple("Screen state", "Any state", Icons.Rounded.PhoneAndroid),
+        Triple("Charging", "Either", Icons.Rounded.BatteryChargingFull),
+        Triple("Day and time", "Always", Icons.Rounded.Schedule),
+    )
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { SignalTopBar("Extra filters", onBack = { model.navigate(Route.RULE_BUILDER) }, actionIcon = Icons.Rounded.Info, onAction = { model.showMessage("All enabled filters must match.") }) }
+        item { SignalSectionHeading("Narrow this match", "All enabled filters must match.") }
+        item { Text("NOTIFICATION METADATA", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                metadataFilters.forEachIndexed { index, (title, subtitle, icon) ->
+                    SignalListRow(
+                        icon = icon,
+                        title = title,
+                        subtitle = subtitle,
+                        selected = state.draft.extras.contains(title),
+                        onClick = { model.toggleExtraFilter(title) },
+                    )
+                    if (index != metadataFilters.lastIndex) SignalDivider()
+                }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.End) { CreateRuleButton { model.showOverlay(Overlay.ADD_FILTER) } }
+        item { Text("SYSTEM STATE", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                systemFilters.forEachIndexed { index, (title, subtitle, icon) ->
+                    SignalListRow(
+                        icon = icon,
+                        title = title,
+                        subtitle = subtitle,
+                        selected = state.draft.extras.contains(title),
+                        onClick = { model.toggleExtraFilter(title) },
+                    )
+                    if (index != systemFilters.lastIndex) SignalDivider()
+                }
+            }
+        }
+        item { SignalStatusPanel("Metadata only", "Filters never save notification content.", icon = Icons.Rounded.Shield) }
+        item { SignalPrimaryButton("Use filters", { model.navigate(Route.RULE_BUILDER) }) }
+        if (state.draft.extras.isNotEmpty()) {
+            item { SignalOutlineButton("Reset filters", model::clearExtraFilters, Modifier.fillMaxWidth()) }
+        }
+        item { Text("MATCH LOGIC", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                SignalListRow(Icons.Rounded.FilterAlt, "Operator", state.draft.filterOperator, onClick = { model.showOverlay(Overlay.FILTER_OPERATOR) })
+            }
+        }
     }
 }
 
 @Composable
 fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
-    if (state.auditState.startsWith("061_")) {
-        SelectedActionScreen(model)
-        return
-    }
-    val listState = rememberLazyListState()
-    val target = when (state.auditState.substringBefore('_').toIntOrNull()) {
-        50 -> 2; 51 -> 5; 52 -> 8; 53 -> 11; 54 -> 14; 55 -> 17; 56 -> 20; 57 -> 24; 58 -> 26; else -> 0
-    }
-    LaunchedEffect(state.auditState) { listState.scrollToItem(target.coerceAtMost(actionCatalog.lastIndex)) }
+    var query by remember { mutableStateOf("") }
+    val actionChoices = listOf("Do nothing", "Mute", "Snooze", "Remind me", "Open notification") +
+        actionCatalog.filterNot { it in setOf("Mute", "Remind me", "Open notification") }
+    val filtered = actionChoices.filter { it.contains(query, ignoreCase = true) }
     Column(Modifier.fillMaxSize()) {
-        SignalTopBar("Choose an action", onBack = { model.navigate(Route.RULE_BUILDER) })
-        LazyColumn(state = listState, contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 30.dp)) {
-            itemsIndexed(actionCatalog) { index, action ->
-                if (index in setOf(2, 7, 10, 16, 19, 22, 27)) {
-                    val label = when (index) { 2 -> "Get your attention"; 7 -> "Group notifications"; 10 -> "Change notifications"; 16 -> "Dismiss"; 19 -> "Interact"; 22 -> "Utilities"; else -> "Integrations" }
-                    SectionLabel(label)
-                }
-                Row(
-                    Modifier.fillMaxWidth().clickable {
-                        model.updateDraft { it.copy(action = action) }
-                        model.navigate(Route.RULE_BUILDER)
-                    }.padding(horizontal = 20.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(46.dp).background(actionColor(index), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                        Icon(if (action == "Mute") Icons.AutoMirrored.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
+        SignalTopBar("Choose action", onBack = { model.navigate(Route.RULE_BUILDER) })
+        Column(Modifier.padding(horizontal = SignalMetrics.pageHorizontal)) {
+            SignalStatusPanel("Preview only", "Actions are described, not executed.", icon = Icons.Rounded.Shield)
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = { Text("Search actions") },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(SignalMetrics.controlRadius),
+                colors = signalTextFieldColors(),
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+            )
+            Text("AVAILABLE ACTIONS", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 18.dp, bottom = 10.dp))
+        }
+        LazyColumn(
+            modifier = Modifier.weight(1f).padding(horizontal = SignalMetrics.pageHorizontal),
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
+            item {
+                SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                    filtered.forEachIndexed { index, action ->
+                        SignalListRow(
+                            actionIcon(action),
+                            action,
+                            actionDescription(action),
+                            selected = state.draft.action.equals(action, ignoreCase = true) ||
+                                (action == "Do nothing" && state.draft.action.equals("nothing", ignoreCase = true)),
+                            onClick = { model.updateDraft { it.copy(action = if (action == "Do nothing") "nothing" else action) } },
+                        )
+                        if (index != filtered.lastIndex) SignalDivider()
                     }
-                    Text(action, fontSize = 18.sp, modifier = Modifier.weight(1f).padding(start = 16.dp))
-                    if (state.draft.action == action) Icon(Icons.Rounded.Check, contentDescription = "Selected", tint = SignalColors.Yellow)
                 }
             }
         }
+        SignalPrimaryButton(
+            "Use selected action",
+            { model.navigate(Route.RULE_BUILDER) },
+            modifier = Modifier.padding(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
+        )
     }
 }
 
 @Composable
-private fun SelectedActionScreen(model: MainViewModel) {
-    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
-        Spacer(Modifier.height(72.dp))
-        Text("Silence actions ︿", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-        Spacer(Modifier.height(42.dp))
-        ActionFeatureCard("Cooldown", "Prevent the same app or conversation from interrupting you multiple times in quick succession.", SignalColors.Surface, SignalColors.White, 158.dp) { }
-        Spacer(Modifier.height(18.dp))
-        ActionFeatureCard("Mute", "Prevent a matching notification from buzzing or playing a sound.", SignalColors.White, SignalColors.Background, 148.dp) {
-            model.updateDraft { it.copy(action = "Mute") }
-        }
-        Text("Attention actions ︿", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 30.dp))
-        ActionFeatureCard("Alarm", "Show a full-screen alert with sound and vibration.", SignalColors.Surface, SignalColors.White, 130.dp) { }
-        Spacer(Modifier.weight(1f))
-        SignalPrimaryButton("Pick action", { model.navigate(Route.RULE_BUILDER) }, modifier = Modifier.padding(bottom = 24.dp))
-    }
+private fun signalTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = SignalColors.Surface,
+    unfocusedContainerColor = SignalColors.Surface,
+    focusedBorderColor = SignalColors.Yellow,
+    unfocusedBorderColor = SignalColors.Border,
+    focusedLabelColor = SignalColors.Yellow,
+    unfocusedLabelColor = SignalColors.Secondary,
+    cursorColor = SignalColors.Yellow,
+)
+
+private fun actionIcon(action: String): ImageVector = when {
+    action.equals("Mute", true) -> Icons.AutoMirrored.Rounded.VolumeOff
+    action.equals("nothing", true) || action.equals("Do nothing", true) -> Icons.Rounded.VisibilityOff
+    action.equals("Snooze", true) -> Icons.Rounded.Schedule
+    action.equals("Remind me", true) -> Icons.Rounded.Notifications
+    action.equals("Open notification", true) -> Icons.AutoMirrored.Rounded.OpenInNew
+    else -> Icons.Rounded.Tune
 }
 
-@Composable
-private fun ActionFeatureCard(title: String, description: String, background: Color, foreground: Color, height: androidx.compose.ui.unit.Dp, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().height(height).background(background, RoundedCornerShape(18.dp)).clickable(onClick = onClick).padding(24.dp)
-    ) {
-        Box(Modifier.size(42.dp).background(SignalColors.RuleBlue, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-            Icon(if (title == "Mute") Icons.AutoMirrored.Rounded.VolumeOff else Icons.Rounded.Tune, contentDescription = null, tint = SignalColors.Background)
-        }
-        Text(title, color = foreground, fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 12.dp))
-        Text(description, color = if (background == SignalColors.White) SignalColors.Background else SignalColors.Secondary, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 4.dp))
-    }
-}
-
-private fun actionColor(index: Int): Color = when (index % 5) {
-    0 -> SignalColors.RuleBlue
-    1 -> SignalColors.Yellow
-    2 -> SignalColors.SuggestionGreen
-    3 -> SignalColors.SuggestionPurple
-    else -> SignalColors.Error
+private fun actionDescription(action: String): String = when (action) {
+    "Mute" -> "Preview silencing this alert"
+    "Do nothing" -> "Only record the match"
+    "Snooze" -> "Preview delaying this alert"
+    "Cooldown" -> "Preview reducing repeated interruptions"
+    "Alarm" -> "Preview a full-screen alert"
+    "Remind me" -> "Preview a later reminder"
+    "Open notification" -> "Preview opening the source notification"
+    "Dismiss" -> "Preview dismissing this alert"
+    "Batch" -> "Preview collecting repeated updates"
+    "Flashlight" -> "Preview flashing for this alert"
+    else -> "Preview this action"
 }

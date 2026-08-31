@@ -1,7 +1,7 @@
 {
   "suite": "instrumentation",
-  "source": "C:\\repos\\NoNo\\replica-app\\app\\build\\outputs\\androidTest-results\\connected (device emulator-5566)",
-  "generated_at": "2026-08-29T21:00:31-04:00",
+  "source": "app/build/outputs/androidTest-results/connected (device emulator-5566)",
+  "generated_at": "2026-08-31T01:37:17-04:00",
   "tests": 16,
   "failures": 0,
   "errors": 0,

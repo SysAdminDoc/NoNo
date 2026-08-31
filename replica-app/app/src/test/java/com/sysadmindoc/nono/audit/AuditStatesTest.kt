@@ -55,6 +55,7 @@ class AuditStatesTest {
         assertEquals(Overlay.RULE_MORE, resolve("065_rule_overflow_menu").overlay)
         assertEquals(Overlay.THEME, resolve("027_theme_dialog").overlay)
         assertEquals(Route.HISTORY_ACTIVITY, resolve("073_history_item_activity").route)
+        assertEquals("Light", resolve("903_light_rules").settings["Theme"])
     }
 
     @Test
@@ -68,6 +69,7 @@ class AuditStatesTest {
             "063_rules_populated_test_record", "064_rules_test_record_disabled", "066_rule_enable_for_dialog",
             "067_rule_priority_dialog", "068_rule_folder_dialog", "069_rule_rename_dialog",
             "070_rule_edit_existing", "072_history_notification_detail", "082_explore_suggestion_rule_preview",
+            "900_shortcut_selected", "901_phrase_urgent", "902_filter_group_populated", "903_light_rules",
         )
         ids.forEach { assertNotNull("state $it must resolve", auditStateFor(base, it)) }
     }

@@ -2,12 +2,14 @@ package com.sysadmindoc.nono.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,14 +17,37 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Article
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DeleteForever
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Forum
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.ImportExport
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.automirrored.rounded.Shortcut
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -30,21 +55,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sysadmindoc.nono.BuildConfig
 import com.sysadmindoc.nono.MainViewModel
+import com.sysadmindoc.nono.R
 import com.sysadmindoc.nono.model.Overlay
+import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
 
@@ -62,83 +89,126 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
     }
     LaunchedEffect(state.transferExportRequest) {
         if (state.transferExportRequest == 0) return@LaunchedEffect
-        // Two contracts because the MIME type is fixed when the contract is built.
         if (state.transferExportIsHistory) {
             historyExportLauncher.launch("nono-history.csv")
         } else {
             exportLauncher.launch("nono-rules.json")
         }
     }
-    val listState = rememberLazyListState()
-    // Scroll offsets for the audited settings captures, as item positions in the list below.
-    // They name rows, so re-derive them whenever a row is added or removed:
-    //   17 -> "Allow dismissing fixed notifications"
-    //   18 -> "Notification capture"
-    //   19 -> "Import rules"
-    //   20 -> "Hide popups when muting"
-    val target = when (state.auditState.substringBefore('_').toIntOrNull()) { 17 -> 7; 18 -> 13; 19 -> 21; 20 -> 30; else -> 0 }
-    LaunchedEffect(state.auditState) { listState.scrollToItem(target) }
-    LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp)) {
-        item { SectionLabel("Help") }
-        item { PreferenceRow("Contact support", unavailable = NO_SUPPORT_CHANNEL) }
-        item { PreferenceRow("Guide and FAQs", onClick = { openUrl(context, "https://developer.android.com/develop/ui/views/notifications") }) }
-        item { PreferenceRow("Open community", unavailable = NO_SUPPORT_CHANNEL) }
-        item { PreferenceRow("Rules are not triggering?", "Steps for keeping the listener alive on this phone.", onClick = { model.showOverlay(Overlay.LISTENER_CHECKLIST) }) }
 
-        item { SectionLabel("Settings") }
-        item { PreferenceRow("Mute mode", "Configure how aggressively the mute should be.", state.settings["Mute mode"], onClick = { model.showOverlay(Overlay.MUTE_MODE) }) }
-        item { PersistentSwitchRow(state, model, "Allow dismissing fixed notifications", "Allow rules to dismiss notifications that cannot normally be swiped away.", unavailable = NO_ACTION_ENGINE) }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        item { SignalPageHeader("Settings") }
+        item { SignalStatusPanel("Local by design", "No internet permission · Metadata only", icon = Icons.Rounded.Shield) }
 
-        item { SectionLabel("Mute actions") }
-        item { PreferenceRow("Mute importance level", "How important a notification must be to trigger the rule.", state.settings["Mute importance"], onClick = { model.showOverlay(Overlay.MUTE_IMPORTANCE) }) }
+        item { SettingsSectionLabel("BEHAVIOR") }
+        item {
+            SettingsGroup {
+                PreferenceRow(Icons.AutoMirrored.Rounded.VolumeOff, "Mute mode", value = state.settings["Mute mode"], onClick = { model.showOverlay(Overlay.MUTE_MODE) })
+                SignalDivider()
+                PersistentSwitchRow(
+                    state,
+                    model,
+                    Icons.Rounded.Notifications,
+                    "Dismiss fixed notifications",
+                    "Off in preview-only builds.",
+                    unavailable = NO_ACTION_ENGINE,
+                )
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Tune, "Mute importance", value = state.settings["Mute importance"], onClick = { model.showOverlay(Overlay.MUTE_IMPORTANCE) })
+            }
+        }
 
-        item { SectionLabel("Unsilence actions") }
-        item { PersistentSwitchRow(state, model, "Adjust silent ringer mode for calls", "Temporarily change the ringer when an unsilence rule runs.", unavailable = NO_ACTION_ENGINE) }
+        item { SettingsSectionLabel("HISTORY & DATA") }
+        item {
+            SettingsGroup {
+                PreferenceRow(Icons.Rounded.History, "Notification history", value = state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Download, "Export metadata", value = "CSV", onClick = model::beginHistoryExport)
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Backup, "Automatic backups", value = "Off", unavailable = NO_AUTOMATIC_BACKUPS)
+                SignalDivider()
+                PreferenceRow(
+                    if (state.capturePaused) Icons.Rounded.PauseCircle else Icons.Rounded.Notifications,
+                    "Notification capture",
+                    value = if (state.capturePaused) "Paused" else "Active",
+                    onClick = { model.setCapturePaused(!state.capturePaused) },
+                )
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.VisibilityOff, "Why is content hidden?", "Android may redact sensitive notifications before NoNo reads metadata.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) })
+            }
+        }
 
-        item { SectionLabel("History") }
-        item { PreferenceRow("Notification capture", "Keep listener access enabled but ignore incoming notifications while paused.", if (state.capturePaused) "Paused" else "Active", onClick = { model.setCapturePaused(!state.capturePaused) }) }
-        item { PreferenceRow("Notification history", "Choose what content is retained locally.", state.settings["Notification history"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) }) }
-        item { PreferenceRow("Why is content hidden?", "Android redacts notifications it treats as sensitive before any app reads them.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) }) }
-        item { PreferenceRow("Keep history for", "Older entries are removed automatically.", state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_RETENTION) }) }
+        item { SettingsSectionLabel("APPEARANCE") }
+        item {
+            SettingsGroup {
+                PreferenceRow(Icons.Rounded.DarkMode, "Theme", value = state.settings["Theme"], onClick = { model.showOverlay(Overlay.THEME) })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Language, "Language", value = "System default", unavailable = "This build follows the system locale.")
+            }
+        }
 
-        item { SectionLabel("Shortcuts") }
-        item { PreferenceRow("Create shortcut", "Create a launcher shortcut for a safe rule action.", onClick = { model.navigate(Route.SHORTCUT_EDITOR) }) }
-        item { PreferenceRow("Clear shortcuts", unavailable = NOT_RECONSTRUCTED) }
+        item { SettingsSectionLabel("RULES & TRANSFER") }
+        item {
+            SettingsGroup {
+                PreferenceRow(Icons.AutoMirrored.Rounded.Shortcut, "Create shortcut", "Prepare a launcher shortcut for a saved rule.", onClick = { model.navigate(Route.SHORTCUT_EDITOR) })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.ImportExport, "Import rules", "Read encrypted NoNo rules JSON.", onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Download, "Export rules", "Create an encrypted rules file.", onClick = model::beginExport)
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.DeleteForever, "Delete all rules", "Removes every saved rule from this device.", destructive = true, onClick = model::deleteAllRules)
+            }
+        }
 
-        item { SectionLabel("Backup") }
-        item { PreferenceRow("Import rules", "Encrypted NoNo rules JSON; notification history is never imported.", onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) }) }
-        item { PreferenceRow("Export rules", "Create an encrypted file through Android storage access.", onClick = model::beginExport) }
-        item { PreferenceRow("Export history", "Write the stored metadata as CSV. Notification content is never included.", onClick = model::beginHistoryExport) }
-        item { PreferenceRow("Automatic backups", unavailable = NO_AUTOMATIC_BACKUPS) }
+        item { SettingsSectionLabel("HELP") }
+        item {
+            SettingsGroup {
+                PreferenceRow(Icons.AutoMirrored.Rounded.HelpOutline, "Rules are not triggering?", "Check listener access and device restrictions.", onClick = { model.showOverlay(Overlay.LISTENER_CHECKLIST) })
+                SignalDivider()
+                PreferenceRow(Icons.AutoMirrored.Rounded.Article, "Guide and FAQs", onClick = { openUrl(context, "https://developer.android.com/develop/ui/views/notifications") })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Forum, "Contact support", unavailable = NO_SUPPORT_CHANNEL)
+                SignalDivider()
+                PreferenceRow(Icons.AutoMirrored.Rounded.OpenInNew, "Open notification settings", onClick = { openListenerSettings(context) })
+            }
+        }
 
-        item { SectionLabel("Advanced") }
-        item { PersistentSwitchRow(state, model, "Privacy mode", "Hide notification text in history and diagnostics.", unavailable = NO_ACTION_ENGINE) }
-        item { PreferenceRow("Theme", value = state.settings["Theme"], onClick = { model.showOverlay(Overlay.THEME) }) }
-        item { PreferenceRow("Language", unavailable = "This build ships no translated resources, so it follows the system locale only.") }
-        item { PreferenceRow("Translate", unavailable = NOT_RECONSTRUCTED) }
-        item { PersistentSwitchRow(state, model, "Hide popups when muting", "Avoid heads-up popups for notifications matched by a mute rule.", unavailable = NO_ACTION_ENGINE) }
-        item { PreferenceRow("Open notification settings", "Review Android notification access and channels.", onClick = { openListenerSettings(context) }) }
-        item { PreferenceRow("Restore batch", unavailable = NO_ACTION_ENGINE) }
-        item { PersistentSwitchRow(state, model, "Restore batches after reboot", "Rebuild scheduled local batches after device restart.", unavailable = NO_ACTION_ENGINE) }
-        item { PersistentSwitchRow(state, model, "Android 15+ icon workaround", "Use a compatibility path for notification icons.", unavailable = NO_ACTION_ENGINE) }
-        item { PersistentSwitchRow(state, model, "Notification grouping workaround", "Use a compatibility path for grouped notifications.", unavailable = NO_ACTION_ENGINE) }
-        item { PreferenceRow("Delete all rules", "Removes every rule on this device. This cannot be undone.", destructive = true, onClick = model::deleteAllRules) }
-        item { Text("NoNo ${BuildConfig.VERSION_NAME}", color = SignalColors.Secondary, modifier = Modifier.fillMaxWidth().padding(24.dp)) }
+        item {
+            Text(
+                "NoNo ${BuildConfig.VERSION_NAME}",
+                color = SignalColors.Muted,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            )
+        }
     }
 }
 
-/** Reasons a control exists for fidelity but cannot do anything in this build. */
-private const val NOT_RECONSTRUCTED = "the original behaviour was not observable during the audit."
-private const val NO_SUPPORT_CHANNEL = "this reconstruction has no support channel or community."
-private const val NO_AUTOMATIC_BACKUPS = "automatic backup scheduling is not implemented; use encrypted export instead."
-private const val NO_ACTION_ENGINE = "this build has no notification action engine, so the setting would have no effect."
+private const val NO_SUPPORT_CHANNEL = "This reconstruction has no support channel."
+private const val NO_AUTOMATIC_BACKUPS = "Use encrypted export instead."
+private const val NO_ACTION_ENGINE = "No notification action engine is present."
 
 private fun openUrl(context: android.content.Context, url: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }
 
 @Composable
+private fun SettingsSectionLabel(label: String) {
+    Text(label, color = SignalColors.Yellow, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+}
+
+@Composable
+private fun SettingsGroup(content: @Composable () -> Unit) {
+    SignalGroupedSurface(Modifier.fillMaxWidth(), content)
+}
+
+@Composable
 private fun PreferenceRow(
+    icon: ImageVector,
     title: String,
     summary: String? = null,
     value: String? = null,
@@ -148,62 +218,52 @@ private fun PreferenceRow(
 ) {
     val enabled = unavailable == null && onClick != null
     val titleColor = when {
-        !enabled -> SignalColors.Muted
         destructive -> SignalColors.Error
+        !enabled && onClick == null -> SignalColors.Muted
         else -> SignalColors.White
     }
     Row(
         Modifier
             .fillMaxWidth()
-            .then(if (enabled) Modifier.clickable(role = Role.Button) { onClick?.invoke() } else Modifier)
-            .heightIn(min = 48.dp)
-            .padding(horizontal = 24.dp, vertical = 13.dp)
+            .heightIn(min = 64.dp)
+            .then(if (enabled) Modifier.clickable(role = Role.Button) { onClick() } else Modifier)
             .semantics {
                 if (unavailable != null) {
                     disabled()
                     contentDescription = "$title. Unavailable: $unavailable"
                 }
-            },
+            }
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, color = titleColor, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            if (summary != null) Text(summary, color = SignalColors.Secondary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 3.dp))
-            if (value != null && enabled) Text(value, color = SignalColors.Yellow, fontSize = 14.sp, modifier = Modifier.padding(top = 3.dp))
-            if (unavailable != null) UnavailableNote(unavailable)
+        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = when { destructive -> SignalColors.Error; enabled -> SignalColors.White; else -> SignalColors.Muted })
         }
-        if (enabled) {
-            Icon(if (destructive) Icons.Rounded.DeleteForever else Icons.Rounded.ChevronRight, contentDescription = null, tint = if (destructive) SignalColors.Error else SignalColors.Secondary)
+        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Text(title, color = titleColor, style = MaterialTheme.typography.titleMedium)
+            val supporting = unavailable ?: summary
+            if (supporting != null) Text(supporting, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
         }
+        if (value != null) Text(value, color = if (enabled) SignalColors.Secondary else SignalColors.Muted, style = MaterialTheme.typography.bodyMedium)
+        if (enabled) Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = SignalColors.Secondary, modifier = Modifier.size(20.dp).padding(start = 4.dp))
     }
-}
-
-/** Inline marker so the UI never advertises behaviour this build does not have. */
-@Composable
-private fun UnavailableNote(reason: String) {
-    Text(
-        "Unavailable - " + reason,
-        color = SignalColors.Muted,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        modifier = Modifier.padding(top = 3.dp),
-    )
 }
 
 @Composable
 private fun PersistentSwitchRow(
     state: UiState,
     model: MainViewModel,
+    icon: ImageVector,
     title: String,
     summary: String,
     unavailable: String? = null,
 ) {
-    val checked = state.settings[title] == "On"
     val enabled = unavailable == null
+    val checked = enabled && state.settings[title] == "On"
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = 72.dp)
             .toggleable(
                 value = checked,
                 enabled = enabled,
@@ -214,42 +274,102 @@ private fun PersistentSwitchRow(
                 stateDescription = if (checked) "On" else "Off"
                 contentDescription = title
             }
-            .padding(horizontal = 24.dp, vertical = 13.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, color = if (enabled) SignalColors.White else SignalColors.Muted, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text(summary, color = SignalColors.Secondary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 3.dp))
-            if (unavailable != null) UnavailableNote(unavailable)
+        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = if (enabled) SignalColors.White else SignalColors.Muted)
+        }
+        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+            Text(title, color = if (enabled) SignalColors.White else SignalColors.Muted, style = MaterialTheme.typography.titleMedium)
+            Text(unavailable ?: summary, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
         }
         Switch(
             checked = checked,
             enabled = enabled,
             onCheckedChange = null,
             modifier = Modifier.clearAndSetSemantics { },
-            colors = SwitchDefaults.colors(checkedTrackColor = SignalColors.Yellow, checkedThumbColor = SignalColors.Background, uncheckedTrackColor = SignalColors.Border),
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = SignalColors.Yellow,
+                checkedThumbColor = SignalColors.Background,
+                uncheckedTrackColor = SignalColors.Border,
+            ),
         )
     }
 }
 
 @Composable
 fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
-    Column(Modifier.fillMaxSize()) {
-        SignalTopBar("Create shortcut", onBack = { model.selectRoot(com.sysadmindoc.nono.model.RootTab.SETTINGS) }, actionIcon = Icons.Rounded.Check, actionDescription = "Save shortcut", onAction = { model.selectRoot(com.sysadmindoc.nono.model.RootTab.SETTINGS) })
-        Text("Shortcut name", color = SignalColors.Secondary, modifier = Modifier.padding(start = 24.dp, top = 24.dp))
-        SurfaceCard(Modifier.fillMaxWidth().padding(24.dp)) {
-            Text("Choose a rule and action to make available from the launcher.", color = SignalColors.Secondary)
-            Text(
-                "Unavailable - launcher shortcut publication is not reconstructed, so nothing is created when you save.",
-                color = SignalColors.Muted,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                modifier = Modifier.padding(top = 8.dp),
+    val rule = state.rules.firstOrNull()
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { SignalTopBar("Create shortcut", onBack = { model.selectRoot(RootTab.SETTINGS) }) }
+        item { SignalSectionHeading("Choose a saved rule", "The shortcut opens NoNo with that rule ready to review.") }
+        item { SignalStatusPanel("Preview workflow", "The shortcut never runs a notification action.", icon = Icons.Rounded.Shield) }
+        item { SettingsSectionLabel("SAVED RULES") }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                if (rule == null) {
+                    SignalListRow(Icons.Rounded.Tune, "No saved rules", "Create a rule before making a shortcut.")
+                } else {
+                    SignalListRow(
+                        Icons.Rounded.Tune,
+                        rule.name,
+                        "${rule.app} · ${rule.matchType} ${rule.phrase} · ${rule.action}",
+                        selected = true,
+                    )
+                }
+            }
+        }
+        item { SettingsSectionLabel("SHORTCUT DETAILS") }
+        item {
+            OutlinedTextField(
+                value = rule?.name.orEmpty(),
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Name") },
+                shape = RoundedCornerShape(SignalMetrics.controlRadius),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = SignalColors.Surface,
+                    unfocusedContainerColor = SignalColors.Surface,
+                    focusedBorderColor = SignalColors.Border,
+                    unfocusedBorderColor = SignalColors.Border,
+                ),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Add, contentDescription = null, tint = SignalColors.Yellow)
-            Text("Add shortcut action", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
+        if (rule != null) {
+            item {
+                SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.mipmap.ic_launcher_foreground),
+                            contentDescription = "NoNo app icon",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(64.dp),
+                        )
+                        Column(Modifier.padding(start = 14.dp)) {
+                            Text(rule.name, style = MaterialTheme.typography.titleMedium)
+                            Text("Home screen preview", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+                        }
+                    }
+                }
+            }
         }
+        item { SignalPrimaryButton("Create shortcut", onClick = { }, enabled = false) }
+        item {
+            Text(
+                "Shortcut publication is not available in this build.",
+                color = SignalColors.Muted,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        item {
+            SignalOutlineButton("Cancel", { model.selectRoot(RootTab.SETTINGS) }, Modifier.fillMaxWidth())
+        }
+        item { Spacer(Modifier.height(12.dp)) }
     }
 }

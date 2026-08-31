@@ -199,6 +199,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 .collect { result ->
+                    if (auditOverride != null) return@collect
                     _state.value = when (result.state) {
                         HistoryLoadState.LOADING -> _state.value.copy(
                             historyLoadState = HistoryLoadState.LOADING,
@@ -245,6 +246,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * invisible: the app kept presenting a working rule list while the listener was unbound.
      */
     fun refreshCapabilities() {
+        if (auditOverride != null) return
         val app = getApplication<Application>()
         val listenerGranted = runCatching {
             NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
@@ -658,6 +660,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = updated), overlay = Overlay.NONE)
     }
 
+    fun clearExtraFilters() {
+        _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = emptyList()))
+    }
+
     fun setEnabledFor(duration: String) {
         mutateRule(_state.value.selectedRuleId) { it.copy(enabledFor = duration, enabled = true) }
         _state.value = _state.value.copy(
@@ -769,7 +775,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Release builds link a no-op resolver, so the QA override cannot exist there.
         val resolved = auditStateFor(base, id) ?: return
         auditOverride = id
-        _state.value = resolved
+        ListenerHealth.reset()
+        ListenerHealth.onConnected()
+        _state.value = resolved.copy(
+            listenerAccessGranted = true,
+            historyLoadState = HistoryLoadState.READY,
+        )
     }
 
     override fun onCleared() {

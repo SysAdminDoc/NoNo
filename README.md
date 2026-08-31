@@ -1,6 +1,6 @@
 # NoNo
 
-[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
@@ -17,5 +17,11 @@ evaluator explains how saved rules would treat a selected history record. Live n
 mutation and action execution remain intentionally absent, and unavailable controls are shown
 disabled with their reason inline. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do)
 for the privacy and capability boundary.
+
+![NoNo rules screen](replica-app/docs/screenshots/nono-rules-v1.4.0.png)
+
+Version 1.4.0 introduces a complete visual redesign across onboarding, rules, history, Explore,
+Settings, and every rule editor. The source mockups and side-by-side implementation checks are
+recorded in [`design-qa.md`](design-qa.md).
 
 Start with [`replica-app/README.md`](replica-app/README.md). Build the APK with `replica-app/scripts/build-debug.ps1`; the binary is not tracked in git. The expected SHA-256 digest of the frozen deliverable is recorded in [`replica-app/dist/SHA256SUMS.txt`](replica-app/dist/SHA256SUMS.txt).

@@ -2,9 +2,11 @@ package com.sysadmindoc.nono.audit
 
 import android.content.Intent
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
+import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 
@@ -18,6 +20,45 @@ import com.sysadmindoc.nono.model.UiState
 
 private const val AUDIT_STATE_EXTRA = "replica_state"
 
+private val designHistoryRecords = listOf(
+    HistoryRecord(
+        id = 1L,
+        app = "Messages",
+        appPackageName = "com.google.android.apps.messaging",
+        title = "Content available",
+        body = "Notification metadata captured",
+        time = "8:42 PM",
+        triggeredRule = true,
+        contentState = NotificationContentState.AVAILABLE,
+        channelId = "messages",
+        matchedRuleIds = listOf(1L),
+        matchState = RuleMatchState.EVALUATED,
+        importance = 3,
+        isConversation = true,
+        category = "msg",
+    ),
+    HistoryRecord(
+        id = 2L,
+        app = "Calendar",
+        appPackageName = "com.google.android.calendar",
+        title = "Content hidden by Android",
+        body = "Sensitive content was redacted",
+        time = "6:15 PM",
+        contentState = NotificationContentState.HIDDEN_BY_SYSTEM,
+        matchState = RuleMatchState.CONTENT_HIDDEN,
+    ),
+    HistoryRecord(
+        id = 3L,
+        app = "System UI",
+        appPackageName = "com.android.systemui",
+        title = "Metadata captured",
+        body = "No notification content was retained",
+        time = "2:09 PM",
+        contentState = NotificationContentState.NOT_STORED,
+        matchState = RuleMatchState.EVALUATED,
+    ),
+)
+
 fun readAuditState(intent: Intent): String = intent.getStringExtra(AUDIT_STATE_EXTRA).orEmpty()
 
 fun auditStateFor(base: UiState, id: String): UiState? = when {
@@ -30,7 +71,7 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         historySearchActive = id.startsWith("014_") || id.startsWith("015_"),
             route = Route.ROOT,
             rootTab = RootTab.HISTORY,
-            history = if (id.startsWith("071_")) listOf(HistoryRecord()) else emptyList(),
+            history = if (id.startsWith("071_")) designHistoryRecords else emptyList(),
             historySearch = if (id.startsWith("015_")) "nothing here" else "",
             historyFilter = when { id.startsWith("075_") -> "Rule-triggered"; id.startsWith("076_") -> "Dismissed"; else -> "All" },
         )
@@ -67,7 +108,33 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         id.startsWith("069_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(action = "Mute")), overlay = Overlay.RENAME, renameDraft = "Test rule")
         id.startsWith("070_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(action = "Mute"), rules = listOf(SignalRule(action = "Mute")))
         id.startsWith("072_") -> base.copy(route = Route.ROOT, rootTab = RootTab.HISTORY, history = listOf(HistoryRecord()), overlay = Overlay.HISTORY_ITEM)
-        id.startsWith("073_") || id.startsWith("074_") -> base.copy(route = Route.HISTORY_ACTIVITY, historyActivityTab = if (id.startsWith("074_")) "Changes" else "Rules")
+        id.startsWith("073_") || id.startsWith("074_") -> base.copy(
+            route = Route.HISTORY_ACTIVITY,
+            historyActivityTab = if (id.startsWith("074_")) "Changes" else "Rules",
+            history = listOf(designHistoryRecords.first()),
+            selectedHistoryId = 1L,
+            rules = listOf(SignalRule(action = "Mute")),
+        )
+        id.startsWith("900_shortcut_selected") -> base.copy(
+            route = Route.SHORTCUT_EDITOR,
+            rules = listOf(SignalRule(action = "Mute")),
+        )
+        id.startsWith("901_phrase_urgent") -> base.copy(
+            route = Route.PHRASE_EDITOR,
+            phraseInputVisible = true,
+            phraseDraft = "urgent",
+            draft = SignalRule(phrase = "urgent", action = "Mute"),
+        )
+        id.startsWith("902_filter_group_populated") -> base.copy(
+            route = Route.FILTER_GROUP,
+            draft = SignalRule(extras = listOf("Conversation")),
+        )
+        id.startsWith("903_light_rules") -> base.copy(
+            route = Route.ROOT,
+            rootTab = RootTab.RULES,
+            rules = listOf(SignalRule(action = "Mute", enabled = true)),
+            settings = base.settings + ("Theme" to "Light"),
+        )
         id.startsWith("082_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "Flashlight suggestion", app = "Messages", phrase = "urgent", action = "Flashlight"))
         else -> base
     }

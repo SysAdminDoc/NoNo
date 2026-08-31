@@ -4,18 +4,22 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -31,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
@@ -105,27 +110,38 @@ private fun SignalBottomNavigation(selected: RootTab, onSelect: (RootTab) -> Uni
         NavEntry(RootTab.EXPLORE, Icons.Rounded.Explore),
         NavEntry(RootTab.SETTINGS, Icons.Rounded.Settings),
     )
-    NavigationBar(
-        containerColor = SignalColors.Background,
-        contentColor = SignalColors.White,
-        modifier = Modifier.navigationBarsPadding(),
-    ) {
-        entries.forEach { entry ->
-            NavigationBarItem(
-                selected = selected == entry.tab,
-                onClick = { onSelect(entry.tab) },
-                icon = { Icon(entry.icon, contentDescription = entry.tab.label) },
-                label = { Text(entry.tab.label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = SignalColors.Background,
-                    selectedTextColor = SignalColors.Yellow,
-                    indicatorColor = SignalColors.Yellow,
-                    unselectedIconColor = SignalColors.Muted,
-                    unselectedTextColor = SignalColors.Secondary,
-                    disabledIconColor = SignalColors.Muted,
-                    disabledTextColor = SignalColors.Muted,
-                ),
-            )
+    Column(Modifier.background(SignalColors.Background)) {
+        HorizontalDivider(color = SignalColors.Border, thickness = 1.dp)
+        NavigationBar(
+            containerColor = SignalColors.Background,
+            contentColor = SignalColors.White,
+            modifier = Modifier.navigationBarsPadding(),
+            tonalElevation = 0.dp,
+        ) {
+            entries.forEach { entry ->
+                val isSelected = selected == entry.tab
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onSelect(entry.tab) },
+                    icon = {
+                        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                            Box(Modifier.width(36.dp).height(3.dp).background(if (isSelected) SignalColors.Yellow else Color.Transparent))
+                            Spacer(Modifier.height(7.dp))
+                            Icon(entry.icon, contentDescription = entry.tab.label)
+                        }
+                    },
+                    label = { Text(entry.tab.label) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SignalColors.Yellow,
+                        selectedTextColor = SignalColors.Yellow,
+                        indicatorColor = Color.Transparent,
+                        unselectedIconColor = SignalColors.Muted,
+                        unselectedTextColor = SignalColors.Secondary,
+                        disabledIconColor = SignalColors.Muted,
+                        disabledTextColor = SignalColors.Muted,
+                    ),
+                )
+            }
         }
     }
 }
