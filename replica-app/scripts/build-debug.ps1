@@ -17,24 +17,9 @@ try {
 
 $apk = Join-Path $root 'app\build\outputs\apk\debug\app-debug.apk'
 if (-not (Test-Path -LiteralPath $apk -PathType Leaf)) { throw "Build finished without expected APK: $apk" }
-# One build, one artifact. Leaving older APKs beside the current one makes it impossible to tell
-# from the directory which binary SHA256SUMS.txt describes.
-$metadataPath = Join-Path $root 'app\build\outputs\apk\debug\output-metadata.json'
-$versionName = (Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json).elements[0].versionName
-if ([string]::IsNullOrWhiteSpace($versionName)) { throw "Could not read versionName from $metadataPath" }
-$dist = Join-Path $root 'dist'
-if (-not (Test-Path -LiteralPath $dist)) { New-Item -ItemType Directory -Path $dist | Out-Null }
-Get-ChildItem -LiteralPath $dist -Filter '*.apk' | Remove-Item -Force
-Get-ChildItem -LiteralPath $dist -Filter 'reproducibility-*.json' | Remove-Item -Force
-$distApkName = "NoNo-v$versionName.apk"
-$distApk = Join-Path $dist $distApkName
-Copy-Item -LiteralPath $apk -Destination $distApk -Force
-$distHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $distApk).Hash
-[System.IO.File]::WriteAllText(
-    (Join-Path $dist 'SHA256SUMS.txt'),
-    "$distHash  $distApkName`n",
-    (New-Object System.Text.UTF8Encoding($false))
-)
+# This deliberately does not write to dist\. A debug APK is debuggable and signed with the
+# machine's throwaway debug key, and freezing it there is how the published checksum came to
+# describe one. dist\ is written only by reproducible-release.ps1.
 
 $manifestPath = Join-Path $root 'validation\reports\build-manifest.json'
 $manifest = [ordered]@{
@@ -45,5 +30,5 @@ $manifest = [ordered]@{
 }
 [System.IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "Debug APK: $apk"
-Write-Host "Frozen deliverable: $distApk"
+Write-Host "dist is not written by this script; use reproducible-release.ps1 for a shippable artifact."
 Write-Host "Build manifest: $manifestPath"

@@ -46,7 +46,52 @@ From the `replica-app` directory of your clone:
 .\scripts\launch-replica.ps1 -Serial emulator-5554
 ```
 
-The build artifact is `app\build\outputs\apk\debug\app-debug.apk`. `build-debug.ps1` also freezes it as `dist\NoNo-v<version>.apk`, clearing any earlier APK from that directory first so the version in the file name is always the one `dist\SHA256SUMS.txt` describes. The APK itself is not tracked in git, but `SHA256SUMS.txt` is, so a downloaded artifact can still be verified.
+That produces `app\build\outputs\apk\debug\app-debug.apk`, which is for development only.
+
+## Release builds
+
+The APK in `dist\` is the signed, non-debuggable release, and `dist\SHA256SUMS.txt` records its
+hash. The APK is not tracked in git; the checksum file is, so a downloaded artifact can be
+checked against it.
+
+Signing credentials live in `replica-app\keystore.properties`, which is gitignored and never
+committed. It names four values:
+
+```properties
+storeFile=C:/path/to/nono-release.jks
+storePassword=...
+keyAlias=nono
+keyPassword=...
+```
+
+Without that file `assembleRelease` fails at `verifyReleaseSigning` rather than quietly producing
+an unsigned APK. Signatures are v2 and v3; v1 is off because the minimum supported Android
+version is 7.0, which understands v2.
+
+To build a release and record what produced it:
+
+```powershell
+.\scripts\reproducible-release.ps1
+```
+
+It builds twice from clean copies of the tree, compares the unsigned APKs, signs one of them, and
+verifies the signature with `apksigner verify --print-certs`. The `reproducibility.json` it writes
+alongside records the commit and whether the tree was dirty, the OS and architecture, the JDK,
+Gradle, AGP, Kotlin, KSP, build-tools and compile SDK, the dependency-verification state, the
+exact Gradle invocation, both unsigned hashes, the signed hash, and the signer's certificate
+SHA-256. If the two builds disagree it keeps both APKs and names them, ready for diffoscope.
+
+Pass `-SkipSigning` on a machine without the keystore to check determinism alone.
+
+To check an APK you already have:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.4.0-reconstruction.apk
+```
+
+The signer certificate SHA-256 is
+`f64b4691203ed903ddd4007d7630a65045ef2ad20d579388444bce22c482a724`. Every release is signed with
+that key, so a build reporting a different one did not come from this project.
 
 ## Tests and validation
 

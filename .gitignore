@@ -32,3 +32,8 @@ Thumbs.db
 /Roadmap_Blocked.md
 /CODEX_CHANGELOG.md
 .claude/
+
+# Release signing credentials. The keystore lives outside the repository; this file names it.
+replica-app/keystore.properties
+*.jks
+*.keystore

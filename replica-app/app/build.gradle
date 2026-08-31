@@ -5,9 +5,36 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Release signing credentials, never committed. See replica-app/README.md.
+// Absent on a machine that only builds debug, which is why the config below is conditional and
+// the verifyReleaseSigning task exists to refuse an unsigned release rather than ship one.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def hasReleaseSigning = keystoreProperties.containsKey('storeFile') &&
+    file(keystoreProperties['storeFile'] as String).exists()
+
 android {
     namespace 'com.sysadmindoc.nono'
     compileSdk 37
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(keystoreProperties['storeFile'] as String)
+                storePassword keystoreProperties['storePassword'] as String
+                keyAlias keystoreProperties['keyAlias'] as String
+                keyPassword keystoreProperties['keyPassword'] as String
+                // v1 is omitted deliberately: minSdk is 24, so v2 is understood everywhere this
+                // app runs, and a v1 signature would put the signer's name in the APK listing.
+                enableV1Signing false
+                enableV2Signing true
+                enableV3Signing true
+            }
+        }
+    }
 
     defaultConfig {
         applicationId 'com.sysadmindoc.nono'
@@ -27,9 +54,13 @@ android {
             debuggable true
         }
         release {
+            debuggable false
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
@@ -99,4 +130,28 @@ dependencies {
     androidTestImplementation libs.espresso.accessibility
     androidTestImplementation libs.compose.ui.test.junit4
     androidTestImplementation libs.room.testing
+}
+
+/**
+ * Refuses a release build that is not signed or is debuggable.
+ *
+ * The signing config is conditional, because a machine with no keystore must still be able to
+ * build and test. Without this the release task would succeed quietly and produce an unsigned
+ * artifact, which is how the previously distributed checksum ended up naming a debuggable APK.
+ */
+tasks.register('verifyReleaseSigning') {
+    group = 'verification'
+    description = 'Fails unless release signing credentials are configured.'
+    doLast {
+        if (!hasReleaseSigning) {
+            throw new GradleException(
+                'Release signing is not configured. Create replica-app/keystore.properties with ' +
+                    'storeFile, storePassword, keyAlias and keyPassword. It is gitignored; see README.md.'
+            )
+        }
+    }
+}
+
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
+    dependsOn 'verifyReleaseSigning'
 }
