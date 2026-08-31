@@ -64,9 +64,16 @@ keyAlias=nono
 keyPassword=...
 ```
 
-Without that file `assembleRelease` fails at `verifyReleaseSigning` rather than quietly producing
-an unsigned APK. Signatures are v2 and v3; v1 is off because the minimum supported Android
-version is 7.0, which understands v2.
+Without that file, the tasks that write a release artifact refuse to run: `packageRelease`,
+`packageReleaseBundle` and `signReleaseBundle`. The guard is on those rather than on
+`assembleRelease`, because a dependency on the lifecycle task imposes no ordering and the unsigned
+APK was already on disk by the time it fired. Building an unsigned release on purpose takes
+`-PallowUnsignedRelease=true`, which the reproducibility check passes; note that Gradle reads
+properties from `~/.gradle/gradle.properties` too, so a value set there applies without appearing
+in the repository.
+
+Signatures are v2 and v3. v1 is off because the minimum supported Android version is 7.0, which
+understands v2.
 
 To build a release and record what produced it:
 

@@ -46,7 +46,9 @@ import com.sysadmindoc.nono.model.Route
 fun SignalApp(model: MainViewModel) {
     val state by model.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    LaunchedEffect(state.transientMessage) {
+    // Keyed on the id, not the text: two deletes in a row produce the same string, and keying on
+    // that left the second snackbar unshown while its record had already replaced the first.
+    LaunchedEffect(state.transientMessageId) {
         state.transientMessage?.let { message ->
             val undo = state.transientUndo
             val result = snackbar.showSnackbar(

@@ -479,6 +479,20 @@ interface NotificationDao {
     suspend fun readById(id: Long): NotificationEntity?
 
     /**
+     * Puts a deleted row back exactly as it was, or reports that it could not.
+     *
+     * Deliberately not [upsert]. If the app reposted that notification while the snackbar was up,
+     * a new row already holds the key, and upsert would update that row instead: the original id
+     * would never come back, the star would be dropped, and the live row's timestamp would be
+     * rewound, all reported as success.
+     *
+     * @return true when the row was restored.
+     */
+    @Transaction
+    suspend fun restore(notification: NotificationEntity): Boolean =
+        insertIfAbsent(notification) != -1L
+
+    /**
      * Replaces the raw identifiers left by an older build.
      *
      * A row whose rewritten key would collide with one already present is deleted rather than

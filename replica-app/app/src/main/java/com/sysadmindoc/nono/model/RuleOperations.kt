@@ -10,19 +10,35 @@ package com.sysadmindoc.nono.model
  */
 
 /**
- * The lowest id no saved rule is using.
+ * The next id to hand out, from a counter that only ever moves forward.
  *
- * Not `max + 1`: a rule holding [Long.MAX_VALUE], which an imported file may legitimately carry,
- * wraps that to [Long.MIN_VALUE]. Every later allocation then returns the same colliding value,
- * so saving two new rules kept only the second and duplicating one dropped the copy, both without
- * a word to the user.
+ * A rule id is not just a key into the rule list: every history record stores the ids that
+ * matched it, permanently. Handing a deleted rule's id to a new rule therefore rewrites the past,
+ * and an old record starts naming a rule that had nothing to do with it. So ids are never reused
+ * while the counter can advance.
+ *
+ * `max + 1` alone is not enough either, in both directions: it reuses an id after the highest
+ * rule is deleted, and a rule holding [Long.MAX_VALUE], which an imported file may carry, wraps
+ * it to [Long.MIN_VALUE] and collides. The counter is taken as the floor and the highest live id
+ * raises it, so a hand-edited file cannot make it collide.
+ *
+ * @param counter the store's saved counter.
+ * @return an id no live rule holds. Only when the counter is genuinely exhausted, which needs
+ * a file naming [Long.MAX_VALUE], does this fall back to reusing the lowest free id.
  */
-fun nextRuleId(rules: List<SignalRule>): Long {
+fun nextRuleId(counter: Long, rules: List<SignalRule>): Long {
+    val highest = rules.maxOfOrNull { it.id } ?: 0L
+    val candidate = if (highest == Long.MAX_VALUE) counter else maxOf(counter, highest + 1)
+    if (candidate != Long.MAX_VALUE && rules.none { it.id == candidate }) return candidate
     val taken = rules.mapTo(mutableSetOf()) { it.id }
-    var candidate = 1L
-    while (candidate in taken) candidate++
-    return candidate
+    var lowest = 1L
+    while (lowest in taken) lowest++
+    return lowest
 }
+
+/** The counter to save after [allocated] was handed out. */
+fun advanceRuleCounter(allocated: Long): Long =
+    if (allocated == Long.MAX_VALUE) allocated else allocated + 1
 
 /**
  * Decides what a Save writes: a fresh entry with an allocated id, or a replacement for the rule
@@ -32,10 +48,10 @@ fun nextRuleId(rules: List<SignalRule>): Long {
  * without an Android runtime. Nothing about the draft's enabled state is touched: a disabled rule
  * that is edited stays disabled, which the toggle on the rule card is what changes.
  */
-fun resolveSavedRule(rules: List<SignalRule>, draft: SignalRule): SignalRule {
+fun resolveSavedRule(rules: List<SignalRule>, draft: SignalRule, counter: Long): SignalRule {
     val isNew = draft.id == UNSAVED_RULE_ID || rules.none { it.id == draft.id }
     return draft.copy(
-        id = if (isNew) nextRuleId(rules) else draft.id,
+        id = if (isNew) nextRuleId(counter, rules) else draft.id,
         name = draft.name.ifBlank { "Rule ${rules.size + 1}" },
     )
 }
@@ -60,10 +76,10 @@ fun removeRule(rules: List<SignalRule>, ruleId: Long?): List<SignalRule> =
  * to save. Duplicating an imported rule used to write a brand-new saved rule naming a device
  * action and an expiry, without ever passing through validation.
  */
-fun duplicateRule(rules: List<SignalRule>, ruleId: Long?): List<SignalRule> {
+fun duplicateRule(rules: List<SignalRule>, ruleId: Long?, counter: Long): List<SignalRule> {
     val source = rules.firstOrNull { it.id == ruleId } ?: return rules
     return rules + source.copy(
-        id = nextRuleId(rules),
+        id = nextRuleId(counter, rules),
         name = "${source.name} copy",
         action = if (isExecutableAction(source.action)) RECORD_ONLY_ACTION else source.action,
         enabledFor = null,

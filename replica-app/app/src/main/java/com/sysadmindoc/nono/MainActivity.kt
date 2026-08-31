@@ -48,12 +48,16 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(requested) {
                     model.applyAuditState(requested)
                 }
-                LaunchedEffect(shortcutRuleId, state.rules) {
-                    // Waits for the rules to load: a shortcut tapped from cold start arrives
-                    // before the store has been read, and would otherwise report the rule missing.
-                    if (shortcutRuleId != NO_RULE && state.rules.isNotEmpty()) {
+                LaunchedEffect(shortcutRuleId, state.rulesLoaded) {
+                    // Waits for the store to be read, not for the list to be non-empty: a user
+                    // with no rules left would otherwise have the shortcut silently do nothing
+                    // rather than say the rule is gone, and it would fire later out of nowhere.
+                    if (shortcutRuleId != NO_RULE && state.rulesLoaded) {
                         model.openRuleFromShortcut(shortcutRuleId)
                         requestedRuleId.value = NO_RULE
+                        // Consumed, so a configuration change that recreates the Activity does
+                        // not replay it and overwrite a draft the user has since edited.
+                        intent.removeExtra(EXTRA_RULE_ID)
                     }
                 }
                 DisposableEffect(lifecycleOwner, model) {

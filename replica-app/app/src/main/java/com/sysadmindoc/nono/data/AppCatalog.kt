@@ -21,11 +21,7 @@ data class CatalogedApp(
 ) {
     /** What the row shows underneath the label. */
     val detail: String
-        get() = when {
-            !installed -> "$packageName · not installed"
-            duplicateLabel -> packageName
-            else -> packageName
-        }
+        get() = if (installed) packageName else "$packageName · not installed"
 }
 
 /**
@@ -41,6 +37,7 @@ fun mergeAppCatalog(
     launchable: List<CatalogedApp>,
     observedPackages: List<String>,
     selfPackage: String,
+    describeObserved: (String) -> CatalogedApp = ::uninstalledApp,
 ): List<CatalogedApp> {
     val byPackage = LinkedHashMap<String, CatalogedApp>()
     launchable.forEach { app ->
@@ -49,8 +46,11 @@ fun mergeAppCatalog(
     }
     observedPackages.forEach { packageName ->
         if (packageName.isBlank() || packageName == selfPackage) return@forEach
-        // An observed package the launcher query already covered keeps its label.
-        byPackage.getOrPut(packageName) { CatalogedApp(label = packageName, packageName = packageName, installed = false) }
+        // An observed package the launcher query already covered keeps its label. One it missed
+        // is looked up: an app with no launcher activity is installed, and posts notifications,
+        // which is the whole reason history is merged in here. Only a package nothing can
+        // resolve is reported as gone.
+        byPackage.getOrPut(packageName) { describeObserved(packageName) }
     }
 
     val labelCounts = byPackage.values.groupingBy { it.label.lowercase() }.eachCount()
@@ -58,6 +58,27 @@ fun mergeAppCatalog(
         .map { it.copy(duplicateLabel = (labelCounts[it.label.lowercase()] ?: 0) > 1) }
         .sortedWith(compareBy({ it.label.lowercase() }, { it.packageName }))
 }
+
+/** A package nothing on the device can resolve: it has been removed since it posted. */
+fun uninstalledApp(packageName: String): CatalogedApp =
+    CatalogedApp(label = packageName, packageName = packageName, installed = false)
+
+/**
+ * Describes a package history has seen but the launcher query missed.
+ *
+ * Two different things land here. An app with no launcher activity is installed and posts
+ * notifications, and its real label should be shown. An app the user has removed cannot be
+ * resolved at all, and is reported as gone so a rule written against it still makes sense.
+ */
+fun describeObservedApp(packageManager: PackageManager, packageName: String): CatalogedApp =
+    runCatching {
+        val info = packageManager.getApplicationInfo(packageName, 0)
+        CatalogedApp(
+            label = packageManager.getApplicationLabel(info).toString().trim().ifBlank { packageName },
+            packageName = packageName,
+            installed = true,
+        )
+    }.getOrElse { uninstalledApp(packageName) }
 
 /** Matches a catalog entry against the picker's search box. */
 fun CatalogedApp.matches(query: String): Boolean =

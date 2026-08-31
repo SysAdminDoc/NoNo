@@ -171,8 +171,13 @@ $provenance = [ordered]@{
     }
     toolchain = [ordered]@{
         java_home = $env:JAVA_HOME
-        java_version = (Invoke-NativeCapture (Join-Path $env:JAVA_HOME 'bin\java.exe') @('-version')).Lines |
-            Select-Object -First 1
+        # JAVA_HOME is set above from Resolve-JavaHome, but falling back keeps a missing value
+        # from aborting the run after both builds have already been paid for.
+        java_version = (
+            Invoke-NativeCapture (
+                if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin\java.exe' } else { 'java' }
+            ) @('-version')
+        ).Lines | Select-Object -First 1
         gradle = (Get-Content (Join-Path $root 'gradle\wrapper\gradle-wrapper.properties') |
             Select-String 'gradle-([0-9.]+)-bin' | ForEach-Object { $_.Matches[0].Groups[1].Value })
         agp = Get-CatalogVersion $catalog 'agp'

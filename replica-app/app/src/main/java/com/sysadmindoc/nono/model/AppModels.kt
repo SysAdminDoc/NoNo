@@ -164,6 +164,15 @@ const val NO_FILTER_ENGINE = "This build evaluates app and phrase conditions onl
 data class RuleStore(
     val version: Int = CURRENT_RULE_STORE_VERSION,
     val rules: List<SignalRule> = emptyList(),
+    /**
+     * The next id to hand out, saved so it survives deleting rules.
+     *
+     * History records store the rule ids that matched them permanently, so an id must never be
+     * reused. Deriving the next one from the live rules alone would recycle it the moment the
+     * highest rule was deleted, and old records would start naming a rule they never matched.
+     * A file written before this existed has no counter; decode raises it past every stored id.
+     */
+    val nextRuleId: Long = 1L,
 )
 
 const val CURRENT_RULE_STORE_VERSION = 3
@@ -374,10 +383,20 @@ data class UiState(
     val renameDraft: String = "",
     val folderDraft: String = "",
     val settings: Map<String, String> = defaultSettings,
+    /** True once the saved rules have been read from disk. An empty list is a real answer. */
+    val rulesLoaded: Boolean = false,
     val validationError: String? = null,
     val transientMessage: String? = null,
     /** Offered alongside [transientMessage] when the action it reports can be taken back. */
     val transientUndo: UndoableAction? = null,
+    /**
+     * Bumped every time a message is set, so the snackbar re-fires for an identical string.
+     *
+     * Two deletes in a row produce the same text. Without this the effect that shows the snackbar
+     * did not restart, so the second one was never offered and its undo was unreachable while the
+     * first record had already been replaced.
+     */
+    val transientMessageId: Long = 0L,
 ) {
     /** Whether the record whose menu is open is kept past the retention period. */
     val selectedHistoryStarred: Boolean
@@ -390,6 +409,19 @@ data class UiState(
     /** Content provenance of the record whose menu is open, if one is. */
     val selectedHistoryContentState: NotificationContentState?
         get() = history.firstOrNull { it.id == selectedHistoryId }?.contentState
+
+    /**
+     * Sets the snackbar message, and the undo it may carry.
+     *
+     * Every message goes through here so an undo cannot outlive the message it belongs to. It
+     * used to survive a navigation or a later unrelated message, and the Undo button then
+     * reappeared next to "Metadata copied" and resurrected a record deleted minutes earlier.
+     */
+    fun withMessage(message: String?, undo: UndoableAction? = null): UiState = copy(
+        transientMessage = message,
+        transientUndo = if (message == null) null else undo,
+        transientMessageId = transientMessageId + 1,
+    )
 
     /** True when the filters select more rows than have been loaded. */
     val hasMoreHistory: Boolean

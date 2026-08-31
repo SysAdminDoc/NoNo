@@ -21,13 +21,18 @@ val ruleJson: Json = Json {
     encodeDefaults = true
 }
 
-fun encodeRules(rules: List<SignalRule>): String =
-    ruleJson.encodeToString(RuleStore.serializer(), RuleStore(rules = normalizeRules(rules)))
+fun encodeRules(rules: List<SignalRule>, nextRuleId: Long = 1L): String {
+    val normalized = normalizeRules(rules)
+    return ruleJson.encodeToString(
+        RuleStore.serializer(),
+        RuleStore(rules = normalized, nextRuleId = raiseCounter(nextRuleId, normalized)),
+    )
+}
 
 /**
- * @return the stored rules, or null when there is nothing readable to restore.
+ * @return the stored rules and the id counter, or null when there is nothing readable to restore.
  */
-fun decodeRules(encoded: String?): List<SignalRule>? {
+fun decodeRuleStore(encoded: String?): RuleStore? {
     if (encoded.isNullOrBlank()) return null
     val store = try {
         ruleJson.decodeFromString(RuleStore.serializer(), encoded)
@@ -36,7 +41,30 @@ fun decodeRules(encoded: String?): List<SignalRule>? {
         return null
     }
     if (store.version > CURRENT_RULE_STORE_VERSION) return null
-    return migrateRules(store.version, store.rules)
+    val rules = migrateRules(store.version, store.rules)
+    return RuleStore(
+        version = CURRENT_RULE_STORE_VERSION,
+        rules = rules,
+        nextRuleId = raiseCounter(store.nextRuleId, rules),
+    )
+}
+
+/**
+ * @return the stored rules, or null when there is nothing readable to restore.
+ */
+fun decodeRules(encoded: String?): List<SignalRule>? = decodeRuleStore(encoded)?.rules
+
+/**
+ * Lifts the counter above every id present.
+ *
+ * A store written before the counter existed defaults it to 1, and a hand-edited file could set
+ * it anywhere. Either way it has to end up past the highest live id, or the next allocation would
+ * collide with a rule that already exists.
+ */
+private fun raiseCounter(counter: Long, rules: List<SignalRule>): Long {
+    val highest = rules.maxOfOrNull { it.id } ?: 0L
+    if (highest == Long.MAX_VALUE) return Long.MAX_VALUE
+    return maxOf(counter, highest + 1)
 }
 
 /**

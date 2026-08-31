@@ -113,6 +113,34 @@ class RuleCodecTest {
     }
 
     @Test
+    fun `the id counter survives deleting the highest rule`() {
+        // The whole point of persisting it. History stores the ids that matched a record, so the
+        // deleted rule's id must not come back and start naming an unrelated rule.
+        val three = listOf(SignalRule(id = 1L), SignalRule(id = 2L), SignalRule(id = 3L))
+        val saved = encodeRules(three, nextRuleId = 4L)
+
+        val afterDeletingTheHighest = encodeRules(three.dropLast(1), nextRuleId = decodeRuleStore(saved)!!.nextRuleId)
+
+        assertEquals(4L, decodeRuleStore(afterDeletingTheHighest)?.nextRuleId)
+    }
+
+    @Test
+    fun `a store written before the counter existed gets one past its highest id`() {
+        val legacy = """{"version":3,"rules":[{"id":7,"name":"Seven","app":"any app","phrase":"a","action":"Mute"}]}"""
+
+        assertEquals(8L, decodeRuleStore(legacy)?.nextRuleId)
+    }
+
+    @Test
+    fun `a counter behind the rules is raised rather than allowed to collide`() {
+        // A hand-edited file could name any counter. Trusting one below the highest live id would
+        // hand a new rule an id that already exists.
+        val encoded = """{"version":3,"nextRuleId":2,"rules":[{"id":9,"name":"Nine","app":"any app","phrase":"a","action":"Mute"}]}"""
+
+        assertEquals(10L, decodeRuleStore(encoded)?.nextRuleId)
+    }
+
+    @Test
     fun `round trips an empty store`() {
         assertEquals(emptyList<SignalRule>(), decodeRules(encodeRules(emptyList())))
     }

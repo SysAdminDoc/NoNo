@@ -106,6 +106,39 @@ class MatchedRuleSummaryTest {
     }
 
     @Test
+    fun theHeadlineNeverClaimsRulesWereCheckedWhenTheyWereNot() {
+        // "No rule matched" asserts the rules were run. That is untrue for three of the five
+        // states, and the detail line two rows below said so while the headline contradicted it.
+        val notEvaluated = captureAttribution(HistoryRecord(id = 1L, matchState = RuleMatchState.NOT_EVALUATED), rules)
+        val notLoaded = captureAttribution(HistoryRecord(id = 1L, matchState = RuleMatchState.RULES_NOT_LOADED), rules)
+        val hidden = captureAttribution(HistoryRecord(id = 1L, matchState = RuleMatchState.CONTENT_HIDDEN), rules)
+
+        assertEquals("No rules were saved yet", notEvaluated.headline)
+        assertEquals("Arrived before the rules were read", notLoaded.headline)
+        assertEquals("No content arrived to test", hidden.headline)
+        // Only the state that really did check them may say so.
+        assertEquals(
+            "No rule matched",
+            captureAttribution(HistoryRecord(id = 1L, matchState = RuleMatchState.EVALUATED), rules).headline,
+        )
+    }
+
+    @Test
+    fun aRecordWithMatchesReadsTheSameOnBothScreens() {
+        // A rule matching on the app alone matches a notification that carried no text, so this
+        // state can legitimately have ids. The row said "not matched" while the Activity screen
+        // named two matching rules.
+        val record = HistoryRecord(
+            id = 1L,
+            matchState = RuleMatchState.CONTENT_HIDDEN,
+            matchedRuleIds = listOf(7L, 9L),
+        )
+
+        assertEquals("Matched 2 rules", captureAttribution(record, rules).headline)
+        assertEquals("Would match: Chat, Invoices", describeMatchedRules(record, rules))
+    }
+
+    @Test
     fun aGroupSummarySaysNoRuleWasTestedRatherThanNoneMatched() {
         val summary = HistoryRecord(id = 1L, matchState = RuleMatchState.GROUP_SUMMARY, isGroupSummary = true)
 

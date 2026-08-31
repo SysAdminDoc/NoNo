@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.sysadmindoc.nono.audit.auditStateFor
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.BoundedReadResult
+import com.sysadmindoc.nono.data.describeObservedApp
 import com.sysadmindoc.nono.data.loadLaunchableApps
 import com.sysadmindoc.nono.data.mergeAppCatalog
 import com.sysadmindoc.nono.data.ConflictResolution
@@ -35,6 +36,7 @@ import com.sysadmindoc.nono.data.toMetrics
 import com.sysadmindoc.nono.data.toHistoryRecord
 import com.sysadmindoc.nono.data.HistoryExport
 import com.sysadmindoc.nono.data.decodeMatchedRuleIds
+import com.sysadmindoc.nono.data.decodeRuleStore
 import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.encodeRules
 import com.sysadmindoc.nono.model.HistoryRecord
@@ -49,7 +51,7 @@ import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.applyToRule
 import com.sysadmindoc.nono.model.duplicateRule as duplicateRuleIn
-import com.sysadmindoc.nono.model.nextRuleId as nextRuleIdFor
+import com.sysadmindoc.nono.model.advanceRuleCounter
 import com.sysadmindoc.nono.model.normalizeMatchType
 import com.sysadmindoc.nono.model.removeRule
 import com.sysadmindoc.nono.model.resolveSavedRule
@@ -109,6 +111,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Held between a delete and the snackbar action that can put it back. */
     private var deletedHistoryRecord: com.sysadmindoc.nono.data.NotificationEntity? = null
 
+    /**
+     * The next rule id to hand out. Saved with the rules, because history stores the ids that
+     * matched it and a reused id would rewrite what an old record says happened.
+     */
+    private var nextRuleIdCounter = 1L
+
     // Shared with the notification listener, which evaluates rules as notifications arrive.
     private val dataStore: DataStore<Preferences> = SignalPreferences.get(application)
     private val historyDatabase = SignalDatabase.get(application)
@@ -147,7 +155,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 null
             }
-            val rule = decodeRules(values[Keys.Rules]) ?: listOfNotNull(legacyRule)
+            val ruleStore = decodeRuleStore(values[Keys.Rules])
+            val rule = ruleStore?.rules ?: listOfNotNull(legacyRule)
+            nextRuleIdCounter = ruleStore?.nextRuleId ?: ((rule.maxOfOrNull { it.id } ?: 0L) + 1L)
             val stored = defaultSettings.mapValues { (label, default) -> values[settingKey(label)] ?: default }
             // An older build could persist a storage label this one does not offer. Resolving it
             // here means the dialog shows the choice actually in force rather than nothing.
@@ -160,8 +170,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 route = if (values[Keys.Onboarding] == true) Route.ROOT else Route.ONBOARDING,
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
                 rules = rule,
+                rulesLoaded = true,
                 settings = settings,
                 transientMessage = if (SignalPreferences.consumeCorruptionRecovery()) SETTINGS_RESET_MESSAGE else null,
+                transientUndo = null,
             )
             auditOverride?.let(::applyAuditState)
         }
@@ -182,8 +194,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             historyDatabase.notificationDao().observeObservedPackages()
                 .catch { emit(emptyList()) }
                 .collect { observed ->
-                    val catalog = withContext(Dispatchers.Default) {
-                        mergeAppCatalog(launchable, observed, application.packageName)
+                    val catalog = withContext(Dispatchers.IO) {
+                        mergeAppCatalog(launchable, observed, application.packageName) { packageName ->
+                            describeObservedApp(application.packageManager, packageName)
+                        }
                     }
                     _state.value = _state.value.copy(appCatalog = catalog)
                 }
@@ -325,7 +339,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 dataStore.edit(transform)
             } catch (error: IOException) {
-                _state.value = _state.value.copy(transientMessage = "Could not save to storage.")
+                _state.value = _state.value.copy(transientMessage = "Could not save to storage.", transientUndo = null)
             }
         }
     }
@@ -426,15 +440,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         CaptureGate.setPaused(getApplication(), paused)
     }
     fun beginExport() {
-        _state.value = _state.value.copy(overlay = Overlay.TRANSFER_EXPORT_PASSPHRASE, transientMessage = null)
+        _state.value = _state.value.copy(overlay = Overlay.TRANSFER_EXPORT_PASSPHRASE, transientMessage = null, transientUndo = null)
     }
     fun requestExport(passphrase: String) {
         if (passphrase.isBlank()) {
-            _state.value = _state.value.copy(transientMessage = "Enter a passphrase to encrypt the rule file.")
+            _state.value = _state.value.copy(transientMessage = "Enter a passphrase to encrypt the rule file.", transientUndo = null)
             return
         }
         val rules = _state.value.rules
-        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Preparing encrypted rule export…")
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Preparing encrypted rule export…", transientUndo = null)
         viewModelScope.launch(Dispatchers.Default) {
             val chars = passphrase.toCharArray()
             val result = runCatching { RuleTransfer.exportRules(rules, chars) }
@@ -447,6 +461,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             transferExportRequest = _state.value.transferExportRequest + 1,
                             transferExportIsHistory = false,
                             transientMessage = null,
+                            transientUndo = null,
                         )
                     },
                     onFailure = { _state.value = _state.value.copy(transientMessage = "Could not prepare the encrypted rule file.") },
@@ -462,7 +477,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportIsHistory = false
         pendingExportRowCount = 0
         if (payload == null) {
-            _state.value = _state.value.copy(transientMessage = "The export expired; try again.")
+            _state.value = _state.value.copy(transientMessage = "The export expired; try again.", transientUndo = null)
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
@@ -498,7 +513,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * confused. Only stored metadata is written, never notification content.
      */
     fun beginHistoryExport() {
-        _state.value = _state.value.copy(transientMessage = "Preparing the history export…")
+        _state.value = _state.value.copy(transientMessage = "Preparing the history export…", transientUndo = null)
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching {
                 historyDatabase.notificationDao().readAllForExport().map { it.toHistoryRecord() }
@@ -507,7 +522,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 result.fold(
                     onSuccess = { records ->
                         if (records.isEmpty()) {
-                            _state.value = _state.value.copy(transientMessage = "There is no history to export yet.")
+                            _state.value = _state.value.copy(transientMessage = "There is no history to export yet.", transientUndo = null)
                             return@fold
                         }
                         pendingExportPayload = HistoryExport.toCsv(records)
@@ -517,10 +532,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             transferExportRequest = _state.value.transferExportRequest + 1,
                             transferExportIsHistory = true,
                             transientMessage = null,
+                            transientUndo = null,
                         )
                     },
                     onFailure = {
-                        _state.value = _state.value.copy(transientMessage = "History could not be read for export.")
+                        _state.value = _state.value.copy(transientMessage = "History could not be read for export.", transientUndo = null)
                     },
                 )
             }
@@ -531,7 +547,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportPayload = null
         pendingExportIsHistory = false
         pendingExportRowCount = 0
-        _state.value = _state.value.copy(transientMessage = "Export cancelled.")
+        _state.value = _state.value.copy(transientMessage = "Export cancelled.", transientUndo = null)
     }
     /**
      * Reads and parses a chosen rule file entirely off the main thread.
@@ -541,13 +557,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * fit in memory.
      */
     fun beginImport(uri: Uri) {
-        _state.value = _state.value.copy(transientMessage = "Reading rule file…")
+        _state.value = _state.value.copy(transientMessage = "Reading rule file…", transientUndo = null)
         viewModelScope.launch(Dispatchers.IO) {
             val app = getApplication<Application>()
             val declared = declaredSize(uri)
             if (declared != null && declared > RuleTransferLimits.MAX_ENCODED_BYTES) {
                 withContext(Dispatchers.Main.immediate) {
-                    _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message)
+                    _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message, transientUndo = null)
                 }
                 return@launch
             }
@@ -557,13 +573,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // volunteered a size.
                 BoundedReadResult.TooLarge -> {
                     withContext(Dispatchers.Main.immediate) {
-                        _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message)
+                        _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message, transientUndo = null)
                     }
                     return@launch
                 }
                 BoundedReadResult.Unreadable -> {
                     withContext(Dispatchers.Main.immediate) {
-                        _state.value = _state.value.copy(transientMessage = "Import failed; that file could not be read.")
+                        _state.value = _state.value.copy(transientMessage = "Import failed; that file could not be read.", transientUndo = null)
                     }
                     return@launch
                 }
@@ -587,12 +603,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         when (result) {
             is RuleImportResult.NeedsPassphrase -> {
                 pendingImportEncoded = encoded
-                _state.value = _state.value.copy(overlay = Overlay.TRANSFER_IMPORT_PASSPHRASE, transientMessage = null)
+                _state.value = _state.value.copy(overlay = Overlay.TRANSFER_IMPORT_PASSPHRASE, transientMessage = null, transientUndo = null)
             }
             is RuleImportResult.Success -> showImportPreview(result.rules)
             RuleImportResult.Cancelled -> cancelTransfer()
             is RuleImportResult.InvalidFile ->
-                _state.value = _state.value.copy(transientMessage = result.rejection.message)
+                _state.value = _state.value.copy(transientMessage = result.rejection.message, transientUndo = null)
         }
     }
     fun submitImportPassphrase(passphrase: String) {
@@ -615,10 +631,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     RuleImportResult.NeedsPassphrase -> _state.value = _state.value.copy(
                         overlay = Overlay.NONE,
                         transientMessage = ImportRejection.WRONG_PASSPHRASE.message,
+                        transientUndo = null,
                     )
                     is RuleImportResult.InvalidFile -> _state.value = _state.value.copy(
                         overlay = Overlay.NONE,
                         transientMessage = result.rejection.message,
+                        transientUndo = null,
                     )
                 }
             }
@@ -640,6 +658,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     transferAdditions = preview.additions.size,
                     transferConflicts = preview.conflicts.size,
                     transientMessage = null,
+                    transientUndo = null,
                 )
             }
         }
@@ -655,7 +674,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val preview = RuleTransfer.preview(current, incoming)
             val resolutions = preview.conflicts.associate { it.existing.id to resolution }
             val updated = RuleTransfer.commit(current, incoming, resolutions)
-            val encoded = updated?.let(::encodeRules)
+            // An import can bring ids above the counter; encodeRules lifts it past them so the
+            // next rule created cannot collide with one that just arrived.
+            val counter = maxOf(nextRuleIdCounter, (updated?.maxOfOrNull { it.id } ?: 0L))
+            val encoded = updated?.let { encodeRules(it, counter) }
             withContext(Dispatchers.Main.immediate) {
                 if (updated == null || encoded == null) {
                     cancelTransfer()
@@ -667,7 +689,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     transferAdditions = 0,
                     transferConflicts = 0,
                     transientMessage = "Imported ${preview.additions.size} new rule(s); notification history was not imported.",
+                    transientUndo = null,
                 )
+                // Keep the in-memory counter in step with what was just written.
+                nextRuleIdCounter = decodeRuleStore(encoded)?.nextRuleId ?: nextRuleIdCounter
                 writeEncodedRules(encoded)
             }
         }
@@ -676,7 +701,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportPayload = null
         pendingImportEncoded = null
         pendingImportRules = null
-        _state.value = _state.value.copy(overlay = Overlay.NONE, transferAdditions = 0, transferConflicts = 0, transientMessage = "Transfer cancelled.")
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transferAdditions = 0, transferConflicts = 0, transientMessage = "Transfer cancelled.", transientUndo = null)
     }
     fun retryHistory() { historyRetry.value += 1 }
     fun setHistoryActivityTab(tab: String) { _state.value = _state.value.copy(historyActivityTab = tab) }
@@ -697,6 +722,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _state.value = _state.value.copy(
                 overlay = Overlay.NONE,
                 transientMessage = "That app is not installed, or it has no screen to open.",
+                transientUndo = null,
             )
             return
         }
@@ -706,6 +732,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(
             overlay = Overlay.NONE,
             transientMessage = if (launched) null else "That app could not be opened.",
+            transientUndo = null,
         )
     }
 
@@ -717,6 +744,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(
             overlay = Overlay.NONE,
             transientMessage = if (starred) "Kept until you unstar it." else "No longer kept.",
+            transientUndo = null,
         )
     }
 
@@ -734,13 +762,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 dao.readById(historyId)?.also { dao.deleteById(historyId) }
             }.getOrNull()
             _state.value = if (removed == null) {
-                _state.value.copy(transientMessage = "That record could not be deleted.")
+                _state.value.withMessage("That record could not be deleted.")
             } else {
+                // A second delete before the first snackbar resolves would otherwise overwrite
+                // this slot and lose the earlier record with no way back and nothing said.
+                deletedHistoryRecord?.let { pending ->
+                    runCatching { historyDatabase.notificationDao().upsert(pending) }
+                }
                 deletedHistoryRecord = removed
-                _state.value.copy(
-                    transientMessage = "Record deleted.",
-                    transientUndo = UndoableAction.RESTORE_DELETED_HISTORY,
-                )
+                _state.value.withMessage("Record deleted.", UndoableAction.RESTORE_DELETED_HISTORY)
             }
         }
     }
@@ -752,14 +782,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val record = deletedHistoryRecord
                 deletedHistoryRecord = null
                 if (record == null) {
-                    _state.value = _state.value.copy(transientMessage = null, transientUndo = null)
+                    _state.value = _state.value.withMessage(null)
                     return
                 }
                 viewModelScope.launch {
-                    val restored = runCatching { historyDatabase.notificationDao().upsert(record) }.isSuccess
-                    _state.value = _state.value.copy(
-                        transientMessage = if (restored) null else "That record could not be restored.",
-                        transientUndo = null,
+                    // A plain insert, not an upsert: a restore has to bring the row back as it
+                    // was. If the app reposted that notification while the snackbar was up, the
+                    // update path would keep the live row's identity and drop the star instead.
+                    val restored = runCatching {
+                        historyDatabase.notificationDao().restore(record)
+                    }.getOrDefault(false)
+                    _state.value = _state.value.withMessage(
+                        if (restored) null else "That record could not be restored; it is back on this device.",
                     )
                 }
             }
@@ -768,19 +802,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Copies the metadata a record actually holds. Never notification content, because none is stored. */
     fun copyHistoryMetadata(historyId: Long) {
-        val record = _state.value.history.firstOrNull { it.id == historyId }
-        if (record == null) {
-            _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "That record is no longer available.")
-            return
+        _state.value = _state.value.copy(overlay = Overlay.NONE)
+        viewModelScope.launch {
+            // Read by id like the delete path, not from the loaded page: on a busy device the
+            // record can fall off the page between opening the menu and tapping Copy, and Copy
+            // would then refuse a record Delete would still handle.
+            val record = runCatching {
+                historyDatabase.notificationDao().readById(historyId)?.toHistoryRecord()
+            }.getOrNull()
+            if (record == null) {
+                _state.value = _state.value.withMessage("That record is no longer available.")
+                return@launch
+            }
+            val clipboard = getApplication<Application>().getSystemService(ClipboardManager::class.java)
+            val copied = clipboard != null && runCatching {
+                clipboard.setPrimaryClip(ClipData.newPlainText("NoNo record", historyMetadataClipboardText(record)))
+            }.isSuccess
+            _state.value = _state.value.withMessage(
+                if (copied) "Metadata copied." else "The clipboard is not available.",
+            )
         }
-        val clipboard = getApplication<Application>().getSystemService(ClipboardManager::class.java)
-        val copied = runCatching {
-            clipboard?.setPrimaryClip(ClipData.newPlainText("NoNo record", historyMetadataClipboardText(record)))
-        }.isSuccess && clipboard != null
-        _state.value = _state.value.copy(
-            overlay = Overlay.NONE,
-            transientMessage = if (copied) "Metadata copied." else "The clipboard is not available.",
-        )
     }
 
     /**
@@ -794,11 +835,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         val rule = _state.value.rules.firstOrNull { it.id == ruleId }
         if (rule == null) {
-            _state.value = _state.value.copy(transientMessage = "That rule is no longer saved.")
+            _state.value = _state.value.copy(transientMessage = "That rule is no longer saved.", transientUndo = null)
             return
         }
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(app)) {
-            _state.value = _state.value.copy(transientMessage = "This launcher does not support pinned shortcuts.")
+            _state.value = _state.value.copy(transientMessage = "This launcher does not support pinned shortcuts.", transientUndo = null)
             return
         }
         val shortcut = ShortcutInfoCompat.Builder(app, "rule-${rule.id}")
@@ -836,6 +877,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 route = Route.ROOT,
                 rootTab = RootTab.RULES,
                 transientMessage = "That shortcut points at a rule that no longer exists.",
+                transientUndo = null,
             )
         } else {
             _state.value.copy(route = Route.RULE_BUILDER, overlay = Overlay.NONE, draft = rule, selectedRuleId = rule.id)
@@ -844,7 +886,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Feedback for the copy action in the content-hidden explainer. */
     fun reportCommandCopied() {
-        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Command copied.")
+        _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Command copied.", transientUndo = null)
     }
 
     fun setRenameDraft(text: String) { _state.value = _state.value.copy(renameDraft = text) }
@@ -873,6 +915,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             selectedRuleId = null,
             validationError = null,
             transientMessage = null,
+            transientUndo = null,
         )
     }
 
@@ -880,7 +923,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val record = _state.value.history.firstOrNull { it.id == _state.value.selectedHistoryId }
         if (record == null) {
             newRule()
-            _state.value = _state.value.copy(transientMessage = "That history entry is no longer available.")
+            _state.value = _state.value.copy(transientMessage = "That history entry is no longer available.", transientUndo = null)
             return
         }
         val derived = deriveRuleDraft(record)
@@ -898,6 +941,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             phraseDraft = if (derived.phrase == "anything") "" else derived.phrase,
             validationError = null,
             transientMessage = derived.provenanceMessage,
+            transientUndo = null,
         )
     }
 
@@ -930,11 +974,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val current = _state.value.draft
         val error = validateRule(current)
         if (error != null) {
-            _state.value = _state.value.copy(validationError = error, transientMessage = error)
+            _state.value = _state.value.copy(validationError = error, transientMessage = error, transientUndo = null)
             return
         }
         val existing = _state.value.rules
-        val draft = resolveSavedRule(existing, current)
+        val draft = resolveSavedRule(existing, current, nextRuleIdCounter)
+        if (draft.id != current.id) nextRuleIdCounter = advanceRuleCounter(draft.id)
         val rules = upsertRule(existing, draft)
         _state.value = _state.value.copy(
             route = Route.ROOT,
@@ -943,6 +988,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             selectedRuleId = draft.id,
             validationError = null,
             transientMessage = "Rule saved",
+            transientUndo = null,
         )
         persistRules()
     }
@@ -997,13 +1043,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun duplicateRule() {
         val existing = _state.value.rules
-        val rules = duplicateRuleIn(existing, _state.value.selectedRuleId)
+        val rules = duplicateRuleIn(existing, _state.value.selectedRuleId, nextRuleIdCounter)
+        rules.lastOrNull()?.takeIf { rules.size != existing.size }?.let {
+            nextRuleIdCounter = advanceRuleCounter(it.id)
+        }
         if (rules.size == existing.size) return
         _state.value = _state.value.copy(
             rules = rules,
             overlay = Overlay.NONE,
             selectedRuleId = rules.last().id,
             transientMessage = "Rule duplicated",
+            transientUndo = null,
         )
         persistRules()
     }
@@ -1025,7 +1075,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteAllRules() {
         if (_state.value.rules.isEmpty()) {
-            _state.value = _state.value.copy(transientMessage = "There are no rules to delete.")
+            _state.value = _state.value.copy(transientMessage = "There are no rules to delete.", transientUndo = null)
             return
         }
         val removed = _state.value.rules.size
@@ -1034,6 +1084,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             selectedRuleId = null,
             overlay = Overlay.NONE,
             transientMessage = if (removed == 1) "Deleted 1 rule" else "Deleted $removed rules",
+            transientUndo = null,
         )
         persistRules()
     }
@@ -1073,10 +1124,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(history = listOf(HistoryRecord()), rootTab = RootTab.HISTORY, route = Route.ROOT)
     }
 
-    fun clearTransient() { _state.value = _state.value.copy(transientMessage = null) }
-    fun showMessage(message: String) { _state.value = _state.value.copy(transientMessage = message) }
+    fun clearTransient() { _state.value = _state.value.withMessage(null) }
+    fun showMessage(message: String) { _state.value = _state.value.withMessage(message) }
 
-    private fun persistRules() = writeEncodedRules(encodeRules(_state.value.rules))
+    private fun persistRules() = writeEncodedRules(encodeRules(_state.value.rules, nextRuleIdCounter))
 
     /** Split out so a caller that already encoded off the main thread does not encode twice. */
     private fun writeEncodedRules(encoded: String) {
@@ -1095,7 +1146,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun applyAuditState(id: String) {
         if (id.isBlank()) return
-        val base = _state.value.copy(auditState = id, overlay = Overlay.NONE, transientMessage = null)
+        val base = _state.value.copy(auditState = id, overlay = Overlay.NONE, transientMessage = null, transientUndo = null)
         // Release builds link a no-op resolver, so the QA override cannot exist there.
         val resolved = auditStateFor(base, id) ?: return
         auditOverride = id
@@ -1121,3 +1172,4 @@ private data class HistoryLoadResult(
     val records: List<HistoryRecord> = emptyList(),
     val error: String? = null,
 )
+

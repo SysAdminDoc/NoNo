@@ -39,18 +39,18 @@ class RuleOperationsTest {
 
     @Test
     fun `duplicating a rule appends a copy with a fresh id`() {
-        val expanded = duplicateRule(rules, 2L)
+        val expanded = duplicateRule(rules, 2L, counter = 4L)
 
         assertEquals(4, expanded.size)
         assertEquals(4L, expanded.last().id)
         assertEquals("Second copy", expanded.last().name)
-        assertEquals(rules, duplicateRule(rules, 99L))
+        assertEquals(rules, duplicateRule(rules, 99L, counter = 4L))
     }
 
     @Test
     fun `duplicate then toggle the copy preserves every original`() {
         // The exact sequence that used to destroy the first rule.
-        val expanded = duplicateRule(rules, 1L)
+        val expanded = duplicateRule(rules, 1L, counter = 4L)
         val copyId = expanded.last().id
         val toggled = applyToRule(expanded, copyId) { it.copy(enabled = false) }
 
@@ -72,35 +72,64 @@ class RuleOperationsTest {
     }
 
     @Test
-    fun `the next id is the lowest one no rule is using`() {
-        assertEquals(4L, nextRuleId(rules))
-        assertEquals(1L, nextRuleId(emptyList()))
-        // The lowest free id, not one past the highest: gaps get reused.
-        assertEquals(1L, nextRuleId(listOf(SignalRule(id = 10L))))
-        assertEquals(2L, nextRuleId(listOf(SignalRule(id = 1L), SignalRule(id = 3L))))
+    fun `the next id comes from the counter and clears every live rule`() {
+        assertEquals(4L, nextRuleId(counter = 4L, rules = rules))
+        assertEquals(1L, nextRuleId(counter = 1L, rules = emptyList()))
+        // A counter behind the live rules is raised past them rather than colliding.
+        assertEquals(11L, nextRuleId(counter = 1L, rules = listOf(SignalRule(id = 10L))))
+    }
+
+    @Test
+    fun `a deleted rule's id is never handed to a new one`() {
+        // History records store the ids that matched them permanently. Recycling an id makes an
+        // old record name a rule that had nothing to do with it, which is worse than a gap.
+        val afterDeletingTheHighest = listOf(SignalRule(id = 1L), SignalRule(id = 2L))
+        val counterAfterThreeRules = 4L
+
+        val allocated = nextRuleId(counterAfterThreeRules, afterDeletingTheHighest)
+
+        assertEquals("the id of the deleted rule 3 must not come back", 4L, allocated)
+    }
+
+    @Test
+    fun `the counter keeps moving through repeated create and delete`() {
+        var counter = 1L
+        var live = emptyList<SignalRule>()
+        val handedOut = mutableListOf<Long>()
+
+        repeat(20) {
+            val id = nextRuleId(counter, live)
+            handedOut += id
+            counter = advanceRuleCounter(id)
+            // Create it, then immediately delete it: the naive schemes reuse the id here.
+            live = live + SignalRule(id = id)
+            live = removeRule(live, id)
+        }
+
+        assertEquals("every id handed out must be distinct", 20, handedOut.distinct().size)
     }
 
     @Test
     fun `a rule holding the largest possible id does not wrap the next one`() {
-        // max + 1 wraps to Long.MIN_VALUE. Every later allocation then returned that same value,
-        // so saving two new rules kept only the second and duplicating one dropped the copy.
+        // max + 1 wraps to Long.MIN_VALUE, and every later allocation returned that same value.
         val extremes = listOf(
             SignalRule(id = Long.MAX_VALUE, name = "MAX"),
             SignalRule(id = Long.MIN_VALUE, name = "MIN"),
         )
 
-        val allocated = nextRuleId(extremes)
+        val allocated = nextRuleId(counter = 1L, rules = extremes)
 
-        assertEquals(1L, allocated)
-        assertTrue(extremes.none { it.id == allocated })
+        assertTrue("must not collide with a live rule", extremes.none { it.id == allocated })
     }
 
     @Test
     fun `two new rules saved in a row do not collide`() {
         val existing = listOf(SignalRule(id = Long.MAX_VALUE, name = "MAX", action = RECORD_ONLY_ACTION))
 
-        val first = upsertRule(existing, resolveSavedRule(existing, SignalRule(name = "First", action = RECORD_ONLY_ACTION)))
-        val second = upsertRule(first, resolveSavedRule(first, SignalRule(name = "Second", action = RECORD_ONLY_ACTION)))
+        val firstSaved = resolveSavedRule(existing, SignalRule(name = "First", action = RECORD_ONLY_ACTION), counter = 1L)
+        val first = upsertRule(existing, firstSaved)
+        val secondSaved = resolveSavedRule(first, SignalRule(name = "Second", action = RECORD_ONLY_ACTION), advanceRuleCounter(firstSaved.id))
+        val second = upsertRule(first, secondSaved)
 
         assertEquals(3, second.size)
         assertEquals(listOf("MAX", "First", "Second"), second.map { it.name })
@@ -197,7 +226,7 @@ class RuleOperationsTest {
         // the capabilities this build refuses to save rather than copying them forward.
         val imported = listOf(SignalRule(id = 1L, name = "From a file", action = "Mute", enabledFor = "1 hour"))
 
-        val copy = duplicateRule(imported, 1L).last()
+        val copy = duplicateRule(imported, 1L, counter = 2L).last()
 
         assertEquals(RECORD_ONLY_ACTION, copy.action)
         assertNull(copy.enabledFor)
@@ -210,7 +239,7 @@ class RuleOperationsTest {
     fun `duplicating an ordinary rule copies it unchanged apart from its identity`() {
         val ordinary = listOf(SignalRule(id = 1L, name = "Mine", phrase = "invoice", action = RECORD_ONLY_ACTION))
 
-        val copy = duplicateRule(ordinary, 1L).last()
+        val copy = duplicateRule(ordinary, 1L, counter = 2L).last()
 
         assertEquals("Mine copy", copy.name)
         assertEquals("invoice", copy.phrase)
@@ -239,7 +268,7 @@ class RuleOperationsTest {
         // overwrote whichever rule already held that id.
         val suggestion = SignalRule(name = "Quiet group chats", app = "Messages", phrase = "group", action = "Mute")
 
-        val saved = resolveSavedRule(rules, suggestion)
+        val saved = resolveSavedRule(rules, suggestion, counter = 4L)
         val updated = upsertRule(rules, saved)
 
         assertEquals(4L, saved.id)
@@ -252,9 +281,11 @@ class RuleOperationsTest {
     fun `an allocated id cannot collide with a saved rule`() {
         val gapped = listOf(SignalRule(id = 2L, name = "Two"), SignalRule(id = 9L, name = "Nine"))
 
-        val saved = resolveSavedRule(gapped, SignalRule(name = "New"))
+        val saved = resolveSavedRule(gapped, SignalRule(name = "New"), counter = 10L)
 
-        assertEquals(1L, saved.id)
+        // The counter, raised past the highest live id. Gaps are left alone: an id below the
+        // counter may already appear in a history record.
+        assertEquals(10L, saved.id)
         assertTrue(gapped.none { it.id == saved.id })
     }
 
@@ -262,7 +293,7 @@ class RuleOperationsTest {
     fun `editing a disabled rule leaves it disabled`() {
         val disabled = listOf(SignalRule(id = 1L, name = "Off rule", enabled = false))
 
-        val saved = resolveSavedRule(disabled, disabled.first().copy(phrase = "invoice", action = "Mute"))
+        val saved = resolveSavedRule(disabled, disabled.first().copy(phrase = "invoice", action = "Mute"), counter = 2L)
         val updated = upsertRule(disabled, saved)
 
         assertEquals(1, updated.size)
@@ -273,7 +304,7 @@ class RuleOperationsTest {
 
     @Test
     fun `editing a saved rule replaces it rather than adding a copy`() {
-        val saved = resolveSavedRule(rules, rules[1].copy(name = "Renamed"))
+        val saved = resolveSavedRule(rules, rules[1].copy(name = "Renamed"), counter = 4L)
         val updated = upsertRule(rules, saved)
 
         assertEquals(3, updated.size)
@@ -283,7 +314,7 @@ class RuleOperationsTest {
 
     @Test
     fun `a blank name is filled in without touching the id`() {
-        val saved = resolveSavedRule(rules, SignalRule(name = "", action = "Mute"))
+        val saved = resolveSavedRule(rules, SignalRule(name = "", action = "Mute"), counter = 4L)
 
         assertEquals("Rule 4", saved.name)
         assertEquals(4L, saved.id)

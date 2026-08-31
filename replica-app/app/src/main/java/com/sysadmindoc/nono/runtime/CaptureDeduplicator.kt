@@ -2,6 +2,9 @@ package com.sysadmindoc.nono.runtime
 
 import com.sysadmindoc.nono.model.RuleMatchState
 
+/** ASCII 0x1F. It cannot occur in a package name, a pseudonym, or a platform enum name. */
+private const val FIELD_SEPARATOR = "\u001F"
+
 /** How long two identical posts of one notification count as the same capture. */
 const val CAPTURE_DEDUPLICATION_WINDOW_MILLIS = 2_000L
 
@@ -29,8 +32,10 @@ fun captureFingerprint(
     sanitized.isOngoing.toString(),
     matchState.name,
     matchedRuleIds.sorted().joinToString(","),
-    // Separated, so two different field splits cannot concatenate to the same string.
-).joinToString(" ")
+    // A unit separator, not a space: a category or a label can contain a space, and two
+    // different field splits would then concatenate to the same fingerprint. This byte cannot
+    // appear in any of these values.
+).joinToString(FIELD_SEPARATOR)
 
 /**
  * Collapses a burst of identical posts into one capture.

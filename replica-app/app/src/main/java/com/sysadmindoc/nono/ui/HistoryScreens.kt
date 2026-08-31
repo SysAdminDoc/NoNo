@@ -533,11 +533,17 @@ internal fun captureAttribution(record: HistoryRecord, rules: List<SignalRule>):
         val rule = rules.firstOrNull { it.id == id }
         AttributedRule(id = id, name = rule?.name ?: "Deleted rule $id", deleted = rule == null)
     }
+    // Derived from the stored state, not just from whether ids are present. "No rule matched"
+    // is a claim that the rules were checked, which is untrue for three of the five states, and
+    // a state that did produce ids must not be summarised as if it had not.
     val headline = when {
-        record.matchState == RuleMatchState.GROUP_SUMMARY -> "Group summary: no rule was tested"
-        attributed.isEmpty() -> "No rule matched"
         attributed.size == 1 -> "Matched ${attributed.single().name}"
-        else -> "Matched ${attributed.size} rules"
+        attributed.isNotEmpty() -> "Matched ${attributed.size} rules"
+        record.matchState == RuleMatchState.GROUP_SUMMARY -> "Group summary: no rule was tested"
+        record.matchState == RuleMatchState.NOT_EVALUATED -> "No rules were saved yet"
+        record.matchState == RuleMatchState.RULES_NOT_LOADED -> "Arrived before the rules were read"
+        record.matchState == RuleMatchState.CONTENT_HIDDEN -> "No content arrived to test"
+        else -> "No rule matched"
     }
     val evaluationDetail = when (record.matchState) {
         RuleMatchState.NOT_EVALUATED -> "No rules were saved when this arrived."
@@ -602,13 +608,20 @@ internal fun describeGroupSummary(origin: GroupSummaryOrigin): String = when (or
     GroupSummaryOrigin.UNKNOWN -> "Group summary, origin unknown. Not counted as a notification."
 }
 
+/**
+ * The one-line summary on a history row.
+ *
+ * Stored ids come first: a rule matching on the app alone matches a notification that carried no
+ * text, so a CONTENT_HIDDEN record can legitimately have them. Reading the state first made this
+ * row say "not matched" about a record the Activity screen named two matching rules for.
+ */
 internal fun describeMatchedRules(record: HistoryRecord, rules: List<SignalRule>): String? = when {
-    record.matchState == RuleMatchState.CONTENT_HIDDEN -> "Not matched: no content arrived to test"
-    record.matchedRuleIds.isEmpty() -> null
-    else -> {
+    record.matchedRuleIds.isNotEmpty() -> {
         val names = record.matchedRuleIds.map { id -> rules.firstOrNull { it.id == id }?.name ?: "deleted rule $id" }
         "Would match: " + names.joinToString(", ")
     }
+    record.matchState == RuleMatchState.CONTENT_HIDDEN -> "Not matched: no content arrived to test"
+    else -> null
 }
 
 internal const val NO_DISMISSAL_STATE = "this build runs no actions, so nothing ever records a dismissal"
