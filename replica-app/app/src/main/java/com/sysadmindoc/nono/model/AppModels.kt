@@ -202,6 +202,10 @@ data class HistoryRecord(
     val category: String? = null,
     val isOngoing: Boolean = false,
     val starred: Boolean = false,
+    /** When the platform said this notification left the shade. Null while it is still there. */
+    val removedAtEpochMillis: Long? = null,
+    /** Why it left, when the platform said. Never inferred from anything else. */
+    val removalReason: RemovalReason = RemovalReason.UNKNOWN,
 )
 
 enum class HistoryLoadState {
@@ -235,7 +239,7 @@ data class HistoryQuery(
 const val HISTORY_PAGE_SIZE = 100
 
 /** Filters the History segmented control offers. Each one is implemented in SQL. */
-val historyFilterCatalog = listOf("All", "Rule-triggered", "Starred")
+val historyFilterCatalog = listOf("All", "Rule-triggered", "Starred", "Dismissed")
 
 /**
  * Android's channel importance levels, as the platform numbers them.

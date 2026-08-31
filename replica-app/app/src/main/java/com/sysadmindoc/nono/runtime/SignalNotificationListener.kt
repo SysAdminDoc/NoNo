@@ -3,12 +3,14 @@ package com.sysadmindoc.nono.runtime
 import android.content.ComponentName
 import android.content.Context
 import android.os.SystemClock
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.NotificationListenerService.RankingMap
 import android.service.notification.StatusBarNotification
 import com.sysadmindoc.nono.data.IdentifierPseudonyms
 import com.sysadmindoc.nono.data.PseudonymKeyStore
 import com.sysadmindoc.nono.data.SignalDatabase
+import com.sysadmindoc.nono.model.RemovalReason
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.toEntity
@@ -158,6 +160,16 @@ class SignalNotificationListener : NotificationListenerService() {
         val fingerprint = captureFingerprint(sanitized, evaluation.matchedRuleIds, evaluation.state)
         if (!deduplicator.shouldCapture(sanitized.notificationKey, fingerprint, now)) return
 
+        // A key that was withdrawn and posted again is live once more. The stored departure has to
+        // go with it, or the history says a notification on screen is gone.
+        val repostedKey = sanitized.notificationKey
+        if (repostedKey.isNotEmpty()) {
+            serviceScope.launch {
+                runCatching {
+                    database.notificationDao().clearRemoval(repostedKey, RemovalReason.UNKNOWN.name)
+                }
+            }
+        }
         ingestor.offer(CapturedNotification(sanitized, evaluation.matchedRuleIds, evaluation.state))
         SignalObservability.emit(
             SignalEvent(
@@ -169,6 +181,46 @@ class SignalNotificationListener : NotificationListenerService() {
         ListenerHealth.recordEvent(SystemClock.elapsedRealtime())
         // Durable, so silence can still be measured after the process or the phone restarts.
         ListenerActivityLog.recordEvent(applicationContext, System.currentTimeMillis())
+    }
+
+    /**
+     * The one-argument overload. No reason code exists here, so none is recorded.
+     *
+     * Still worth handling: it is what runs below API 26, and an OEM build can call it on any
+     * level. A removal with no reason is a fact; a removal with a guessed reason is not.
+     */
+    override fun onNotificationRemoved(sbn: StatusBarNotification?) = recordRemoval(sbn, null)
+
+    override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?) =
+        recordRemoval(sbn, null)
+
+    /** The three-argument overload, API 26 and later, which is the only one carrying a reason. */
+    override fun onNotificationRemoved(
+        sbn: StatusBarNotification?,
+        rankingMap: RankingMap?,
+        reason: Int,
+    ) = recordRemoval(sbn, reason)
+
+    /**
+     * Marks a stored record as gone.
+     *
+     * Runs even while capture is paused: pausing stops new metadata being written, and a record
+     * already stored still left the shade. It does not create a row, so nothing is recorded for a
+     * notification this build never captured.
+     */
+    private fun recordRemoval(sbn: StatusBarNotification?, reason: Int?) {
+        if (!acceptingCallbacks.get()) return
+        val notification = sbn ?: return
+        if (notification.packageName == packageName) return
+        val removalReason = RemovalReason.fromPlatform(reason, Build.VERSION.SDK_INT)
+        val removedAt = System.currentTimeMillis()
+        val key = pseudonyms.pseudonym(notification.key).orEmpty()
+        if (key.isEmpty()) return
+        serviceScope.launch {
+            runCatching {
+                database.notificationDao().markRemoved(key, removedAt, removalReason.name)
+            }
+        }
     }
 
     override fun onDestroy() {

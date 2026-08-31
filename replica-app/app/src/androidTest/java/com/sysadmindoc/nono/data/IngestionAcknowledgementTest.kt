@@ -149,7 +149,7 @@ class IngestionAcknowledgementTest {
             close()
         }
 
-        val migrated = helper.runMigrationsAndValidate(name, 10, true, SignalDatabase.MIGRATION_9_10)
+        val migrated = helper.runMigrationsAndValidate(name, 11, true, SignalDatabase.MIGRATION_9_10, SignalDatabase.MIGRATION_10_11)
         migrated.query(
             "SELECT dropped, failed, acknowledgedDropped, acknowledgedFailed FROM ingestion_diagnostics",
         ).use { cursor ->

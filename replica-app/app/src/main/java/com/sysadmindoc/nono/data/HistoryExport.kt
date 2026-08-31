@@ -34,6 +34,8 @@ object HistoryExport {
         "category",
         "is_ongoing",
         "starred",
+        "removed_at_epoch_millis",
+        "removal_reason",
     )
 
     fun toCsv(records: List<HistoryRecord>): String = buildString {
@@ -59,6 +61,8 @@ object HistoryExport {
                     record.category.orEmpty(),
                     record.isOngoing.toString(),
                     record.starred.toString(),
+                    record.removedAtEpochMillis?.toString().orEmpty(),
+                    record.removalReason.name,
                 ).joinToString(",") { quote(it) },
             )
             append("\r\n")

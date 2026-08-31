@@ -39,7 +39,7 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             "migration-v1-test.db",
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_1_2,
             SignalDatabase.MIGRATION_2_3,
@@ -50,6 +50,7 @@ class SignalDatabaseMigrationTest {
             SignalDatabase.MIGRATION_7_8,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey, isGroupSummary FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -77,7 +78,7 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             databaseName,
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_3_4,
             SignalDatabase.MIGRATION_4_5,
@@ -86,6 +87,7 @@ class SignalDatabaseMigrationTest {
             SignalDatabase.MIGRATION_7_8,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -114,7 +116,7 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             name,
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_4_5,
             SignalDatabase.MIGRATION_5_6,
@@ -122,6 +124,7 @@ class SignalDatabaseMigrationTest {
             SignalDatabase.MIGRATION_7_8,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         )
         migrated.query("SELECT packageName, channelId, matchedRuleIds, matchState FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -176,11 +179,12 @@ class SignalDatabaseMigrationTest {
         }
         helper.runMigrationsAndValidate(
             name,
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_7_8,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         ).close()
 
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -189,6 +193,7 @@ class SignalDatabaseMigrationTest {
                 SignalDatabase.MIGRATION_7_8,
                 SignalDatabase.MIGRATION_8_9,
                 SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
             )
             .build()
         val pseudonyms = IdentifierPseudonyms(ByteArray(32) { it.toByte() })
@@ -238,10 +243,11 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             name,
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         )
         migrated.query("SELECT groupKey, overrideGroupKey, isGroupSummary, groupSummaryOrigin FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -272,13 +278,14 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             name,
-            10,
+            11,
             true,
             SignalDatabase.MIGRATION_5_6,
             SignalDatabase.MIGRATION_6_7,
             SignalDatabase.MIGRATION_7_8,
             SignalDatabase.MIGRATION_8_9,
             SignalDatabase.MIGRATION_9_10,
+            SignalDatabase.MIGRATION_10_11,
         )
         migrated.query("SELECT packageName, importance, isConversation, category, isOngoing FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())

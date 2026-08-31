@@ -54,7 +54,9 @@ class HistoryCountsTest {
     @Test
     fun everyOfferedFilterIsOneTheQueryImplements() {
         // The SQL branches on these exact strings, so a label added here without a branch there
-        // would silently select everything.
-        assertEquals(listOf("All", "Rule-triggered", "Starred"), historyFilterCatalog)
+        // would silently select everything. Dismissed joined the list when the query gained the
+        // branch for it, in the same change; the instrumented RemovalRecordTest proves that branch
+        // selects only what the platform called a user removal.
+        assertEquals(listOf("All", "Rule-triggered", "Starred", "Dismissed"), historyFilterCatalog)
     }
 }

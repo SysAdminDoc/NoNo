@@ -61,7 +61,9 @@ import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
+import com.sysadmindoc.nono.data.formatStoredTime
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.RemovalReason
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.RuleMatchState
@@ -269,7 +271,7 @@ private fun EmptyHistory(state: UiState) {
     }
     val body = when {
         state.historySearch.isNotBlank() -> "Try another search term."
-        state.historyFilter == "Dismissed" -> "This build runs no actions, so it never records a dismissal."
+        state.historyFilter == "Dismissed" -> "Nothing here was recorded as removed by you. Android only says why a notification went from Android 8 onward, and it does not always say."
         narrowed -> "Clear a filter to widen the local metadata query."
         else -> "Redacted notification metadata will appear here after access is enabled."
     }
@@ -469,6 +471,8 @@ private fun CapturedMetadata(record: HistoryRecord) {
         MetadataRow("Importance", importanceLabel(record.importance) ?: "Not available")
         SignalDivider()
         MetadataRow("Content storage", "Not stored")
+        SignalDivider()
+        MetadataRow("Left the shade", describeRemoval(record))
     }
 }
 
@@ -590,7 +594,25 @@ internal fun historyMetadataClipboardText(record: HistoryRecord): String = build
     appendLine("Conversation: ${record.isConversation?.toString() ?: "not available"}")
     appendLine("Category: ${record.category ?: "not available"}")
     appendLine("Ongoing: ${record.isOngoing}")
-    append("Starred: ${record.starred}")
+    appendLine("Starred: ${record.starred}")
+    append("Left the shade: ${describeRemoval(record)}")
+}
+
+/**
+ * What is known about the notification leaving the shade.
+ *
+ * Three distinct answers, and they must stay distinct: it is still there, it went and Android said
+ * why, or it went and Android did not say. The last is the common one below Android 8, and
+ * flattening it into either of the others would be a claim the device never made.
+ */
+internal fun describeRemoval(record: HistoryRecord): String {
+    val removedAt = record.removedAtEpochMillis ?: return "Still posted, or gone without Android saying"
+    val moment = formatStoredTime(removedAt)
+    return if (record.removalReason == RemovalReason.UNKNOWN) {
+        "$moment. Android did not say why."
+    } else {
+        "$moment. ${record.removalReason.label}."
+    }
 }
 
 /** What the record says about its own content, rather than what a fresh look would say. */

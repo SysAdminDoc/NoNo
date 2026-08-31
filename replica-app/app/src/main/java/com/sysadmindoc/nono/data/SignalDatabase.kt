@@ -24,6 +24,7 @@ import java.util.Locale
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.RemovalReason
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.runtime.SanitizedNotification
 import com.sysadmindoc.nono.runtime.IngestionMetrics
@@ -58,6 +59,17 @@ data class NotificationEntity(
     val isOngoing: Boolean = false,
     /** Starred records are kept until the user unstars them, whatever the retention period says. */
     val starred: Boolean = false,
+    /** When the platform said this notification left the shade. Null while it is still there. */
+    val removedAtEpochMillis: Long? = null,
+    /**
+     * [com.sysadmindoc.nono.model.RemovalReason], never inferred.
+     *
+     * A row can carry a removal time with an UNKNOWN reason: below API 26 the callback supplies
+     * no code at all, and lockdown and any code a later Android adds are deliberately not
+     * translated into one.
+     */
+    @ColumnInfo(defaultValue = "UNKNOWN")
+    val removalReason: String = RemovalReason.UNKNOWN.name,
     /**
      * Which identifier scheme [notificationKey], [channelId] and [groupKey] are written in.
      *
@@ -183,6 +195,11 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         category = category,
         isOngoing = isOngoing,
         starred = starred,
+        removedAtEpochMillis = removedAtEpochMillis,
+        removalReason = RemovalReason.fromStored(removalReason),
+        // Only a reason the platform actually gave for a user action counts. A row with no reason
+        // is not a dismissal, and this filter must not imply the app watched someone swipe.
+        dismissed = RemovalReason.fromStored(removalReason).userDismissed,
     )
 }
 
@@ -193,8 +210,8 @@ interface NotificationDao {
 
     /**
      * Queries only persisted metadata. Rule-triggered selects records whose saved rules matched
-     * when they arrived. Dismissed stays empty until an action engine writes that state; returning
-     * no rows is safer than inventing them.
+     * when they arrived. Dismissed selects records the platform said the user removed, which is a
+     * reason it supplied rather than anything this app watched or inferred.
      *
      * Group summaries are included. They used to be hidden unless asked for, which meant a
      * summary the app itself posted, carrying its own metadata, was invisible. They are labelled
@@ -213,6 +230,7 @@ interface NotificationDao {
             :filter = 'All'
             OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
             OR (:filter = 'Starred' AND starred = 1)
+            OR (:filter = 'Dismissed' AND removalReason IN ('CLICKED', 'DISMISSED', 'DISMISSED_ALL'))
           )
           AND (:packageName IS NULL OR packageName = :packageName)
           AND (:channelId IS NULL OR channelId = :channelId)
@@ -259,6 +277,7 @@ interface NotificationDao {
             :filter = 'All'
             OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
             OR (:filter = 'Starred' AND starred = 1)
+            OR (:filter = 'Dismissed' AND removalReason IN ('CLICKED', 'DISMISSED', 'DISMISSED_ALL'))
           )
           AND (:packageName IS NULL OR packageName = :packageName)
           AND (:channelId IS NULL OR channelId = :channelId)
@@ -515,6 +534,40 @@ interface NotificationDao {
     @Query("DELETE FROM notification_history WHERE id = :id")
     suspend fun deleteById(id: Long): Int
 
+    /**
+     * Records that a notification left the shade.
+     *
+     * Matches on the stored key, which is a per-install pseudonym, so the caller has to
+     * pseudonymize the platform key the same way the capture did. Only rows that are not already
+     * marked are touched: a repost followed by a second removal is the same notification, and the
+     * first departure is the one with a reason attached to the metadata that was stored.
+     *
+     * @return rows marked, so a caller can tell a real removal from one for a notification this
+     * build never captured.
+     */
+    @Query(
+        "UPDATE notification_history SET removedAtEpochMillis = :removedAtEpochMillis, " +
+            "removalReason = :removalReason WHERE notificationKey = :notificationKey " +
+            "AND removedAtEpochMillis IS NULL",
+    )
+    suspend fun markRemoved(
+        notificationKey: String,
+        removedAtEpochMillis: Long,
+        removalReason: String,
+    ): Int
+
+    /**
+     * Clears a removal because the same notification is back.
+     *
+     * An app that reposts a key it withdrew has a live notification again, and leaving the old
+     * departure on the row would have the history say a notification that is on screen is gone.
+     */
+    @Query(
+        "UPDATE notification_history SET removedAtEpochMillis = NULL, removalReason = :unknownReason " +
+            "WHERE notificationKey = :notificationKey",
+    )
+    suspend fun clearRemoval(notificationKey: String, unknownReason: String): Int
+
     /** Read before a delete, so the row can be put back if the user takes it back. */
     @Query("SELECT * FROM notification_history WHERE id = :id LIMIT 1")
     suspend fun readById(id: Long): NotificationEntity?
@@ -562,7 +615,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 10, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 11, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -661,6 +714,16 @@ abstract class SignalDatabase : RoomDatabase() {
         }
 
         /** Lets the user acknowledge ingestion counts that would otherwise warn for ever. */
+        /** Adds the removal record. Existing rows are not retroactively called removed. */
+        val MIGRATION_10_11: Migration = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN removedAtEpochMillis INTEGER")
+                db.execSQL(
+                    "ALTER TABLE notification_history ADD COLUMN removalReason TEXT NOT NULL DEFAULT 'UNKNOWN'",
+                )
+            }
+        }
+
         val MIGRATION_9_10: Migration = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE ingestion_diagnostics ADD COLUMN acknowledgedDropped INTEGER NOT NULL DEFAULT 0")
@@ -720,6 +783,7 @@ abstract class SignalDatabase : RoomDatabase() {
             MIGRATION_7_8,
             MIGRATION_8_9,
             MIGRATION_9_10,
+            MIGRATION_10_11,
         ).build()
     }
 }
