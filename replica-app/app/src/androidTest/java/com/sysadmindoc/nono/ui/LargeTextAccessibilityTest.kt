@@ -162,6 +162,22 @@ class LargeTextAccessibilityTest {
     }
 
     @Test
+    fun theGroupedRulesScreenStillScrollsAndKeepsItsTargets() {
+        // Folder headings add rows to a list that already had to scroll at this size, and the
+        // grouped layout is only reached once something is filed.
+        val filed = populated.copy(
+            rules = populated.rules.mapIndexed { index, rule ->
+                rule.copy(folder = if (index == 0) "Work that arrives all day" else "No folder")
+            },
+        )
+        setCompactLargeText { RulesHomeScreen(filed, model) }
+
+        scrollTo("Create rule")
+        assertNoClippedText()
+        assertTouchTargets()
+    }
+
+    @Test
     fun onboardingScrollsToItsLastControlAtTwiceTheFontSize() {
         setCompactLargeText {
             OnboardingScreen(populated.copy(route = Route.ONBOARDING, listenerAccessGranted = false), model)

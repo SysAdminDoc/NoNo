@@ -2,6 +2,7 @@ package com.sysadmindoc.nono.ui
 
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import com.sysadmindoc.nono.model.groupRulesByFolder
 import com.sysadmindoc.nono.model.MatchField
 import com.sysadmindoc.nono.model.MatchMode
 import com.sysadmindoc.nono.model.MatchableFields
@@ -151,8 +152,19 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         if (state.rules.isEmpty()) {
             item { EmptyRules(onCreate = model::newRule, onExplore = { model.selectRoot(RootTab.EXPLORE) }) }
         } else {
-            items(state.rules, key = { it.id }) { rule ->
-                key(rule.id) { RuleCard(rule, model, state.ruleMatchCounts[rule.id] ?: 0) }
+            groupRulesByFolder(state.rules).forEach { group ->
+                if (group.heading != null) {
+                    item(key = "folder-${group.heading}") {
+                        Text(
+                            group.heading.uppercase(),
+                            color = SignalColors.Secondary,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+                items(group.rules, key = { it.id }) { rule ->
+                    key(rule.id) { RuleCard(rule, model, state.ruleMatchCounts[rule.id] ?: 0) }
+                }
             }
             item {
                 Text(
