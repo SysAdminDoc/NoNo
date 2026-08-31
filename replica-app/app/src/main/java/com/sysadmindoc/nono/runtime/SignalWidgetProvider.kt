@@ -30,9 +30,10 @@ class SignalWidgetProvider : AppWidgetProvider() {
             try {
                 val dao = SignalDatabase.get(context).notificationDao()
                 val count = dao.readWidgetCount()
+                val summaries = dao.readGroupSummaryCount()
                 val latest = dao.readWidgetLatest()
                 CaptureGate.load(context)
-                val views = widgetViews(context, count, latest?.postedAtEpochMillis, latest?.contentState)
+                val views = widgetViews(context, count, summaries, latest?.postedAtEpochMillis, latest?.contentState)
                 withContext(Dispatchers.Main) { manager.updateAppWidget(appWidgetIds, views) }
             } finally {
                 pendingResult.finish()
@@ -61,10 +62,11 @@ class SignalWidgetProvider : AppWidgetProvider() {
         internal fun widgetViews(
             context: Context,
             count: Int,
+            groupSummaryCount: Int,
             latestEpochMillis: Long?,
             latestContentState: String?,
         ): RemoteViews = RemoteViews(context.packageName, R.layout.widget_signal_status).apply {
-            setTextViewText(R.id.widget_count, if (count == 0) "No metadata captured" else "$count notifications")
+            setTextViewText(R.id.widget_count, countLabel(count, groupSummaryCount))
             setTextViewText(R.id.widget_latest, latestEpochMillis?.let { "Last metadata: ${formatTime(it)}" } ?: "Last metadata: —")
             setTextViewText(R.id.widget_provenance, if (CaptureGate.isPaused()) "Capture paused" else provenanceLabel(latestContentState))
             setOnClickPendingIntent(
@@ -76,6 +78,19 @@ class SignalWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
             )
+        }
+
+        /**
+         * Says what the number counts.
+         *
+         * A group summary stands for its group, so it is not counted as an arrival. Leaving that
+         * silent made the widget disagree with History for no visible reason.
+         */
+        internal fun countLabel(count: Int, groupSummaryCount: Int): String = when {
+            count == 0 && groupSummaryCount == 0 -> "No metadata captured"
+            groupSummaryCount == 0 -> "$count notifications"
+            count == 0 -> "$groupSummaryCount group summaries, no notifications"
+            else -> "$count notifications, plus $groupSummaryCount group summaries not counted"
         }
 
         private fun formatTime(epochMillis: Long): String =

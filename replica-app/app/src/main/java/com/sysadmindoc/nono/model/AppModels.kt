@@ -171,7 +171,10 @@ data class HistoryRecord(
     val notificationKey: String = "",
     val channelId: String? = null,
     val groupKey: String? = null,
+    /** The group the platform imposed, when it imposed one. Null when the app's own group stands. */
+    val overrideGroupKey: String? = null,
     val isGroupSummary: Boolean = false,
+    val groupSummaryOrigin: GroupSummaryOrigin = GroupSummaryOrigin.UNKNOWN,
     val matchedRuleIds: List<Long> = emptyList(),
     val matchState: RuleMatchState = RuleMatchState.NOT_EVALUATED,
     val importance: Int? = null,
@@ -242,6 +245,34 @@ enum class RuleMatchState {
 
     /** Evaluated, but the system redacted the text, so phrase conditions could not be tested. */
     CONTENT_HIDDEN,
+
+    /**
+     * A group summary. It stands for the group rather than being an arrival of its own, so no
+     * rule was tested against it. Recorded distinctly so the row cannot read as "nothing matched".
+     */
+    GROUP_SUMMARY,
+}
+
+/**
+ * Who created a group summary, as far as a supported public API can tell.
+ *
+ * Android has no API that names the author of a summary. What it does publish is whether the
+ * app declared the group at all (`StatusBarNotification.isAppGroup`) and whether the platform
+ * imposed one of its own (`getOverrideGroupKey`). Those two answer the question often enough to
+ * be worth recording, and leave [UNKNOWN] whenever they disagree or say nothing.
+ *
+ * Sibling rows are deliberately not consulted. A summary usually has children, and an
+ * auto-generated one does too, so their presence proves nothing about who wrote it.
+ */
+enum class GroupSummaryOrigin {
+    /** The app declared the group this summary sits in. */
+    APP,
+
+    /** The app declared no group and the platform supplied one. */
+    SYSTEM,
+
+    /** Nothing supported says either way. The default, and the common case. */
+    UNKNOWN,
 }
 
 /** Provenance of notification content exposed to the app. */

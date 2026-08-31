@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NotificationContentState
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
@@ -157,14 +158,43 @@ class SignalDatabaseTest {
         ).forEach { dao.insert(it) }
 
         assertEquals(2, dao.readWidgetCount())
+        assertEquals(1, dao.readGroupSummaryCount())
         // The summary is the newest row, so the widget would otherwise report its timestamp.
         assertEquals(2_000L, dao.readWidgetLatest()?.postedAtEpochMillis)
 
+        // Visible, and labelled by the UI, rather than hidden. Hiding it meant a summary the app
+        // itself posted, carrying its own metadata, could not be seen at all.
         val defaultHistory = dao.observeHistory(query = "", filter = "All").first()
-        assertEquals(listOf("child-2", "child-1"), defaultHistory.map { it.notificationKey })
+        assertEquals(listOf("summary", "child-2", "child-1"), defaultHistory.map { it.notificationKey })
 
         val summariesOnly = dao.observeHistory(query = "", filter = "All", groupSummary = true).first()
         assertEquals(listOf("summary"), summariesOnly.map { it.notificationKey })
+
+        val withoutSummaries = dao.observeHistory(query = "", filter = "All", groupSummary = false).first()
+        assertEquals(listOf("child-2", "child-1"), withoutSummaries.map { it.notificationKey })
+    }
+
+    @Test
+    fun aStoredSummaryKeepsBothGroupsAndAnUnknownOriginByDefault() = runBlocking {
+        val dao = database.notificationDao()
+        dao.insert(
+            NotificationEntity(
+                notificationKey = "summary",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.NOT_AVAILABLE.name,
+                groupKey = "app-group",
+                overrideGroupKey = "platform-group",
+                isGroupSummary = true,
+            ),
+        )
+
+        val row = dao.observeHistory(query = "", filter = "All").first().single()
+
+        assertEquals("app-group", row.groupKey)
+        assertEquals("platform-group", row.overrideGroupKey)
+        // Nothing classifies a stored row after the fact; the two signals only exist live.
+        assertEquals(GroupSummaryOrigin.UNKNOWN.name, row.groupSummaryOrigin)
     }
 
     @Test
@@ -199,9 +229,8 @@ class SignalDatabaseTest {
             ),
         )
 
-        // The target row is a group summary, and summaries are no longer returned by default, so
-        // this selector has to be stated like any other. Every other selector under test is
-        // unchanged.
+        // The target row is a group summary, and the query returns both kinds, so this selector
+        // narrows to it the same way every other selector under test does.
         val filtered = dao.observeHistory(
             query = "chat",
             filter = "All",

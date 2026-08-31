@@ -147,11 +147,14 @@ class SignalNotificationListener : NotificationListenerService() {
         // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
         // payload itself goes no further than this stack frame.
         val rules = currentRules
-        val evaluation = if (rules == null) {
+        val evaluation = when {
+            // One policy, shared with the counts: a summary stands for its group rather than
+            // being an arrival, so no rule is tested against it and it is not counted as one.
+            !groupingFor(sanitized).shouldEvaluate ->
+                CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
             // The platform can deliver a notification before the store has been read.
-            CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
-        } else {
-            evaluateCapture(rules, payload)
+            rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
+            else -> evaluateCapture(rules, payload)
         }
         ingestor.offer(CapturedNotification(sanitized, evaluation.matchedRuleIds, evaluation.state))
         SignalObservability.emit(

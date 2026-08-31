@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
@@ -274,6 +275,14 @@ private fun HistoryRecordRow(
             }
             Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(item.body, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (item.isGroupSummary) {
+                Text(
+                    describeGroupSummary(item.groupSummaryOrigin),
+                    color = SignalColors.Muted,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
+            }
             describeMatchedRules(item, rules)?.let {
                 Text(it, color = SignalColors.Yellow, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 3.dp))
             }
@@ -398,6 +407,12 @@ private fun CapturedMetadata(record: HistoryRecord) {
         SignalDivider()
         MetadataRow("Channel", record.channelId ?: "Not available")
         SignalDivider()
+        MetadataRow("Group", record.groupKey ?: "Not available")
+        SignalDivider()
+        MetadataRow("Group Android imposed", record.overrideGroupKey ?: "None")
+        SignalDivider()
+        MetadataRow("Group summary", if (record.isGroupSummary) describeGroupSummary(record.groupSummaryOrigin) else "No")
+        SignalDivider()
         MetadataRow("Importance", importanceLabel(record.importance) ?: "Not available")
         SignalDivider()
         MetadataRow("Content storage", "Not stored")
@@ -434,6 +449,18 @@ private fun EvaluationReason.displayName(): String = when (this) {
     EvaluationReason.CONTENT_NOT_AVAILABLE -> "no content arrived"
     EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
     EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
+}
+
+/**
+ * Says what a summary row is, and how much is actually known about where it came from.
+ *
+ * Unknown is the honest common case: Android names no author for a summary, so the two grouping
+ * signals it does publish only sometimes settle it.
+ */
+internal fun describeGroupSummary(origin: GroupSummaryOrigin): String = when (origin) {
+    GroupSummaryOrigin.APP -> "Group summary, from the app's own group. Not counted as a notification."
+    GroupSummaryOrigin.SYSTEM -> "Group summary, from a group Android imposed. Not counted as a notification."
+    GroupSummaryOrigin.UNKNOWN -> "Group summary, origin unknown. Not counted as a notification."
 }
 
 internal fun describeMatchedRules(record: HistoryRecord, rules: List<SignalRule>): String? = when {

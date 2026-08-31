@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.sysadmindoc.nono.data.IdentifierPseudonyms
+import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NotificationContentState
 
 /**
@@ -48,7 +49,11 @@ data class SanitizedNotification(
     val postedAtEpochMillis: Long,
     val contentState: NotificationContentState,
     val groupKey: String? = null,
+    /** The platform's own group, pseudonymized like the rest. Null below API 26 or when unset. */
+    val overrideGroupKey: String? = null,
     val isGroupSummary: Boolean = false,
+    /** Never inferred from siblings. See [groupSummaryOrigin]. */
+    val groupSummaryOrigin: GroupSummaryOrigin = GroupSummaryOrigin.UNKNOWN,
     val channelId: String? = null,
     /** Channel importance the platform assigned, 0 to 5, or null below API 26. */
     val importance: Int? = null,
@@ -130,6 +135,9 @@ fun sanitizeNotification(
     ranking: NotificationListenerService.Ranking? = null,
 ): SanitizedNotification {
     val notification = sbn.notification
+    val isSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0
+    // Public since API 26. Below that the platform did not reorganise groups at all.
+    val overrideGroupKey = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) sbn.overrideGroupKey else null
     return SanitizedNotification(
         // Pseudonymized here, while the raw values are still on the stack, so nothing downstream
         // has to remember to do it.
@@ -141,7 +149,17 @@ fun sanitizeNotification(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) notification.channelId else null,
         ),
         groupKey = pseudonyms.pseudonym(notification.group),
-        isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+        overrideGroupKey = pseudonyms.pseudonym(overrideGroupKey),
+        isGroupSummary = isSummary,
+        groupSummaryOrigin = groupSummaryOrigin(
+            isGroupSummary = isSummary,
+            // Notification.getGroup is public on every level this app supports, and it says
+            // exactly what the classification needs: whether the app declared a group of its own.
+            // StatusBarNotification.isAppGroup would say the same thing but needs API 30, and it
+            // also counts a bare sort key, which is not a group declaration.
+            appDeclaredGroup = notification.group != null,
+            overrideGroupKey = overrideGroupKey,
+        ),
         importance = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ranking?.importance else null,
         isConversation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ranking?.isConversation else null,
         category = notification.category,

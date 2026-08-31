@@ -15,6 +15,7 @@ import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
+import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
@@ -33,7 +34,11 @@ data class NotificationEntity(
     val contentState: String,
     val channelId: String? = null,
     val groupKey: String? = null,
+    /** The group the platform imposed, pseudonymized. Null below API 26 or when it imposed none. */
+    val overrideGroupKey: String? = null,
     val isGroupSummary: Boolean = false,
+    /** [com.sysadmindoc.nono.model.GroupSummaryOrigin], never inferred from sibling rows. */
+    val groupSummaryOrigin: String = GroupSummaryOrigin.UNKNOWN.name,
     /** Ids of the saved rules that matched this notification, comma separated. Never any content. */
     val matchedRuleIds: String? = null,
     /** How far evaluation got: see [com.sysadmindoc.nono.model.RuleMatchState]. */
@@ -95,7 +100,9 @@ fun SanitizedNotification.toEntity(
     contentState = contentState.name,
     channelId = channelId,
     groupKey = groupKey,
+    overrideGroupKey = overrideGroupKey,
     isGroupSummary = isGroupSummary,
+    groupSummaryOrigin = groupSummaryOrigin.name,
     matchedRuleIds = encodeMatchedRuleIds(matchedRuleIds),
     matchState = matchState.name,
     importance = importance,
@@ -133,7 +140,10 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         notificationKey = notificationKey,
         channelId = channelId,
         groupKey = groupKey,
+        overrideGroupKey = overrideGroupKey,
         isGroupSummary = isGroupSummary,
+        groupSummaryOrigin = runCatching { GroupSummaryOrigin.valueOf(groupSummaryOrigin) }
+            .getOrDefault(GroupSummaryOrigin.UNKNOWN),
         matchedRuleIds = decodeMatchedRuleIds(matchedRuleIds),
         matchState = matchState?.let { name -> runCatching { RuleMatchState.valueOf(name) }.getOrNull() }
             ?: RuleMatchState.NOT_EVALUATED,
@@ -155,9 +165,10 @@ interface NotificationDao {
      * when they arrived. Dismissed stays empty until an action engine writes that state; returning
      * no rows is safer than inventing them.
      *
-     * Group summaries are excluded unless [groupSummary] asks for them. Android 16 groups an app's
-     * notifications itself and posts a summary alongside the children, so counting both reports
-     * more notifications than arrived and shows the user a row with nothing of its own in it.
+     * Group summaries are included. They used to be hidden unless asked for, which meant a
+     * summary the app itself posted, carrying its own metadata, was invisible. They are labelled
+     * instead, and the counts that stand for "how many notifications arrived" exclude them
+     * separately. [groupSummary] narrows to summaries only, or to non-summaries only, when set.
      */
     @Query(
         """
@@ -177,7 +188,7 @@ interface NotificationDao {
           AND (:groupKey IS NULL OR groupKey = :groupKey)
           AND (:importance IS NULL OR importance = :importance)
           AND (:conversation IS NULL OR isConversation = :conversation)
-          AND isGroupSummary = COALESCE(:groupSummary, 0)
+          AND (:groupSummary IS NULL OR isGroupSummary = :groupSummary)
           AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
         ORDER BY postedAtEpochMillis DESC, id DESC
         LIMIT :limit
@@ -259,9 +270,17 @@ interface NotificationDao {
     @Query("SELECT * FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC")
     suspend fun readAllForExport(): List<NotificationEntity>
 
-    /** Counts what actually arrived: a system-generated group summary is not its own notification. */
+    /**
+     * Counts what arrived. A group summary stands for its group rather than being an arrival of
+     * its own, so counting it would report more notifications than the device received. The
+     * widget says so rather than leaving the difference unexplained.
+     */
     @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 0")
     suspend fun readWidgetCount(): Int
+
+    /** Summaries stored alongside them, so the widget can say how many it left out. */
+    @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 1")
+    suspend fun readGroupSummaryCount(): Int
 
     @Query(
         """
@@ -288,11 +307,18 @@ interface NotificationDao {
         SET notificationKey = :notificationKey,
             channelId = :channelId,
             groupKey = :groupKey,
+            overrideGroupKey = :overrideGroupKey,
             identifierScheme = $IDENTIFIER_SCHEME_PSEUDONYM
         WHERE id = :id
         """,
     )
-    suspend fun rewriteIdentifiers(id: Long, notificationKey: String, channelId: String?, groupKey: String?)
+    suspend fun rewriteIdentifiers(
+        id: Long,
+        notificationKey: String,
+        channelId: String?,
+        groupKey: String?,
+        overrideGroupKey: String?,
+    )
 
     @Query("DELETE FROM notification_history WHERE id = :id")
     suspend fun deleteById(id: Long)
@@ -317,6 +343,7 @@ interface NotificationDao {
                     notificationKey = key,
                     channelId = pseudonyms.pseudonym(row.channelId),
                     groupKey = pseudonyms.pseudonym(row.groupKey),
+                    overrideGroupKey = pseudonyms.pseudonym(row.overrideGroupKey),
                 )
             }
             if (result.isSuccess) rewritten += 1 else deleteById(row.id)
@@ -325,7 +352,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 8, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 9, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -407,6 +434,22 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Records the platform's own group alongside the app's, and who the summary came from.
+         *
+         * Existing rows default to UNKNOWN rather than being classified retroactively: the two
+         * signals that decide it are only available while the notification is in hand.
+         */
+        val MIGRATION_8_9: Migration = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notification_history ADD COLUMN overrideGroupKey TEXT")
+                db.execSQL(
+                    "ALTER TABLE notification_history ADD COLUMN groupSummaryOrigin TEXT NOT NULL " +
+                        "DEFAULT '${GroupSummaryOrigin.UNKNOWN.name}'",
+                )
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -439,6 +482,7 @@ abstract class SignalDatabase : RoomDatabase() {
             MIGRATION_5_6,
             MIGRATION_6_7,
             MIGRATION_7_8,
+            MIGRATION_8_9,
         ).build()
     }
 }
