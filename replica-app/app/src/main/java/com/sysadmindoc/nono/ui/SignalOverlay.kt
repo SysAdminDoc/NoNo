@@ -1,5 +1,17 @@
 package com.sysadmindoc.nono.ui
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import com.sysadmindoc.nono.model.MINUTES_PER_DAY
+import com.sysadmindoc.nono.model.describeSchedule
+import com.sysadmindoc.nono.model.formatMinuteOfDay
 import android.content.ClipData
 import android.os.Build
 import android.content.ClipboardManager
@@ -191,6 +203,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", listOf("Default", "Mute all sounds", "Aggressive"), state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
         Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
         Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", historyStorageCatalog, state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
+        Overlay.SCHEDULE -> ScheduleDialog(state, model)
         Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", historyRetentionCatalog, state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }
         Overlay.TRANSFER_EXPORT_PASSPHRASE -> TransferPassphraseDialog(
             title = "Encrypt rule export",
@@ -346,6 +359,140 @@ private fun ChoiceDialog(title: String, choices: List<String>, selected: String?
                 ChoiceRow(choice, choice == selected, { onChoice(choice) })
             }
         }
+    }
+}
+
+
+private val scheduleDayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+/**
+ * A window a rule is limited to.
+ *
+ * Windows are offered as whole and half hours rather than as a free text field. A rule that fires
+ * at 22:07 is not a thing anyone wants, and a picker cannot be typed into wrongly.
+ */
+@Composable
+private fun ScheduleDialog(state: UiState, model: MainViewModel) {
+    val schedule = state.draft.schedule
+    DialogFrame("When this rule applies", model::dismissOverlay) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(max = 560.dp)) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .toggleable(
+                        value = schedule != null,
+                        role = Role.Switch,
+                        onValueChange = model::setScheduleEnabled,
+                    )
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Limit to a schedule", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        describeSchedule(schedule),
+                        color = SignalColors.Secondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Switch(
+                    checked = schedule != null,
+                    onCheckedChange = null,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = SignalColors.Yellow,
+                        checkedThumbColor = SignalColors.Background,
+                        uncheckedTrackColor = SignalColors.Border,
+                        uncheckedThumbColor = SignalColors.Secondary,
+                    ),
+                )
+            }
+            if (schedule == null) {
+                Text(
+                    "Without a schedule the rule is checked whenever a notification arrives.",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                )
+                return@DialogFrame
+            }
+            Text(
+                "Days",
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 10.dp),
+            )
+            Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+                scheduleDayLabels.forEachIndexed { index, label ->
+                    val isoDay = index + 1
+                    val selected = isoDay in schedule.days
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .toggleable(
+                                value = selected,
+                                role = Role.Checkbox,
+                                onValueChange = { model.toggleScheduleDay(isoDay) },
+                            )
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                        Icon(
+                            if (selected) Icons.Rounded.Check else Icons.Rounded.Close,
+                            contentDescription = null,
+                            tint = if (selected) SignalColors.Yellow else SignalColors.Muted,
+                        )
+                    }
+                }
+            }
+            Text(
+                "Between",
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 10.dp),
+            )
+            ScheduleTimeRow("Start", schedule.startMinute) { model.setScheduleWindow(it, schedule.endMinute) }
+            ScheduleTimeRow("End", schedule.endMinute) { model.setScheduleWindow(schedule.startMinute, it) }
+            Text(
+                if (schedule.coversWholeDay) {
+                    "The same start and end means the whole of each selected day."
+                } else if (schedule.crossesMidnight) {
+                    "This window runs past midnight, so it belongs to the day it starts on."
+                } else {
+                    "The start is included and the end is not."
+                },
+                color = SignalColors.Muted,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
+/** Half-hour steps, wrapping at midnight so neither end can run off the clock. */
+@Composable
+private fun ScheduleTimeRow(label: String, minuteOfDay: Int, onChange: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        SignalIconButton(
+            Icons.Rounded.Remove,
+            "$label half an hour earlier",
+            onClick = { onChange((minuteOfDay - 30 + MINUTES_PER_DAY) % MINUTES_PER_DAY) },
+        )
+        Text(
+            formatMinuteOfDay(minuteOfDay),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 10.dp),
+        )
+        SignalIconButton(
+            Icons.Rounded.Add,
+            "$label half an hour later",
+            onClick = { onChange((minuteOfDay + 30) % MINUTES_PER_DAY) },
+        )
     }
 }
 

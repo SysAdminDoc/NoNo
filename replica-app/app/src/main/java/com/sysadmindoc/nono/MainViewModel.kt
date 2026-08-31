@@ -48,6 +48,8 @@ import com.sysadmindoc.nono.model.deriveRuleDraft
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
+import com.sysadmindoc.nono.model.MINUTES_PER_DAY
+import com.sysadmindoc.nono.model.RuleSchedule
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.StatusMessages
 import com.sysadmindoc.nono.model.applyToRule
@@ -391,6 +393,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val phrase = _state.value.phraseDraft.ifBlank { "anything" }
         _state.value = _state.value.copy(route = Route.RULE_BUILDER, draft = _state.value.draft.copy(phrase = phrase), overlay = Overlay.NONE, phraseInputVisible = false)
     }
+    /**
+     * Turns the draft's schedule on or off.
+     *
+     * A schedule that has just been switched on covers every day, all day: the same behaviour the
+     * rule had a moment ago. Starting from an empty selection would silently stop the rule
+     * matching the instant the user opened the editor.
+     */
+    fun setScheduleEnabled(enabled: Boolean) {
+        updateDraft { draft ->
+            draft.copy(schedule = if (enabled) draft.schedule ?: RuleSchedule() else null)
+        }
+    }
+
+    fun toggleScheduleDay(isoDay: Int) {
+        updateDraft { draft ->
+            val schedule = draft.schedule ?: RuleSchedule()
+            val days = if (isoDay in schedule.days) schedule.days - isoDay else schedule.days + isoDay
+            draft.copy(schedule = schedule.copy(days = days))
+        }
+    }
+
+    /** Both ends in minutes from local midnight. Equal ends mean the whole day. */
+    fun setScheduleWindow(startMinute: Int, endMinute: Int) {
+        updateDraft { draft ->
+            val schedule = draft.schedule ?: RuleSchedule()
+            draft.copy(
+                schedule = schedule.copy(
+                    startMinute = startMinute.coerceIn(0, MINUTES_PER_DAY - 1),
+                    endMinute = endMinute.coerceIn(0, MINUTES_PER_DAY - 1),
+                ),
+            )
+        }
+    }
+
     fun openRuleSearch() { _state.value = _state.value.copy(ruleSearchActive = true) }
 
     /** Closing clears the query, so the list the user comes back to is the whole list. */

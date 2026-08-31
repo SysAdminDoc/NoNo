@@ -500,6 +500,7 @@ private fun EvaluationReason.displayName(): String = when (this) {
     EvaluationReason.CONTENT_NOT_AVAILABLE -> "no content arrived"
     EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
     EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
+    EvaluationReason.OUTSIDE_SCHEDULE -> "outside its schedule"
 }
 
 /**

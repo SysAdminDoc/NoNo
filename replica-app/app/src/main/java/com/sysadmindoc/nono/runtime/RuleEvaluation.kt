@@ -5,6 +5,8 @@ import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.isNegatedMatchType
+import com.sysadmindoc.nono.model.matchesSchedule
+import java.util.TimeZone
 
 /** Why a rule was not selected during a dry-run evaluation. */
 enum class EvaluationReason {
@@ -14,6 +16,9 @@ enum class EvaluationReason {
     CONTENT_NOT_AVAILABLE,
     PHRASE_MISMATCH,
     EXTRA_FILTER_UNSUPPORTED,
+
+    /** The notification arrived outside the rule's schedule window. */
+    OUTSIDE_SCHEDULE,
 }
 
 data class RuleConditionTrace(
@@ -61,10 +66,14 @@ fun evaluateRules(
     payload: NotificationPayload,
     sdkInt: Int,
     traceId: String = newTraceId(),
+    atEpochMillis: Long = System.currentTimeMillis(),
+    zone: TimeZone = TimeZone.getDefault(),
 ): RuleEvaluationTrace {
     val contentState = classifyNotificationContent(payload, sdkInt)
     val matchableText = matchableNotificationText(payload, sdkInt)?.lowercase()
-    val conditions = rules.map { rule -> evaluateRule(rule, payload, contentState, matchableText) }
+    val conditions = rules.map { rule ->
+        evaluateRule(rule, payload, contentState, matchableText, atEpochMillis, zone)
+    }
     val matchingRules = rules.filter { rule ->
         conditions.first { it.ruleId == rule.id }.matched
     }
@@ -112,9 +121,11 @@ fun evaluateCapture(
     rules: List<SignalRule>,
     payload: NotificationPayload,
     sdkInt: Int = Build.VERSION.SDK_INT,
+    atEpochMillis: Long = System.currentTimeMillis(),
+    zone: TimeZone = TimeZone.getDefault(),
 ): CaptureEvaluation {
     if (rules.isEmpty()) return CaptureEvaluation(emptyList(), RuleMatchState.NOT_EVALUATED)
-    val trace = evaluateRules(rules, payload, sdkInt)
+    val trace = evaluateRules(rules, payload, sdkInt, atEpochMillis = atEpochMillis, zone = zone)
     return CaptureEvaluation(
         matchedRuleIds = trace.conditions.filter { it.matched }.map { it.ruleId }.sorted(),
         state = if (trace.contentState == NotificationContentState.HIDDEN_BY_SYSTEM) {
@@ -140,10 +151,12 @@ fun captureEvaluationFor(
     rules: List<SignalRule>?,
     payload: NotificationPayload,
     sdkInt: Int = Build.VERSION.SDK_INT,
+    atEpochMillis: Long = System.currentTimeMillis(),
+    zone: TimeZone = TimeZone.getDefault(),
 ): CaptureEvaluation = when {
     !groupingFor(sanitized).shouldEvaluate -> CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
     rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
-    else -> evaluateCapture(rules, payload, sdkInt)
+    else -> evaluateCapture(rules, payload, sdkInt, atEpochMillis, zone)
 }
 
 private fun evaluateRule(
@@ -151,11 +164,17 @@ private fun evaluateRule(
     payload: NotificationPayload,
     contentState: NotificationContentState,
     matchableText: String?,
+    atEpochMillis: Long,
+    zone: TimeZone,
 ): RuleConditionTrace {
     if (!rule.enabled) return RuleConditionTrace(rule.id, matched = false, reasons = listOf(EvaluationReason.DISABLED))
 
     val reasons = buildList {
         if (!matchesApp(rule, payload)) add(EvaluationReason.APP_MISMATCH)
+        // Recorded as its own reason rather than folded into a mismatch: "your rule is right but
+        // this arrived at the wrong time" is the answer to a different question from "your phrase
+        // did not match", and the Activity screen has to be able to tell them apart.
+        if (!matchesSchedule(rule.schedule, atEpochMillis, zone)) add(EvaluationReason.OUTSIDE_SCHEDULE)
         // A rule that tests no phrase needs no content, so absent content is not a reason to
         // refuse it. Redaction stays a refusal either way: content the system hid might have
         // matched, and this build will not guess which way.

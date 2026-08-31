@@ -35,6 +35,7 @@ enum class Overlay {
     MUTE_IMPORTANCE,
     HISTORY_STORAGE,
     HISTORY_RETENTION,
+    SCHEDULE,
     TRANSFER_EXPORT_PASSPHRASE,
     TRANSFER_IMPORT_PASSPHRASE,
     TRANSFER_PREVIEW,
@@ -76,6 +77,11 @@ data class SignalRule(
     val extras: List<String> = emptyList(),
     val filterOperator: String = DEFAULT_FILTER_OPERATOR,
     val enabledFor: String? = null,
+    /**
+     * When this rule is allowed to match. Null means any time, which is what every rule written
+     * before schedules existed meant and what a new rule means until one is set.
+     */
+    val schedule: RuleSchedule? = null,
 )
 
 /**
@@ -175,7 +181,7 @@ data class RuleStore(
     val nextRuleId: Long = 1L,
 )
 
-const val CURRENT_RULE_STORE_VERSION = 3
+const val CURRENT_RULE_STORE_VERSION = 4
 
 data class HistoryRecord(
     val id: Long = 1L,

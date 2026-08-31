@@ -75,7 +75,10 @@ private fun raiseCounter(counter: Long, rules: List<SignalRule>): Long {
  */
 private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule> =
     when (version) {
-        1, 2, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
+        // Every version so far has only added optional fields, so an older store reads with the
+        // new ones at their defaults: schedule null, which means the rule keeps matching at any
+        // time rather than suddenly being limited to a window nobody chose.
+        1, 2, 3, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
         else -> emptyList()
     }
 

@@ -94,6 +94,7 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.actionCatalog
+import com.sysadmindoc.nono.model.describeSchedule
 import com.sysadmindoc.nono.model.filterRules
 import com.sysadmindoc.nono.model.normalizeMatchType
 import kotlinx.coroutines.Dispatchers
@@ -326,6 +327,14 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
             RuleFlowRow(2, Icons.Rounded.Search, "MATCH", "${rule.matchType.replaceFirstChar { it.uppercase() }} ${rule.phrase}")
             RuleConnector()
             RuleFlowRow(3, actionIcon(rule.action), "ACTION", renderActionSummary(rule.action))
+            if (rule.schedule != null) {
+                Text(
+                    "Only ${describeSchedule(rule.schedule).replaceFirstChar { it.lowercase() }}",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
             if (rule.extras.isNotEmpty()) {
                 Text("Filters: ${rule.extras.joinToString()}", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
             }
@@ -422,6 +431,16 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                 action = "Choose action",
                 onAction = { model.navigate(Route.ACTION_SELECTOR) },
                 error = missing,
+            )
+        }
+        item {
+            BuilderStep(
+                step = 4,
+                label = "ONLY WHEN",
+                value = describeSchedule(state.draft.schedule),
+                icon = Icons.Rounded.Schedule,
+                action = "Set schedule",
+                onAction = { model.showOverlay(Overlay.SCHEDULE) },
             )
         }
         item {

@@ -44,7 +44,12 @@ class RuleCodecGoldenTest {
             decoded,
         )
         assertEquals(decoded, decodeRules(encodeRules(decoded.orEmpty())))
-        assertNull(decodeRules("{\"version\":4,\"rules\":[]}"))
+        // A store written before schedules existed reads with none, so the rule keeps matching at
+        // any time rather than being limited to a window nobody chose.
+        assertNull("a v3 rule has no schedule", decoded?.single()?.schedule)
+        // A store from a build that knows more than this one is refused rather than half-read. The
+        // number moved because version 4 is this build's own; the guard is unchanged.
+        assertNull(decodeRules("{\"version\":5,\"rules\":[]}"))
     }
 
     private fun resource(name: String): String =
