@@ -83,6 +83,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val historyRetry = MutableStateFlow(0)
     private var pendingExportPayload: String? = null
     private var pendingExportIsHistory = false
+
+    /** Rows in the pending history CSV, so the confirmation can say what was written. */
+    private var pendingExportRowCount = 0
     private var pendingImportEncoded: String? = null
     private var pendingImportRules: List<SignalRule>? = null
 
@@ -374,8 +377,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun writeExport(uri: Uri) {
         val payload = pendingExportPayload
         val history = pendingExportIsHistory
+        val rows = pendingExportRowCount
         pendingExportPayload = null
         pendingExportIsHistory = false
+        pendingExportRowCount = 0
         if (payload == null) {
             _state.value = _state.value.copy(transientMessage = "The export expired; try again.")
             return
@@ -391,7 +396,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     transientMessage = result.fold(
                         {
                             if (history) {
-                                "History metadata exported. No notification content was written."
+                                // Says what the file holds, so nobody has to guess whether a
+                                // filter or a page limit was in force.
+                                "Exported all $rows retained records. No notification content was written."
                             } else {
                                 "Encrypted rules exported. Notification history was not included."
                             }
@@ -403,29 +410,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     /**
-     * Prepares a CSV of the history currently loaded and asks the UI for a destination.
+     * Prepares a CSV of every retained record and asks the UI for a destination.
      *
-     * Shares the export plumbing with the rule file; the payload is decided here so the two cannot
-     * be confused. Only stored metadata is written, never notification content.
+     * Reads its own query rather than the history screen's list, which carries the user's filters
+     * and a page limit: exporting that wrote at most one page and called it the history. Shares
+     * the export plumbing with the rule file; the payload is decided here so the two cannot be
+     * confused. Only stored metadata is written, never notification content.
      */
     fun beginHistoryExport() {
-        val records = _state.value.history
-        if (records.isEmpty()) {
-            _state.value = _state.value.copy(transientMessage = "There is no history to export yet.")
-            return
+        _state.value = _state.value.copy(transientMessage = "Preparing the history export…")
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = runCatching {
+                historyDatabase.notificationDao().readAllForExport().map { it.toHistoryRecord() }
+            }
+            withContext(Dispatchers.Main.immediate) {
+                result.fold(
+                    onSuccess = { records ->
+                        if (records.isEmpty()) {
+                            _state.value = _state.value.copy(transientMessage = "There is no history to export yet.")
+                            return@fold
+                        }
+                        pendingExportPayload = HistoryExport.toCsv(records)
+                        pendingExportIsHistory = true
+                        pendingExportRowCount = records.size
+                        _state.value = _state.value.copy(
+                            transferExportRequest = _state.value.transferExportRequest + 1,
+                            transferExportIsHistory = true,
+                            transientMessage = null,
+                        )
+                    },
+                    onFailure = {
+                        _state.value = _state.value.copy(transientMessage = "History could not be read for export.")
+                    },
+                )
+            }
         }
-        pendingExportPayload = HistoryExport.toCsv(records)
-        pendingExportIsHistory = true
-        _state.value = _state.value.copy(
-            transferExportRequest = _state.value.transferExportRequest + 1,
-            transferExportIsHistory = true,
-            transientMessage = null,
-        )
     }
 
     fun exportCancelled() {
         pendingExportPayload = null
         pendingExportIsHistory = false
+        pendingExportRowCount = 0
         _state.value = _state.value.copy(transientMessage = "Export cancelled.")
     }
     fun beginImport(uri: Uri) {

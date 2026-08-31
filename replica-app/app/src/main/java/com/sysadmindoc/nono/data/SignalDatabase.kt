@@ -249,6 +249,16 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
 
+    /**
+     * Every retained row, for export.
+     *
+     * Deliberately not the history screen's query: that one carries the user's filters and a page
+     * limit, so exporting from it wrote whatever happened to be on screen and called it the
+     * history. Suspending, so the caller reads it off the main thread.
+     */
+    @Query("SELECT * FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC")
+    suspend fun readAllForExport(): List<NotificationEntity>
+
     /** Counts what actually arrived: a system-generated group summary is not its own notification. */
     @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 0")
     suspend fun readWidgetCount(): Int

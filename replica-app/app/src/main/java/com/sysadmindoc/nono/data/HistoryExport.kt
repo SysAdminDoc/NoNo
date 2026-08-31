@@ -69,10 +69,34 @@ object HistoryExport {
             .format(Date(epochMillis))
 
     /**
-     * RFC 4180 quoting for every field.
+     * RFC 4180 quoting plus formula neutralization.
      *
-     * A notification key routinely contains commas and vertical bars, and a leading equals or plus
-     * would be read as a formula by a spreadsheet, so nothing is left unquoted.
+     * Quoting alone is not enough. Excel, LibreOffice and Google Sheets all evaluate a cell whose
+     * text begins with `=`, `+`, `-` or `@` even when the CSV had it quoted, so a notification
+     * category, which the posting app writes freely, can become a formula in someone else's
+     * spreadsheet. A leading tab, carriage return or newline is stripped first because the
+     * spreadsheet ignores it and then reads the trigger behind it, and the full-width forms are
+     * covered because the same applications normalize them.
+     *
+     * Neutralized cells are prefixed with a single quote, which is the documented convention: the
+     * apostrophe is visible in the cell and the rest is text.
      */
-    private fun quote(value: String): String = "\"" + value.replace("\"", "\"\"") + "\""
+    internal fun quote(value: String): String {
+        val neutralized = if (needsFormulaGuard(value)) "'$value" else value
+        return "\"" + neutralized.replace("\"", "\"\"") + "\""
+    }
+
+    private fun needsFormulaGuard(value: String): Boolean {
+        val first = value.firstOrNull() ?: return false
+        if (first in LEADING_WHITESPACE_TRIGGERS) return true
+        return value.dropWhile { it in LEADING_WHITESPACE_TRIGGERS }.firstOrNull() in FORMULA_TRIGGERS
+    }
+
+    /**
+     * ASCII triggers and their full-width equivalents: U+FF1D, U+FF0B, U+FF0D, U+FF20.
+     */
+    private val FORMULA_TRIGGERS = setOf('=', '+', '-', '@', '＝', '＋', '－', '＠')
+
+    /** Leading characters a spreadsheet skips before reading the trigger behind them. */
+    private val LEADING_WHITESPACE_TRIGGERS = setOf('\t', '\r', '\n')
 }

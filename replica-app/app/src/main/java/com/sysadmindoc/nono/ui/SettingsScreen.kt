@@ -130,7 +130,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                 SignalDivider()
                 PreferenceRow(Icons.Rounded.Schedule, "Keep history for", value = state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_RETENTION) })
                 SignalDivider()
-                PreferenceRow(Icons.Rounded.Download, "Export metadata", value = "CSV", onClick = model::beginHistoryExport)
+                PreferenceRow(Icons.Rounded.Download, "Export metadata", "Every retained record, as CSV.", value = "CSV", onClick = model::beginHistoryExport)
                 SignalDivider()
                 PreferenceRow(Icons.Rounded.Backup, "Automatic backups", value = "Off", unavailable = NO_AUTOMATIC_BACKUPS)
                 SignalDivider()

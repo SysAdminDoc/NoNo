@@ -81,6 +81,68 @@ class HistoryExportTest {
     }
 
     @Test
+    fun aFieldThatWouldBecomeAFormulaIsEmittedAsText() {
+        // Category is written by the posting app, so it is the field that can carry this.
+        val triggers = listOf("=1+1", "+1", "-1", "@SUM(A1)", "＝1+1", "＋1", "－1", "＠SUM(A1)")
+
+        triggers.forEach { trigger ->
+            val csv = HistoryExport.toCsv(listOf(record.copy(category = trigger)))
+
+            assertTrue("$trigger was not neutralized", csv.contains("\"'$trigger\""))
+            assertTrue("$trigger survived unguarded", !csv.contains("\"$trigger\""))
+        }
+    }
+
+    @Test
+    fun aTriggerHiddenBehindWhitespaceIsAlsoNeutralized() {
+        // A spreadsheet skips the leading tab or newline and reads the trigger behind it.
+        listOf("\t=1+1", "\r=1+1", "\n=1+1", "\t\t@cmd").forEach { value ->
+            val csv = HistoryExport.toCsv(listOf(record.copy(category = value)))
+
+            assertTrue("$value was not neutralized", csv.contains("\"'$value\""))
+        }
+    }
+
+    @Test
+    fun ordinaryFieldsAreNotDecoratedWithAnApostrophe() {
+        val csv = HistoryExport.toCsv(listOf(record.copy(category = "msg")))
+
+        assertTrue(csv.contains("\"msg\""))
+        assertTrue(!csv.contains("\"'msg\""))
+    }
+
+    @Test
+    fun everyRowIsWrittenWhateverThePageSizeWas() {
+        // The old export wrote whatever the history screen had loaded, which was capped at 100.
+        val records = (1..250).map { index ->
+            record.copy(id = index.toLong(), notificationKey = "key-$index", postedAtEpochMillis = index.toLong())
+        }
+
+        val lines = HistoryExport.toCsv(records).trimEnd('\r', '\n').split("\r\n")
+
+        assertEquals(251, lines.size)
+        (1..250).forEach { index ->
+            assertTrue("row $index is missing", lines.any { it.contains("\"key-$index\"") })
+        }
+    }
+
+    @Test
+    fun anAdversarialRowStillOccupiesExactlyOneLine() {
+        val nasty = record.copy(
+            category = "=cmd|'/c calc'!A1",
+            groupKey = "line one\r\nline two",
+            channelId = "quote\"and,comma",
+        )
+
+        val csv = HistoryExport.toCsv(listOf(nasty))
+
+        // The embedded CRLF lives inside a quoted field, so a reader still sees one record.
+        assertTrue(csv.contains("\"'=cmd|'/c calc'!A1\""))
+        assertTrue(csv.contains("\"quote\"\"and,comma\""))
+        assertEquals(1, csv.split("\r\n\"").size - 1)
+    }
+
+    @Test
     fun timestampsAreWrittenInUtcAlongsideTheRawValue() {
         val csv = HistoryExport.toCsv(listOf(record))
         assertTrue(csv.contains("\"2025-08-24T01:46:40Z\""))
