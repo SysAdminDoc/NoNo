@@ -82,7 +82,77 @@ data class SignalRule(
      * before schedules existed meant and what a new rule means until one is set.
      */
     val schedule: RuleSchedule? = null,
+    /**
+     * The phrase side of the rule, once the user has touched it.
+     *
+     * Null for every rule written before this existed, and read through [phraseConditionFor],
+     * which turns the older single phrase and its operator into the same value. Keeping the old
+     * fields rather than rewriting them on load means a store this build writes can still be read
+     * by the build before it.
+     */
+    val phraseCondition: PhraseCondition? = null,
 )
+
+/**
+ * The phrase condition a rule is evaluated against.
+ *
+ * A rule that predates field selection was testing the title and the text joined together with
+ * one substring, case-insensitively, and "doesn't contain" meant the phrase was absent. That maps
+ * onto every field selected, [MatchMode.CONTAINS], and [PhraseQuantifier.NONE], which is what this
+ * returns, so nothing changes meaning when it is read.
+ */
+fun phraseConditionFor(rule: SignalRule): PhraseCondition {
+    rule.phraseCondition?.let { return it }
+    val phrase = rule.phrase.trim()
+    val phrases = if (phrase.isEmpty() || phrase.equals("anything", ignoreCase = true)) {
+        emptyList()
+    } else {
+        listOf(phrase)
+    }
+    return PhraseCondition(
+        phrases = phrases,
+        quantifier = if (isNegatedMatchType(rule.matchType)) PhraseQuantifier.NONE else PhraseQuantifier.ANY,
+        mode = MatchMode.CONTAINS,
+        fields = MatchField.ALL,
+        caseSensitive = false,
+    )
+}
+
+/**
+ * Stores [condition] on the rule and keeps the older fields saying the same thing.
+ *
+ * [SignalRule.phrase] and [SignalRule.matchType] are what the rule card, the shortcut label and a
+ * build older than this one read. Leaving them behind would make a rule display one condition and
+ * evaluate another.
+ */
+fun SignalRule.withPhraseCondition(condition: PhraseCondition): SignalRule {
+    val phrases = condition.phrases.filter { it.isNotBlank() }
+    return copy(
+        phraseCondition = condition,
+        phrase = if (phrases.isEmpty()) "anything" else phrases.joinToString(", "),
+        matchType = if (condition.quantifier == PhraseQuantifier.NONE) "doesn't contain" else "contains",
+    )
+}
+
+/** What the rule card and the builder say a phrase condition does. */
+fun describePhraseCondition(condition: PhraseCondition): String {
+    if (condition.isEmpty) return "Anything"
+    val phrases = condition.phrases.filter { it.isNotBlank() }
+    val subject = if (condition.mode == MatchMode.REGEX) "pattern" else "phrase"
+    val head = when {
+        phrases.size == 1 && condition.quantifier == PhraseQuantifier.NONE -> "Does not contain the $subject"
+        phrases.size == 1 -> "Contains the $subject"
+        else -> condition.quantifier.label
+    }
+    val body = phrases.joinToString(", ")
+    val fields = if (condition.fields == MatchField.ALL) {
+        "any field"
+    } else {
+        condition.fields.sortedBy { it.ordinal }.joinToString(" or ") { it.label.lowercase() }
+    }
+    val case = if (condition.caseSensitive) ", case must match" else ""
+    return "$head $body, in $fields$case"
+}
 
 /**
  * Operators for the content filter and for nested filter groups.
@@ -393,6 +463,9 @@ data class UiState(
     /** Whether the rule-search field is open. Separate from the text: an open, empty field is a
      * different screen from a closed one, and the two empty states have to read differently. */
     val ruleSearchActive: Boolean = false,
+    /** Sample text typed into the match tester. Never stored and never leaves the screen. */
+    val testerTitle: String = "",
+    val testerText: String = "",
     /** Apps the picker offers: launchable ones merged with everything history has seen. */
     val appCatalog: List<CatalogedApp> = emptyList(),
     val renameDraft: String = "",
@@ -534,14 +607,28 @@ private fun actionClause(action: String): String = when {
 /** Verbatim validation copy recorded in the audit (V001). */
 const val MISSING_FIELD_MESSAGE = "You have a missing field. Please tap to fill it in to complete the rule."
 
+const val INVALID_PATTERN_MESSAGE = "That pattern is not valid. Fix it, or switch back to Contains."
+const val NO_FIELD_SELECTED_MESSAGE = "Choose at least one field to search."
+
 fun validateRule(rule: SignalRule): String? = when {
     rule.app.isBlank() -> "Choose an app."
     rule.phrase.isBlank() -> "Choose notification content to match."
+    // A pattern that will not compile tests nothing, so a rule carrying one would sit in the list
+    // looking active and never match. Refused at the point it can still be corrected.
+    invalidPatternIn(rule) -> INVALID_PATTERN_MESSAGE
+    rule.phraseCondition?.let { it.fields.isEmpty() && !it.isEmpty } == true -> NO_FIELD_SELECTED_MESSAGE
     rule.action.isBlank() || rule.action == "nothing" -> MISSING_FIELD_MESSAGE
     // An imported rule keeps its action and stays readable, but saving it again would be the
     // app agreeing to carry it out.
     isExecutableAction(rule.action) -> UNSUPPORTED_ACTION_MESSAGE
     else -> null
+}
+
+/** True when the rule matches on a pattern and at least one of them will not compile. */
+private fun invalidPatternIn(rule: SignalRule): Boolean {
+    val condition = rule.phraseCondition ?: return false
+    if (condition.mode != MatchMode.REGEX) return false
+    return condition.phrases.filter { it.isNotBlank() }.any { !isValidPattern(it) }
 }
 
 fun filterHistory(records: List<HistoryRecord>, query: String, filter: String): List<HistoryRecord> = records.filter { record ->

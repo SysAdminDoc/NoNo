@@ -49,6 +49,12 @@ import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.MINUTES_PER_DAY
+import com.sysadmindoc.nono.model.MatchField
+import com.sysadmindoc.nono.model.MatchMode
+import com.sysadmindoc.nono.model.PhraseCondition
+import com.sysadmindoc.nono.model.PhraseQuantifier
+import com.sysadmindoc.nono.model.phraseConditionFor
+import com.sysadmindoc.nono.model.withPhraseCondition
 import com.sysadmindoc.nono.model.RuleSchedule
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.StatusMessages
@@ -389,10 +395,56 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun dismissOverlay() { _state.value = _state.value.copy(overlay = Overlay.NONE) }
     fun updateDraft(transform: (SignalRule) -> SignalRule) { _state.value = _state.value.copy(draft = transform(_state.value.draft), validationError = null) }
     fun setPhraseDraft(text: String) { _state.value = _state.value.copy(phraseDraft = text) }
+    /**
+     * Applies the editor's phrase to the draft.
+     *
+     * One phrase per line. The legacy [SignalRule.phrase] and [SignalRule.matchType] are kept in
+     * step with the condition rather than abandoned, because the rule card, the shortcut label and
+     * a store read by the previous build all still go through them.
+     */
     fun commitPhrase() {
-        val phrase = _state.value.phraseDraft.ifBlank { "anything" }
-        _state.value = _state.value.copy(route = Route.RULE_BUILDER, draft = _state.value.draft.copy(phrase = phrase), overlay = Overlay.NONE, phraseInputVisible = false)
+        val phrases = _state.value.phraseDraft.lines().map(String::trim).filter(String::isNotEmpty)
+        val condition = currentPhraseCondition().copy(phrases = phrases)
+        _state.value = _state.value.copy(
+            route = Route.RULE_BUILDER,
+            draft = _state.value.draft.withPhraseCondition(condition),
+            overlay = Overlay.NONE,
+            phraseInputVisible = false,
+        )
     }
+
+    /** The condition being edited, which is the draft's own or the one its old fields imply. */
+    private fun currentPhraseCondition(): PhraseCondition = phraseConditionFor(_state.value.draft)
+
+    private fun editPhraseCondition(transform: (PhraseCondition) -> PhraseCondition) {
+        val updated = transform(currentPhraseCondition())
+        _state.value = _state.value.copy(
+            draft = _state.value.draft.withPhraseCondition(updated),
+            validationError = null,
+        )
+    }
+
+    fun setMatchMode(mode: MatchMode) = editPhraseCondition { it.copy(mode = mode) }
+
+    fun setPhraseQuantifier(quantifier: PhraseQuantifier) = editPhraseCondition { it.copy(quantifier = quantifier) }
+
+    fun setMatchCaseSensitive(caseSensitive: Boolean) = editPhraseCondition { it.copy(caseSensitive = caseSensitive) }
+
+    /**
+     * Turns one field on or off.
+     *
+     * The last field cannot be turned off from here: a condition with no field searches nothing,
+     * and leaving the user in that state with no way back is worse than refusing the tap. Saving
+     * still refuses it, for a condition that arrives from a file.
+     */
+    fun toggleMatchField(field: MatchField) = editPhraseCondition { condition ->
+        val fields = if (field in condition.fields) condition.fields - field else condition.fields + field
+        if (fields.isEmpty()) condition else condition.copy(fields = fields)
+    }
+
+    fun setTesterTitle(text: String) { _state.value = _state.value.copy(testerTitle = text) }
+
+    fun setTesterText(text: String) { _state.value = _state.value.copy(testerText = text) }
     /**
      * Turns the draft's schedule on or off.
      *

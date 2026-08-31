@@ -7,6 +7,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.sysadmindoc.nono.data.IdentifierPseudonyms
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
+import com.sysadmindoc.nono.model.MatchableFields
 import com.sysadmindoc.nono.model.NotificationContentState
 
 /**
@@ -19,6 +20,10 @@ data class NotificationPayload(
     val title: CharSequence?,
     val text: CharSequence?,
     val appLabel: CharSequence?,
+    /** The expanded body an app supplies for a big-text notification, when it supplies one. */
+    val bigText: CharSequence? = null,
+    /** The conversation or sender name, when the app supplies one. */
+    val conversation: CharSequence? = null,
     val packageName: String? = null,
     /** Used by metadata-only previews to preserve provenance without supplying content. */
     val contentStateOverride: NotificationContentState? = null,
@@ -93,6 +98,26 @@ fun classifyNotificationContent(
 }
 
 /** Returns content eligible for a future matcher, or null for hidden/unavailable content. */
+/**
+ * The notification's text, field by field, or null when there is nothing matchable.
+ *
+ * Redaction is checked once here rather than per field: if the system hid the content, every field
+ * is equally unavailable and a rule must not be told otherwise.
+ */
+fun matchableNotificationFields(
+    payload: NotificationPayload,
+    sdkInt: Int = Build.VERSION.SDK_INT,
+): MatchableFields? {
+    if (classifyNotificationContent(payload, sdkInt) != NotificationContentState.AVAILABLE) return null
+    val fields = MatchableFields(
+        title = payload.title?.toString()?.takeIf(String::isNotBlank),
+        text = payload.text?.toString()?.takeIf(String::isNotBlank),
+        bigText = payload.bigText?.toString()?.takeIf(String::isNotBlank),
+        conversation = payload.conversation?.toString()?.takeIf(String::isNotBlank),
+    )
+    return if (fields.isEmpty) null else fields
+}
+
 fun matchableNotificationText(
     payload: NotificationPayload,
     sdkInt: Int = Build.VERSION.SDK_INT,
@@ -116,6 +141,9 @@ fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
         title = extras.getCharSequence(Notification.EXTRA_TITLE),
         text = extras.getCharSequence(Notification.EXTRA_TEXT),
         appLabel = null,
+        // Read like every other extra: absent on most notifications, and absent is not empty.
+        bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT),
+        conversation = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE),
         packageName = sbn.packageName,
     )
 }

@@ -501,6 +501,8 @@ private fun EvaluationReason.displayName(): String = when (this) {
     EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
     EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
     EvaluationReason.OUTSIDE_SCHEDULE -> "outside its schedule"
+    EvaluationReason.INVALID_PATTERN -> "its pattern is not valid"
+    EvaluationReason.NO_FIELD_SELECTED -> "no field is selected to search"
 }
 
 /**

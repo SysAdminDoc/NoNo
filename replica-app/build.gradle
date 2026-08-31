@@ -99,9 +99,27 @@ tasks.register('verifyBuildPolicy') {
             }
         }
 
+        // Every schema version has to be on disk, not just the newest. MigrationTestHelper builds
+        // an old database from its exported file, so a missing one turns into an instrumented test
+        // failing on a device, which is the slowest possible place to find out. One went missing
+        // exactly that way on 2026-08-31.
+        def schemaDir = file('app/schemas/com.sysadmindoc.nono.data.SignalDatabase')
+        def databaseSource = file('app/src/main/java/com/sysadmindoc/nono/data/SignalDatabase.kt').getText('UTF-8')
+        def declaredVersion = (databaseSource =~ /version\s*=\s*(\d+),\s*exportSchema/).with {
+            it.find() ? it.group(1).toInteger() : null
+        }
+        if (declaredVersion == null) {
+            failures << 'the database version could not be read from SignalDatabase.kt'
+        } else {
+            def missingSchemas = (1..declaredVersion).findAll { !new File(schemaDir, "${it}.json").exists() }
+            if (!missingSchemas.isEmpty()) {
+                failures << "exported Room schemas are missing: ${missingSchemas.collect { it + '.json' }.join(', ')}"
+            }
+        }
+
         if (!failures.isEmpty()) {
             throw new GradleException('Build policy failed:\n - ' + failures.join('\n - '))
         }
-        println "Build policy OK: kotlin=${kotlinVersion} buildCache=${isBelowAdvisoryFloor(kotlinVersion) ? 'off (GHSA-r937-wjx7-w2jp)' : 'permitted'} repositories=${repositories.unique().join(',')} wrapper=9.7.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
+        println "Build policy OK: kotlin=${kotlinVersion} buildCache=${isBelowAdvisoryFloor(kotlinVersion) ? 'off (GHSA-r937-wjx7-w2jp)' : 'permitted'} schemas=1..${declaredVersion} repositories=${repositories.unique().join(',')} wrapper=9.7.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
     }
 }

@@ -1,5 +1,15 @@
 package com.sysadmindoc.nono.ui
 
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import com.sysadmindoc.nono.model.MatchField
+import com.sysadmindoc.nono.model.MatchMode
+import com.sysadmindoc.nono.model.MatchableFields
+import com.sysadmindoc.nono.model.PhraseCondition
+import com.sysadmindoc.nono.model.PhraseMatchResult
+import com.sysadmindoc.nono.model.PhraseQuantifier
+import com.sysadmindoc.nono.model.evaluatePhrase
+import com.sysadmindoc.nono.model.phraseConditionFor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -410,7 +420,9 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                 icon = Icons.Rounded.Search,
                 action = "Edit match",
                 onAction = {
-                    model.setPhraseDraft(if (state.draft.phrase == "anything") "" else state.draft.phrase)
+                    // From the condition, not the legacy field: that one joins several phrases
+                    // with commas, and the editor is one phrase per line.
+                    model.setPhraseDraft(phraseConditionFor(state.draft).phrases.joinToString(separator = System.lineSeparator()))
                     model.navigate(Route.PHRASE_EDITOR)
                 },
                 secondaryAction = "Add filter",
@@ -672,25 +684,25 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
             )
         }
         item {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(SignalMetrics.controlRadius))
-                    .border(1.dp, SignalColors.ControlOutline, RoundedCornerShape(SignalMetrics.controlRadius)),
-            ) {
-                OperatorChoice("Contains", !state.draft.matchType.contains("doesn't", true), Modifier.weight(1f)) {
-                    model.updateDraft { it.copy(matchType = "contains") }
-                }
-                OperatorChoice("Does not contain", state.draft.matchType.contains("doesn't", true), Modifier.weight(1f)) {
-                    model.updateDraft { it.copy(matchType = "doesn't contain") }
-                }
+            val condition = phraseConditionFor(state.draft)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("HOW TO COMPARE", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
+                SegmentedChoice(
+                    options = MatchMode.entries.map { it.label },
+                    selectedIndex = MatchMode.entries.indexOf(condition.mode),
+                ) { model.setMatchMode(MatchMode.entries[it]) }
+                Text("HOW MANY", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
+                SegmentedChoice(
+                    options = PhraseQuantifier.entries.map { it.label },
+                    selectedIndex = PhraseQuantifier.entries.indexOf(condition.quantifier),
+                ) { model.setPhraseQuantifier(PhraseQuantifier.entries[it]) }
             }
         }
         item {
             OutlinedTextField(
                 value = state.phraseDraft,
                 onValueChange = model::setPhraseDraft,
-                label = { Text("Phrase") },
+                label = { Text(if (phraseConditionFor(state.draft).mode == MatchMode.REGEX) "Patterns, one per line" else "Phrases, one per line") },
                 trailingIcon = if (state.phraseDraft.isNotEmpty()) ({
                     IconButton(onClick = { model.setPhraseDraft("") }) { Icon(Icons.Rounded.Close, contentDescription = "Clear phrase") }
                 }) else null,
@@ -714,11 +726,142 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
                 Icons.Rounded.Search,
             )
         }
-        item { Text("MATCH PREVIEW", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+        item { Text("WHERE TO LOOK", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
+            val condition = phraseConditionFor(state.draft)
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                SignalListRow(Icons.Rounded.Info, "Current condition", "${state.draft.matchType.replaceFirstChar { it.uppercase() }} ${state.phraseDraft.ifBlank { "anything" }}")
+                Column {
+                    MatchField.entries.forEachIndexed { index, field ->
+                        FieldToggleRow(field.label, field in condition.fields) { model.toggleMatchField(field) }
+                        if (index != MatchField.entries.lastIndex) SignalDivider()
+                    }
+                    SignalDivider()
+                    FieldToggleRow("Case must match", condition.caseSensitive) {
+                        model.setMatchCaseSensitive(!condition.caseSensitive)
+                    }
+                }
             }
+        }
+        item { MatchTester(state, model) }
+    }
+}
+
+/**
+ * Tries the condition being edited against text the user types.
+ *
+ * A rule that does not fire is the hardest thing to debug in an app like this, because the
+ * notification that should have matched is gone by the time anyone looks. Sample text is the one
+ * thing that can be tried repeatedly. Nothing typed here is stored or leaves the screen.
+ */
+@Composable
+private fun MatchTester(state: UiState, model: MainViewModel) {
+    val condition = remember(state.draft, state.phraseDraft) {
+        phraseConditionFor(state.draft).copy(
+            phrases = state.phraseDraft.lines().map(String::trim).filter(String::isNotEmpty),
+        )
+    }
+    val fields = MatchableFields(
+        title = state.testerTitle.takeIf(String::isNotBlank),
+        text = state.testerText.takeIf(String::isNotBlank),
+    )
+    val result = remember(condition, fields) { evaluatePhrase(condition, fields) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("TRY IT", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
+        OutlinedTextField(
+            value = state.testerTitle,
+            onValueChange = model::setTesterTitle,
+            label = { Text("Sample title") },
+            singleLine = true,
+            shape = RoundedCornerShape(SignalMetrics.controlRadius),
+            colors = signalTextFieldColors(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.testerText,
+            onValueChange = model::setTesterText,
+            label = { Text("Sample text") },
+            singleLine = false,
+            minLines = 2,
+            shape = RoundedCornerShape(SignalMetrics.controlRadius),
+            colors = signalTextFieldColors(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SignalGroupedSurface(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(describeTesterOutcome(result, condition), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    describeTesterDetail(result, condition, fields),
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+        }
+    }
+}
+
+private fun describeTesterOutcome(result: PhraseMatchResult, condition: PhraseCondition): String = when {
+    result.failure != null -> "Cannot be tested"
+    condition.isEmpty -> "Matches anything"
+    result.matched -> "This would match"
+    else -> "This would not match"
+}
+
+private fun describeTesterDetail(
+    result: PhraseMatchResult,
+    condition: PhraseCondition,
+    fields: MatchableFields,
+): String {
+    result.failure?.let { return it.message }
+    if (condition.isEmpty) return "No phrase is set, so every notification from the chosen app matches."
+    if (fields.isEmpty) return "Type something above to try it."
+    val found = result.fieldMatches.filter { it.matched }.map { it.phrase }.distinct()
+    val notFound = condition.phrases.filter { it.isNotBlank() && it !in found }
+    if (condition.quantifier == PhraseQuantifier.NONE) {
+        return if (result.matched) {
+            "None of them appear in the fields you selected."
+        } else {
+            "Found " + found.joinToString(", ") + ", and this rule requires that to be absent."
+        }
+    }
+    if (result.matched) {
+        val where = result.matchedFields.joinToString(" and ") { it.label.lowercase() }
+        return "Found " + found.joinToString(", ") + " in the $where."
+    }
+    return "Not found: " + notFound.joinToString(", ") + "."
+}
+
+/** One switchable line in the field list. */
+@Composable
+private fun FieldToggleRow(label: String, selected: Boolean, onToggle: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() })
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Icon(
+            if (selected) Icons.Rounded.Check else Icons.Rounded.Close,
+            contentDescription = null,
+            tint = if (selected) SignalColors.Yellow else SignalColors.Muted,
+        )
+    }
+}
+
+/** A row of mutually exclusive choices, laid out one per line so long labels never clip. */
+@Composable
+private fun SegmentedChoice(options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(SignalMetrics.controlRadius))
+            .border(1.dp, SignalColors.ControlOutline, RoundedCornerShape(SignalMetrics.controlRadius))
+            .selectableGroup(),
+    ) {
+        options.forEachIndexed { index, label ->
+            OperatorChoice(label, index == selectedIndex, Modifier.fillMaxWidth()) { onSelect(index) }
+            if (index != options.lastIndex) SignalDivider()
         }
     }
 }

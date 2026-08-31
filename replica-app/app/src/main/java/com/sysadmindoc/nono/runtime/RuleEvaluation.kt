@@ -4,7 +4,10 @@ import android.os.Build
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
-import com.sysadmindoc.nono.model.isNegatedMatchType
+import com.sysadmindoc.nono.model.MatchableFields
+import com.sysadmindoc.nono.model.PhraseMatchFailure
+import com.sysadmindoc.nono.model.evaluatePhrase
+import com.sysadmindoc.nono.model.phraseConditionFor
 import com.sysadmindoc.nono.model.matchesSchedule
 import java.util.TimeZone
 
@@ -16,6 +19,12 @@ enum class EvaluationReason {
     CONTENT_NOT_AVAILABLE,
     PHRASE_MISMATCH,
     EXTRA_FILTER_UNSUPPORTED,
+
+    /** The rule's pattern is not valid, so nothing could be tested against it. */
+    INVALID_PATTERN,
+
+    /** No field is selected, so there is nothing to search. */
+    NO_FIELD_SELECTED,
 
     /** The notification arrived outside the rule's schedule window. */
     OUTSIDE_SCHEDULE,
@@ -70,9 +79,9 @@ fun evaluateRules(
     zone: TimeZone = TimeZone.getDefault(),
 ): RuleEvaluationTrace {
     val contentState = classifyNotificationContent(payload, sdkInt)
-    val matchableText = matchableNotificationText(payload, sdkInt)?.lowercase()
+    val matchableFields = matchableNotificationFields(payload, sdkInt)
     val conditions = rules.map { rule ->
-        evaluateRule(rule, payload, contentState, matchableText, atEpochMillis, zone)
+        evaluateRule(rule, payload, contentState, matchableFields, atEpochMillis, zone)
     }
     val matchingRules = rules.filter { rule ->
         conditions.first { it.ruleId == rule.id }.matched
@@ -163,7 +172,7 @@ private fun evaluateRule(
     rule: SignalRule,
     payload: NotificationPayload,
     contentState: NotificationContentState,
-    matchableText: String?,
+    matchableFields: MatchableFields?,
     atEpochMillis: Long,
     zone: TimeZone,
 ): RuleConditionTrace {
@@ -178,15 +187,24 @@ private fun evaluateRule(
         // A rule that tests no phrase needs no content, so absent content is not a reason to
         // refuse it. Redaction stays a refusal either way: content the system hid might have
         // matched, and this build will not guess which way.
+        val condition = phraseConditionFor(rule)
         when {
             contentState == NotificationContentState.HIDDEN_BY_SYSTEM -> add(EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM)
-            !ruleRequiresContent(rule) -> Unit
+            condition.isEmpty -> Unit
             // The text itself decides, not the provenance. A metadata-only history row is stored
             // as AVAILABLE and replays with no text at all, and a negated rule would otherwise
             // read that absence as proof the phrase was not there.
-            matchableText == null -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
+            matchableFields == null -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             contentState != NotificationContentState.AVAILABLE -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
-            !matchesPhrase(rule, matchableText) -> add(EvaluationReason.PHRASE_MISMATCH)
+            else -> {
+                val result = evaluatePhrase(condition, matchableFields)
+                when (result.failure) {
+                    PhraseMatchFailure.INVALID_PATTERN -> add(EvaluationReason.INVALID_PATTERN)
+                    PhraseMatchFailure.NO_FIELD_SELECTED -> add(EvaluationReason.NO_FIELD_SELECTED)
+                    PhraseMatchFailure.NO_TEXT -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
+                    null -> if (!result.matched) add(EvaluationReason.PHRASE_MISMATCH)
+                }
+            }
         }
         if (rule.extras.isNotEmpty()) add(EvaluationReason.EXTRA_FILTER_UNSUPPORTED)
     }
@@ -197,10 +215,6 @@ private fun evaluateRule(
         specificity = specificity(rule),
     )
 }
-
-/** A blank phrase, or the audited "anything" token, tests nothing and so needs no content. */
-private fun ruleRequiresContent(rule: SignalRule): Boolean =
-    rule.phrase.isNotBlank() && !rule.phrase.equals("anything", ignoreCase = true)
 
 private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean {
     if (rule.app.isBlank() || rule.app.equals("any app", ignoreCase = true)) return true
@@ -216,16 +230,16 @@ private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean 
  * A negated rule still needs the text. Absence cannot be asserted about content the app never
  * saw, so an unreadable notification refuses both operators rather than matching by default.
  */
-private fun matchesPhrase(rule: SignalRule, text: String?): Boolean {
-    if (rule.phrase.isBlank() || rule.phrase.equals("anything", ignoreCase = true)) return true
-    if (text == null) return false
-    val present = text.contains(rule.phrase.trim().lowercase())
-    return if (isNegatedMatchType(rule.matchType)) !present else present
-}
+/**
+ * How specific a rule is, for conflict resolution.
+ *
+ * Counts the phrase condition rather than the legacy field, so a rule carrying three phrases is
+ * not treated as equally specific to one carrying none.
+ */
 
 private fun specificity(rule: SignalRule): Int =
     (if (rule.app.isBlank() || rule.app.equals("any app", ignoreCase = true)) 0 else 1) +
-        (if (rule.phrase.isBlank() || rule.phrase.equals("anything", ignoreCase = true)) 0 else 1) +
+        phraseConditionFor(rule).phrases.count { it.isNotBlank() } +
         rule.extras.size
 
 private val ruleComparator = compareBy<SignalRule> { priorityRank(it.priority) }
