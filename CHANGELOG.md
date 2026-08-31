@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.4.1] (2026-08-31)
+
+### Added
+
+- Added an optional "Match my wallpaper" theme on Android 12 and newer. It keeps NoNo's tested dark or light surfaces, then uses a wallpaper-derived accent only when that accent clears every text and control contrast check. Older Android versions keep the choices they already had.
+
 ### Changed
 
 - Matching does what you tell it to. A rule can look for a plain phrase or a pattern, in the title, the text, the expanded body or the conversation name separately, with or without case mattering, and across several phrases at once with any, all or none of them. Invisible characters some apps put inside words no longer stop a phrase matching: a rule written by reading the screen works. A pattern that is not valid cannot be saved, so a rule can never sit in the list looking active while testing nothing.

@@ -4,6 +4,7 @@ import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.ui.DYNAMIC_THEME
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -56,6 +57,7 @@ class AuditStatesTest {
         assertEquals(Overlay.THEME, resolve("027_theme_dialog").overlay)
         assertEquals(Route.HISTORY_ACTIVITY, resolve("073_history_item_activity").route)
         assertEquals("Light", resolve("903_light_rules").settings["Theme"])
+        assertEquals(DYNAMIC_THEME, resolve("904_dynamic_rules").settings["Theme"])
     }
 
     @Test
@@ -70,6 +72,7 @@ class AuditStatesTest {
             "067_rule_priority_dialog", "068_rule_folder_dialog", "069_rule_rename_dialog",
             "070_rule_edit_existing", "072_history_notification_detail", "082_explore_suggestion_rule_preview",
             "900_shortcut_selected", "901_phrase_urgent", "902_filter_group_populated", "903_light_rules",
+            "904_dynamic_rules",
         )
         ids.forEach { assertNotNull("state $it must resolve", auditStateFor(base, it)) }
     }

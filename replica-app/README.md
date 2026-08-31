@@ -2,11 +2,15 @@
 
 NoNo is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
 
-Version 1.4.0 applies a new AMOLED black, graphite, and citron interface across every page. The
-reference mockups, implementation captures, accessibility checks, and side-by-side comparisons are
-listed in [`../design-qa.md`](../design-qa.md).
+Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. The app checks the
+derived colour on every surface where the accent appears and keeps its built-in accent if the
+wallpaper colour is not readable. The v1.4.0 reference mockups, implementation captures,
+accessibility checks, and side-by-side comparisons are listed in
+[`../design-qa.md`](../design-qa.md).
 
-![NoNo rules screen](docs/screenshots/nono-rules-v1.4.0.png)
+![NoNo rules screen with a wallpaper-matched accent](docs/screenshots/nono-rules-dynamic-v1.4.1.png)
+
+![NoNo theme chooser with wallpaper matching available](docs/screenshots/nono-theme-dialog-v1.4.1.png)
 
 ## Project identity
 
@@ -17,7 +21,7 @@ listed in [`../design-qa.md`](../design-qa.md).
 - Android support: API 24 and newer; target SDK 36; compiled with SDK 37
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
-  The current Room history schema is version 10; the DataStore rule payload is version 3.
+  The current Room history schema is version 11; the DataStore rule payload is version 4.
 
 ## Requirements
 
@@ -93,7 +97,7 @@ Pass `-SkipSigning` on a machine without the keystore to check determinism alone
 To check an APK you already have:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.4.0-reconstruction.apk
+& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.4.1-reconstruction.apk
 ```
 
 The signer certificate SHA-256 is
@@ -192,8 +196,10 @@ control rather than leaving the reader to infer it:
   rule from a file is given an id from this device rather than the one the file names. Pinning a
   rule to the launcher works on any launcher that supports pinned shortcuts, and says so when the
   launcher refuses. There is no backup scheduler: nothing runs on a timer.
-- **Dark, light, and system themes are available** and the choice is persisted. The app ships no
-  translated resources, so the Language row stays unavailable and the app follows the system locale.
+- **Dark, light, system, and wallpaper-matched themes are available** and the choice is persisted.
+  Wallpaper matching appears on Android 12 and newer, and keeps the static light or dark palette
+  when no derived accent passes the contrast checks. The app ships no translated resources, so the
+  Language row stays unavailable and the app follows the system locale.
 - **History is bounded and queryable.** Search and package/channel/group/content-provenance and
   summary filters are backed by Room migrations and explicit loading/error/retry states. Debug
   captures remain available for deterministic audit states.

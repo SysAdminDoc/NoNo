@@ -218,7 +218,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             onDone = model::submitImportPassphrase,
         )
         Overlay.TRANSFER_PREVIEW -> TransferPreviewDialog(state, model)
-        Overlay.THEME -> ChoiceDialog("Theme", listOf("Dark", "Light", "System default"), state.settings["Theme"], model::dismissOverlay) { model.setSetting("Theme", it) }
+        Overlay.THEME -> ChoiceDialog("Theme", themeCatalog(), state.settings["Theme"], model::dismissOverlay) { model.setSetting("Theme", it) }
         Overlay.LANGUAGE -> ChoiceDialog("Language", listOf("System default", "English", "Deutsch", "Español", "Français"), state.settings["Language"], model::dismissOverlay) { model.setSetting("Language", it) }
         Overlay.NONE -> Unit
     }

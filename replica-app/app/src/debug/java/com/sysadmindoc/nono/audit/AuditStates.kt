@@ -11,6 +11,7 @@ import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.ui.DYNAMIC_THEME
 
 /**
  * QA-only reproduction of the captured audit states.
@@ -170,6 +171,12 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
             rootTab = RootTab.RULES,
             rules = listOf(SignalRule(id = 1L, action = "Mute", enabled = true)),
             settings = base.settings + ("Theme" to "Light"),
+        )
+        id.startsWith("904_dynamic_rules") -> base.copy(
+            route = Route.ROOT,
+            rootTab = RootTab.RULES,
+            rules = listOf(SignalRule(id = 1L, action = "Mute", enabled = true)),
+            settings = base.settings + ("Theme" to DYNAMIC_THEME),
         )
         id.startsWith("082_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "Flashlight suggestion", app = "Messages", phrase = "urgent", action = "Flashlight"))
         else -> base

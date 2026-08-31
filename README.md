@@ -1,6 +1,6 @@
 # NoNo
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
@@ -18,11 +18,13 @@ mutation and action execution remain intentionally absent, and unavailable contr
 disabled with their reason inline. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do)
 for the privacy and capability boundary.
 
-![NoNo rules screen](replica-app/docs/screenshots/nono-rules-v1.4.0.png)
+![NoNo rules screen with a wallpaper-matched accent](replica-app/docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
-Version 1.4.0 introduces a complete visual redesign across onboarding, rules, history, Explore,
-Settings, and every rule editor. The source mockups and side-by-side implementation checks are
-recorded in [`design-qa.md`](design-qa.md).
+Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
+derived colour against every surface where it appears and keeps the built-in accent if the
+wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
+The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
+[`design-qa.md`](design-qa.md).
 
 Installing this APK yourself is not affected by the app-store developer-verification requirement
 starting 2026-09-30, which applies to participating stores in four countries. The detail, and the

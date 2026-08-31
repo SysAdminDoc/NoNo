@@ -1,21 +1,25 @@
 package com.sysadmindoc.nono.ui
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 data class SignalPalette(
@@ -84,6 +88,19 @@ object SignalColors {
     }
 }
 
+/**
+ * Accents the platform derived from the wallpaper, best first.
+ *
+ * Primary is what Material You means by the accent; the container and tertiary roles are offered
+ * after it because primary is often too close to the surface to be readable, and a second-choice
+ * wallpaper colour is still the user's wallpaper. All of them are filtered on contrast before use.
+ */
+private fun wallpaperAccentCandidates(context: android.content.Context, dark: Boolean): List<Color> {
+    if (Build.VERSION.SDK_INT < 31) return emptyList()
+    val scheme = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    return listOf(scheme.primary, scheme.tertiary, scheme.secondary, scheme.primaryContainer)
+}
+
 private val SignalTypography = Typography(
     displayLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 44.sp, lineHeight = 48.sp),
     headlineLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp),
@@ -97,28 +114,54 @@ private val SignalTypography = Typography(
     labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp),
 )
 
+/**
+ * The theme choices this device can offer.
+ *
+ * Dynamic colour needs the platform to derive a scheme from the wallpaper, which arrived in API
+ * 31. Below that the option is not shown at all rather than shown and quietly ignored.
+ */
+fun themeCatalog(sdkInt: Int = Build.VERSION.SDK_INT): List<String> = buildList {
+    add("Dark")
+    add("Light")
+    add("System default")
+    if (sdkInt >= 31) add(DYNAMIC_THEME)
+}
+
+const val DYNAMIC_THEME = "Match my wallpaper"
+
 @Composable
 fun SignalTheme(theme: String = "Dark", content: @Composable () -> Unit) {
     val dark = when (theme) {
         "Light" -> false
-        "System default" -> androidx.compose.foundation.isSystemInDarkTheme()
+        "System default", DYNAMIC_THEME -> androidx.compose.foundation.isSystemInDarkTheme()
         else -> true
     }
-    val palette = if (dark) DarkPalette else LightPalette
+    val context = LocalContext.current
+    val basePalette = if (dark) DarkPalette else LightPalette
+    // A stored choice of Dynamic survives a downgrade or a restore onto an older phone, so the
+    // level is checked here as well as in the list the settings screen offers.
+    val palette = if (theme == DYNAMIC_THEME && Build.VERSION.SDK_INT >= 31) {
+        basePalette.withDynamicAccent(wallpaperAccentCandidates(context, dark))
+    } else {
+        basePalette
+    }
+    // Picked rather than fixed. A wallpaper accent can land anywhere on the lightness range, and
+    // the value that suits the built-in yellow puts dark text on a dark button as soon as it moves.
+    val onAccent = onAccentFor(palette.yellow, listOf(palette.background, palette.white))
     val view = LocalView.current
     val scheme = if (dark) {
         darkColorScheme(
-            primary = palette.yellow, onPrimary = palette.background, background = palette.background,
+            primary = palette.yellow, onPrimary = onAccent, background = palette.background,
             onBackground = palette.white, surface = palette.surface, onSurface = palette.white,
             surfaceVariant = palette.surfaceSelected, onSurfaceVariant = palette.secondary,
             secondary = palette.ruleBlue, outline = palette.controlOutline, error = palette.error,
         )
     } else {
         lightColorScheme(
-            // onPrimary sits on the accent, which is dark in this theme, so it takes the light
-            // value. It used to take `white`, which in the light palette is near-black text, and
-            // put dark text on a dark button.
-            primary = palette.yellow, onPrimary = palette.background, background = palette.background,
+            // onPrimary sits on the accent, so it is whichever of the two palette values reads
+            // against it. It used to take `white`, which in the light palette is near-black text,
+            // and put dark text on a dark button.
+            primary = palette.yellow, onPrimary = onAccent, background = palette.background,
             onBackground = palette.white, surface = palette.surface, onSurface = palette.white,
             surfaceVariant = palette.surfaceSelected, onSurfaceVariant = palette.secondary,
             secondary = palette.ruleBlue, outline = palette.controlOutline, error = palette.error,
