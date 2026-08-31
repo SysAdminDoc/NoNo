@@ -155,6 +155,13 @@ if ($reproducible -and -not $SkipSigning) {
     if ($manifestDump.Lines -match 'application-debuggable') { throw 'The signed release APK is debuggable.' }
 }
 
+# Resolved into a variable first. An `if` inside a command's argument parentheses is parsed in
+# argument mode, where `if` is a command name rather than a keyword, and the whole script aborted
+# with "The term 'if' is not recognized" after both builds had already been paid for.
+# JAVA_HOME is set above from Resolve-JavaHome; the fallback keeps a missing value from ending the
+# run at the last step.
+$javaExe = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin\java.exe' } else { 'java' }
+
 $provenance = [ordered]@{
     generated_at_utc = (Get-Date).ToUniversalTime().ToString('o')
     source = [ordered]@{
@@ -171,20 +178,17 @@ $provenance = [ordered]@{
     }
     toolchain = [ordered]@{
         java_home = $env:JAVA_HOME
-        # JAVA_HOME is set above from Resolve-JavaHome, but falling back keeps a missing value
-        # from aborting the run after both builds have already been paid for.
-        java_version = (
-            Invoke-NativeCapture (
-                if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin\java.exe' } else { 'java' }
-            ) @('-version')
-        ).Lines | Select-Object -First 1
+        java_version = (Invoke-NativeCapture $javaExe @('-version')).Lines | Select-Object -First 1
         gradle = (Get-Content (Join-Path $root 'gradle\wrapper\gradle-wrapper.properties') |
             Select-String 'gradle-([0-9.]+)-bin' | ForEach-Object { $_.Matches[0].Groups[1].Value })
         agp = Get-CatalogVersion $catalog 'agp'
         kotlin = Get-CatalogVersion $catalog 'kotlin'
         ksp = Get-CatalogVersion $catalog 'ksp'
         build_tools = $buildTools.Name
-        compile_sdk = (Select-String -Path (Join-Path $root 'app\build.gradle') -Pattern 'compileSdk\s+(\d+)' |
+        # `compileSdk = 37`, with the assignment the AGP 9 build file uses. The pattern here
+        # required a space and no equals sign, matched nothing, and the provenance record died on
+        # a null after both builds had run.
+        compile_sdk = (Select-String -Path (Join-Path $root 'app\build.gradle') -Pattern 'compileSdk\s*=?\s*(\d+)' |
             Select-Object -First 1).Matches[0].Groups[1].Value
     }
     dependency_verification = [ordered]@{
