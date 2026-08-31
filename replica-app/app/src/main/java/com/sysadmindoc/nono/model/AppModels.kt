@@ -382,6 +382,11 @@ data class UiState(
     val phraseDraft: String = "",
     val phraseInputVisible: Boolean = false,
     val appSearch: String = "",
+    /** What the user typed into rule search. Empty when they are not searching. */
+    val ruleSearch: String = "",
+    /** Whether the rule-search field is open. Separate from the text: an open, empty field is a
+     * different screen from a closed one, and the two empty states have to read differently. */
+    val ruleSearchActive: Boolean = false,
     /** Apps the picker offers: launchable ones merged with everything history has seen. */
     val appCatalog: List<CatalogedApp> = emptyList(),
     val renameDraft: String = "",

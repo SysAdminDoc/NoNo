@@ -391,6 +391,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val phrase = _state.value.phraseDraft.ifBlank { "anything" }
         _state.value = _state.value.copy(route = Route.RULE_BUILDER, draft = _state.value.draft.copy(phrase = phrase), overlay = Overlay.NONE, phraseInputVisible = false)
     }
+    fun openRuleSearch() { _state.value = _state.value.copy(ruleSearchActive = true) }
+
+    /** Closing clears the query, so the list the user comes back to is the whole list. */
+    fun closeRuleSearch() { _state.value = _state.value.copy(ruleSearchActive = false, ruleSearch = "") }
+
+    fun setRuleSearch(text: String) { _state.value = _state.value.copy(ruleSearch = text) }
+
+    /**
+     * Opens the rule a search result names, and leaves search behind.
+     *
+     * Takes the id rather than the rule, so a result for a rule deleted in another tab while the
+     * results were on screen reports that instead of opening a stale copy.
+     */
+    fun openRuleFromSearch(ruleId: Long) {
+        val rule = _state.value.rules.firstOrNull { it.id == ruleId }
+        if (rule == null) {
+            _state.value = _state.value.withMessage("That rule is no longer saved.")
+            return
+        }
+        _state.value = _state.value.copy(
+            route = Route.RULE_BUILDER,
+            overlay = Overlay.NONE,
+            draft = rule,
+            selectedRuleId = rule.id,
+            ruleSearchActive = false,
+            ruleSearch = "",
+        )
+    }
+
     fun setAppSearch(text: String) { _state.value = _state.value.copy(appSearch = text) }
     fun setHistorySearch(text: String) { _state.value = _state.value.resetHistoryWindow().copy(historySearch = text) }
     fun openHistorySearch() { _state.value = _state.value.resetHistoryWindow().copy(historySearchActive = true) }

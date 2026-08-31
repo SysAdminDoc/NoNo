@@ -94,11 +94,17 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.actionCatalog
+import com.sysadmindoc.nono.model.filterRules
+import com.sysadmindoc.nono.model.normalizeMatchType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
 fun RulesHomeScreen(state: UiState, model: MainViewModel) {
+    if (state.ruleSearchActive) {
+        SearchRules(state, model)
+        return
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 8.dp),
@@ -108,6 +114,9 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         item {
             SignalPageHeader(
                 title = "Rules",
+                actionIcon = if (state.rules.isEmpty()) null else Icons.Rounded.Search,
+                actionDescription = "Search rules",
+                onAction = if (state.rules.isEmpty()) null else model::openRuleSearch,
             )
         }
         item {
@@ -141,6 +150,113 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         item { Spacer(Modifier.height(8.dp)) }
     }
 }
+
+/**
+ * Rule search.
+ *
+ * Filters the list already in state rather than asking storage: rules live in memory because every
+ * screen needs them, and a query that went to the database would be slower and could disagree with
+ * what the Rules tab is showing.
+ *
+ * The result of an empty query is the whole list, so an open field with nothing typed shows
+ * everything rather than nothing. That is a different screen from a query that matched nothing,
+ * and the two say different things.
+ */
+@Composable
+private fun SearchRules(state: UiState, model: MainViewModel) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(Unit) { requestKeyboardFocus(focusRequester, keyboard) }
+    val results = remember(state.rules, state.ruleSearch) { filterRules(state.rules, state.ruleSearch) }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            OutlinedTextField(
+                value = state.ruleSearch,
+                onValueChange = model::setRuleSearch,
+                placeholder = { Text("Search rules") },
+                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                trailingIcon = {
+                    IconButton(onClick = { keyboard?.hide(); model.closeRuleSearch() }) {
+                        Icon(Icons.Rounded.Close, contentDescription = "Close search")
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(SignalMetrics.controlRadius),
+                colors = ruleSearchFieldColors(),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            )
+        }
+        if (results.isEmpty()) {
+            item {
+                SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(18.dp)) {
+                        Text("No rule matches that", style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            "Searches the app, the phrase, the operator, the action, the folder and the priority.",
+                            color = SignalColors.Secondary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                    }
+                }
+            }
+        } else {
+            item {
+                Text(
+                    if (results.size == 1) "1 rule" else "${results.size} rules",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            items(results, key = { it.id }) { rule ->
+                key(rule.id) { RuleSearchResult(rule) { model.openRuleFromSearch(rule.id) } }
+            }
+        }
+    }
+}
+
+/** One search result. Tapping it opens that rule, not the list it came from. */
+@Composable
+private fun RuleSearchResult(rule: SignalRule, onOpen: () -> Unit) {
+    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClickLabel = "Open rule") { onOpen() }
+                .heightIn(min = 64.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Text(rule.name, style = MaterialTheme.typography.titleMedium)
+            Text(
+                "${rule.app} · ${normalizeMatchType(rule.matchType)} ${rule.phrase}",
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Text(
+                renderActionSummary(rule.action),
+                color = SignalColors.Muted,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ruleSearchFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = SignalColors.Yellow,
+    unfocusedBorderColor = SignalColors.ControlOutline,
+    focusedContainerColor = SignalColors.Surface,
+    unfocusedContainerColor = SignalColors.Surface,
+    cursorColor = SignalColors.Yellow,
+    focusedTextColor = SignalColors.White,
+    unfocusedTextColor = SignalColors.White,
+)
 
 @Composable
 private fun EmptyRules(onCreate: () -> Unit, onExplore: () -> Unit) {

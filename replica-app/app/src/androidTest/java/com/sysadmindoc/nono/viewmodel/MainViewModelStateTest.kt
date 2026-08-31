@@ -24,6 +24,7 @@ import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.filterRules
 import com.sysadmindoc.nono.runtime.HistoryStorage
 import com.sysadmindoc.nono.runtime.HistoryStorageSettings
 import java.io.File
@@ -395,6 +396,50 @@ class MainViewModelStateTest {
         val deleteFailure = awaitState("deleting said nothing at all") { it.transientMessage != null }
         assertEquals("That record could not be deleted.", deleteFailure.transientMessage)
         assertNull("a failed delete has nothing to undo", deleteFailure.transientUndo)
+    }
+
+    @Test
+    fun searchingRulesOpensTheExactRuleTheResultNames() {
+        startModel()
+        listOf("Parcel pings" to "com.example.parcel", "Chat noise" to "com.example.chat").forEach { (name, app) ->
+            onMain { newRule() }
+            onMain { updateDraft { it.copy(name = name, app = app, action = RECORD_ONLY_ACTION) } }
+            onMain { saveRule() }
+        }
+        val saved = awaitState("both rules never saved") { it.rules.size == 2 }
+        val chat = saved.rules.single { it.name == "Chat noise" }
+
+        onMain { openRuleSearch() }
+        onMain { setRuleSearch("chat") }
+        val searching = model.state.value
+        assertTrue(searching.ruleSearchActive)
+        assertEquals(listOf(chat.id), filterRules(searching.rules, searching.ruleSearch).map { it.id })
+
+        onMain { openRuleFromSearch(chat.id) }
+        val opened = model.state.value
+        assertEquals(Route.RULE_BUILDER, opened.route)
+        assertEquals("the result must open the rule it named", chat.id, opened.draft.id)
+        assertEquals("Chat noise", opened.draft.name)
+        assertFalse("opening a result leaves search behind", opened.ruleSearchActive)
+        assertEquals("", opened.ruleSearch)
+    }
+
+    @Test
+    fun aResultForARuleThatHasGoneSaysSoRatherThanOpeningACopy() {
+        startModel()
+        onMain { newRule() }
+        onMain { updateDraft { it.copy(name = "Doomed", app = "com.example.doomed", action = RECORD_ONLY_ACTION) } }
+        onMain { saveRule() }
+        val doomed = awaitState("nothing saved") { it.rules.size == 1 }.rules.single()
+
+        onMain { openRuleSearch() }
+        onMain { showRuleOverlay(Overlay.RULE_MORE, doomed.id) }
+        onMain { deleteRule() }
+        awaitState("the delete never landed") { it.rules.isEmpty() }
+
+        onMain { openRuleFromSearch(doomed.id) }
+        assertEquals("That rule is no longer saved.", model.state.value.transientMessage)
+        assertEquals("nothing may open", Route.ROOT, model.state.value.route)
     }
 
     @Test
