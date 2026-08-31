@@ -151,6 +151,57 @@ The signer certificate SHA-256 is
 `f64b4691203ed903ddd4007d7630a65045ef2ad20d579388444bce22c482a724`. Every release is signed with
 that key, so a build reporting a different one did not come from this project.
 
+## Accessibility: what is tested, and what is not
+
+This is a statement of the checks that run, not a conformance claim. Everything below maps to a
+test in this repository, and everything the tests do not cover is named at the end.
+
+**Colour contrast.** `PaletteContrastTest` computes WCAG 2.2 relative luminance over the exact
+`Color` values the app ships and holds them to two thresholds: 4.5:1 for anything that reads as
+text, and 3:1 for non-text a user needs in order to operate a control. It checks both the dark and
+the light palette, and it checks each one against all three surfaces text can sit on: the page
+background, a card, and a selected card. Primary, secondary, muted, accent, and error text are all
+held to the text threshold. The control outline and the rule-card accent are held to the non-text
+threshold. The hairline border is deliberately excluded, and the reason is written into the test.
+`DynamicAccentTest` applies the same thresholds to the selection of a wallpaper-derived accent on
+Android 12 and newer, which is why an unreadable wallpaper colour is refused rather than used, and
+`DynamicThemeUiTest` measures the accent as actually rendered on a device against those thresholds
+on every surface.
+
+**Text size and viewport.** `LargeTextAccessibilityTest` composes Rules, the folder-grouped Rules
+list, onboarding, History, Settings, and the metadata filter editor at a **2.0 font scale** inside a
+forced **320 x 480 dp** viewport, which is the smallest width Android documents and the top of the
+system font-size slider. For each it scrolls to the last control on the page and asserts it is
+displayed, so content that cannot be reached fails rather than being merely off screen.
+
+**Truncation.** The same test reads every text node's `TextLayoutResult` from the unmerged
+semantics tree and compares the end of the last rendered line against the length of the string.
+Anything the user cannot read to the end of fails. This is done by hand because
+`hasVisualOverflow` reports overflow for text that plainly fits.
+
+**Touch targets.** Every node with a click action is measured on both axes and must be at least
+**48dp**. Measured on the unmerged tree, because a small clickable nested inside a larger one is
+collapsed away in the merged tree and that is exactly the shape that produces a control nobody can
+hit.
+
+**Platform checks.** `ReplicaSmokeTest` enables Espresso's `AccessibilityChecks` from the root view
+for the whole activity.
+
+**Not covered.** There is no full TalkBack traversal audit: the tests read the semantics tree, they
+do not drive the screen reader. Switch Access, Voice Access, and braille output are untested.
+Nothing here checks reading order, focus order, or the wording of announcements beyond the live
+regions the code sets explicitly. Colour is checked as measured contrast only, not for
+colour-blind distinguishability. Font scales above 2.0, which some OEM builds offer, and viewports
+narrower than 320dp are untested. No user testing with assistive technology has been done.
+
+To reproduce the evidence:
+
+```powershell
+cd replica-app
+.\gradlew.bat :app:testDebugUnitTest --tests "com.sysadmindoc.nono.ui.PaletteContrastTest"
+.\gradlew.bat :app:connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.sysadmindoc.nono.ui.LargeTextAccessibilityTest"
+```
+
 ## Android 17 behavior changes, checked against this app
 
 The app targets SDK 36 today. The behavior changes below are gated on targeting Android 17, so

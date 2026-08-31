@@ -47,6 +47,12 @@ dismissal.
 The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
 [`design-qa.md`](design-qa.md).
 
+Accessibility is measured rather than asserted. Contrast is computed against the shipped palette on
+every surface in both themes, and the screens are composed at twice the system font size inside a
+320dp viewport with checks for unreachable content, truncated text, and touch targets under 48dp.
+What that covers, and the several things it does not, are set out in
+[`replica-app/README.md`](replica-app/README.md#accessibility-what-is-tested-and-what-is-not).
+
 Installing this APK yourself is not affected by the app-store developer-verification requirement
 starting 2026-09-30, which applies to participating stores in four countries. The detail, and the
 obligation to recheck the dates before any release, is in
