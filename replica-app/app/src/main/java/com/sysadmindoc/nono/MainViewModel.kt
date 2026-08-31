@@ -45,6 +45,10 @@ import com.sysadmindoc.nono.model.defaultSettings
 import com.sysadmindoc.nono.runtime.ListenerHealth
 import com.sysadmindoc.nono.runtime.CaptureGate
 import com.sysadmindoc.nono.runtime.HistoryRetentionSettings
+import com.sysadmindoc.nono.runtime.HistoryStorageSettings
+import com.sysadmindoc.nono.runtime.applyListenerSettings
+import com.sysadmindoc.nono.runtime.historyStorage
+import com.sysadmindoc.nono.runtime.listenerSettings
 import com.sysadmindoc.nono.runtime.retentionCutoffEpochMillis
 import com.sysadmindoc.nono.runtime.SignalNotificationListener
 import com.sysadmindoc.nono.model.validateRule
@@ -96,9 +100,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val RuleAction = stringPreferencesKey("rule_action")
     }
 
-    private fun settingKey(label: String) = stringPreferencesKey(
-        "setting_" + label.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
-    )
+    private fun settingKey(label: String) = SignalPreferences.settingKey(label)
 
     init {
         viewModelScope.launch {
@@ -120,8 +122,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 null
             }
             val rule = decodeRules(values[Keys.Rules]) ?: listOfNotNull(legacyRule)
-            val settings = defaultSettings.mapValues { (label, default) -> values[settingKey(label)] ?: default }
-            HistoryRetentionSettings.set(settings["History retention"])
+            val stored = defaultSettings.mapValues { (label, default) -> values[settingKey(label)] ?: default }
+            // An older build could persist a storage label this one does not offer. Resolving it
+            // here means the dialog shows the choice actually in force rather than nothing.
+            val settings = stored + (
+                SignalPreferences.HISTORY_STORAGE_SETTING to
+                    historyStorage(stored[SignalPreferences.HISTORY_STORAGE_SETTING]).label
+                )
+            applyListenerSettings(listenerSettings(values))
             _state.value = _state.value.copy(
                 route = if (values[Keys.Onboarding] == true) Route.ROOT else Route.ONBOARDING,
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
@@ -721,9 +729,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setSetting(label: String, value: String) {
-        if (label == "History retention") {
+        if (label == SignalPreferences.HISTORY_RETENTION_SETTING) {
             HistoryRetentionSettings.set(value)
             pruneHistory()
+        }
+        if (label == SignalPreferences.HISTORY_STORAGE_SETTING) {
+            // Takes effect on the next capture. Records already stored are the user's to delete.
+            HistoryStorageSettings.set(value)
         }
         _state.value = _state.value.copy(settings = _state.value.settings + (label to value), overlay = Overlay.NONE)
         editPreferences { it[settingKey(label)] = value }

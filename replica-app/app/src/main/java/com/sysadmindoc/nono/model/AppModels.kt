@@ -287,7 +287,7 @@ data class UiState(
 val defaultSettings = mapOf(
     "Mute mode" to "Mute all sounds",
     "Mute importance" to "All notifications",
-    "Notification history" to "Store notification metadata",
+    "Notification history" to "Metadata only",
     "History retention" to "30 days",
     "Theme" to "Dark",
     "Language" to "System default",

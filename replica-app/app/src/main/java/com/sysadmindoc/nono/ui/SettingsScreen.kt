@@ -39,6 +39,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.automirrored.rounded.Shortcut
@@ -125,7 +126,9 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { SettingsSectionLabel("HISTORY & DATA") }
         item {
             SettingsGroup {
-                PreferenceRow(Icons.Rounded.History, "Notification history", value = state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) })
+                PreferenceRow(Icons.Rounded.History, "Notification history", value = state.settings["Notification history"], onClick = { model.showOverlay(Overlay.HISTORY_STORAGE) })
+                SignalDivider()
+                PreferenceRow(Icons.Rounded.Schedule, "Keep history for", value = state.settings["History retention"], onClick = { model.showOverlay(Overlay.HISTORY_RETENTION) })
                 SignalDivider()
                 PreferenceRow(Icons.Rounded.Download, "Export metadata", value = "CSV", onClick = model::beginHistoryExport)
                 SignalDivider()

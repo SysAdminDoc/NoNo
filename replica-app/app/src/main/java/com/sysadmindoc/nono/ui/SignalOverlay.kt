@@ -69,6 +69,7 @@ import com.sysadmindoc.nono.model.filterOperatorCatalog
 import com.sysadmindoc.nono.model.importanceCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
 import com.sysadmindoc.nono.runtime.historyRetentionCatalog
+import com.sysadmindoc.nono.runtime.historyStorageCatalog
 import com.sysadmindoc.nono.runtime.oemListenerChecklist
 import kotlinx.coroutines.delay
 
@@ -178,7 +179,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         }
         Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", listOf("Default", "Mute all sounds", "Aggressive"), state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
         Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
-        Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", listOf("All notifications", "Store notification content", "Metadata only", "Off"), state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
+        Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", historyStorageCatalog, state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
         Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", historyRetentionCatalog, state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }
         Overlay.TRANSFER_EXPORT_PASSPHRASE -> TransferPassphraseDialog(
             title = "Encrypt rule export",

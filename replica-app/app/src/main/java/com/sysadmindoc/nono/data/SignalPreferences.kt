@@ -28,6 +28,20 @@ object SignalPreferences {
     /** Read by the view model and by the listener, which evaluates rules as notifications arrive. */
     val RULES_KEY = stringPreferencesKey("rules_v1")
 
+    /** Setting labels the listener reads directly, without waiting for an Activity. */
+    const val HISTORY_RETENTION_SETTING = "History retention"
+    const val HISTORY_STORAGE_SETTING = "Notification history"
+
+    /**
+     * Derives the preference key for a settings-screen label.
+     *
+     * Shared rather than private to the view model, because the listener has to read the same
+     * keys the settings screen writes and a second copy of this rule would drift.
+     */
+    fun settingKey(label: String) = stringPreferencesKey(
+        "setting_" + label.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_'),
+    )
+
     private const val STORE_FILE = "$STORE_NAME.preferences_pb"
     private const val STORE_DIRECTORY = "datastore"
 

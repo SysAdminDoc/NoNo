@@ -12,6 +12,7 @@ import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.toEntity
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,6 +43,14 @@ class SignalNotificationListener : NotificationListenerService() {
     private lateinit var ingestor: NotificationIngestor<CapturedNotification>
 
     /**
+     * Completes once the persisted settings have been read at least once.
+     *
+     * The worker awaits this before its first write, so a cold-started service cannot prune with
+     * the process default retention or store a record the user switched off.
+     */
+    private val settingsLoaded = CompletableDeferred<Unit>()
+
+    /**
      * Latest saved rules, kept here so evaluation stays on the callback thread with the payload.
      * Read on the platform's callback thread and written by the collector below.
      */
@@ -54,22 +63,26 @@ class SignalNotificationListener : NotificationListenerService() {
         CaptureGate.load(applicationContext)
         database = SignalDatabase.get(applicationContext)
         ingestor = NotificationIngestor(serviceScope) { captured ->
-            database.notificationDao().insertAndPrune(
-                captured.sanitized.toEntity(captured.matchedRuleIds, captured.matchState),
-                retentionCutoffEpochMillis(
-                    HistoryRetentionSettings.get(),
-                    System.currentTimeMillis(),
-                ),
-            )
-            SignalWidgetProvider.requestUpdate(applicationContext)
+            settingsLoaded.await()
+            // Off is a storage policy, not a capture pause: nothing new is written, and what is
+            // already stored stays until the user deletes it.
+            val written = persistCapture(currentListenerSettings(), System.currentTimeMillis()) { cutoff ->
+                database.notificationDao().insertAndPrune(
+                    captured.sanitized.toEntity(captured.matchedRuleIds, captured.matchState),
+                    cutoff,
+                )
+            }
+            if (written) SignalWidgetProvider.requestUpdate(applicationContext)
         }
         serviceScope.launch {
             // The platform can start this service with no Activity ever having run, so the rules
-            // are read here rather than handed over by the view model.
+            // and the storage settings are read here rather than handed over by the view model.
             SignalPreferences.get(applicationContext).data
                 .catch { emit(emptyPreferences()) }
                 .collect { preferences ->
                     currentRules = decodeRules(preferences[SignalPreferences.RULES_KEY]).orEmpty()
+                    applyListenerSettings(listenerSettings(preferences))
+                    settingsLoaded.complete(Unit)
                 }
         }
         serviceScope.launch {

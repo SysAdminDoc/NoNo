@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- The Notification history setting now offers Metadata only and Off, and both are enforced. The old list included content options this build never performed. Off stops new records being written and leaves everything already stored alone until you delete it.
+- Settings has a separate "Keep history for" row. The retention dialog existed but nothing opened it, and the history row showed the retention value while opening the storage chooser.
+
+### Fixed
+
+- A notification listener started by the system, with the app never opened, now reads your saved retention period before it prunes anything. It previously used the 30 day default until you opened the app, so a saved 7 day or Forever choice was ignored in the background.
+
 ## [1.4.0] (2026-08-31)
 
 ### Added

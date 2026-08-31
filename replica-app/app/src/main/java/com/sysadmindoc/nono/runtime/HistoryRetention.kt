@@ -47,9 +47,11 @@ fun retentionCutoffEpochMillis(
 object HistoryRetentionSettings {
     private val current = AtomicReference(HistoryRetention.THIRTY_DAYS)
 
-    fun set(label: String?) {
-        current.set(historyRetention(label))
+    fun set(retention: HistoryRetention) {
+        current.set(retention)
     }
+
+    fun set(label: String?) = set(historyRetention(label))
 
     fun get(): HistoryRetention = current.get()
 }
