@@ -60,7 +60,7 @@ class SignalDatabaseTest {
     @Test
     fun historyFiltersOnThePlatformsOwnAssessment() = runBlocking {
         val dao = database.notificationDao()
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "chat",
                 packageName = "com.example.chat",
@@ -71,7 +71,7 @@ class SignalDatabaseTest {
                 category = "msg",
             ),
         )
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "promo",
                 packageName = "com.example.shop",
@@ -100,7 +100,7 @@ class SignalDatabaseTest {
     @Test
     fun theRuleTriggeredFilterSelectsRecordsWhoseRulesMatched() = runBlocking {
         val dao = database.notificationDao()
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "matched",
                 packageName = "com.example.chat",
@@ -110,7 +110,7 @@ class SignalDatabaseTest {
                 matchState = "EVALUATED",
             ),
         )
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "unmatched",
                 packageName = "com.example.chat",
@@ -155,7 +155,7 @@ class SignalDatabaseTest {
                 groupKey = "chat-group",
                 isGroupSummary = true,
             ),
-        ).forEach { dao.insert(it) }
+        ).forEach { dao.upsert(it) }
 
         assertEquals(2, dao.readWidgetCount())
         assertEquals(1, dao.readGroupSummaryCount())
@@ -175,9 +175,59 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun arepostKeepsTheStarAndTheRowRatherThanReplacingBoth() = runBlocking {
+        val dao = database.notificationDao()
+        val first = NotificationEntity(
+            notificationKey = "chat-1",
+            packageName = "com.example.chat",
+            postedAtEpochMillis = 1_000L,
+            contentState = NotificationContentState.AVAILABLE.name,
+            importance = 2,
+        )
+
+        assertEquals(true, dao.upsert(first))
+        val stored = dao.observeHistory(query = "", filter = "All").first().single()
+        dao.setStarred(stored.id, true)
+
+        // The app reposts with new metadata. REPLACE used to delete and re-insert here, which
+        // reset the star and handed the row a new id.
+        assertEquals(false, dao.upsert(first.copy(postedAtEpochMillis = 2_000L, importance = 4)))
+
+        val after = dao.observeHistory(query = "", filter = "All").first().single()
+        assertEquals(stored.id, after.id)
+        assertEquals(true, after.starred)
+        assertEquals(2_000L, after.postedAtEpochMillis)
+        assertEquals(4, after.importance)
+        assertEquals(1, dao.count())
+    }
+
+    @Test
+    fun arepostUpdatesTheMatchStateWithoutClearingTheStar() = runBlocking {
+        val dao = database.notificationDao()
+        val entity = NotificationEntity(
+            notificationKey = "chat-2",
+            packageName = "com.example.chat",
+            postedAtEpochMillis = 1_000L,
+            contentState = NotificationContentState.AVAILABLE.name,
+            matchedRuleIds = null,
+            matchState = "EVALUATED",
+        )
+        dao.upsert(entity)
+        val stored = dao.observeHistory(query = "", filter = "All").first().single()
+        dao.setStarred(stored.id, true)
+
+        dao.upsert(entity.copy(matchedRuleIds = "7,9", postedAtEpochMillis = 3_000L))
+
+        val after = dao.observeHistory(query = "", filter = "All").first().single()
+        assertEquals("7,9", after.matchedRuleIds)
+        assertEquals(true, after.starred)
+        assertEquals(listOf("chat-2"), dao.observeHistory(query = "", filter = "Rule-triggered").first().map { it.notificationKey })
+    }
+
+    @Test
     fun aStoredSummaryKeepsBothGroupsAndAnUnknownOriginByDefault() = runBlocking {
         val dao = database.notificationDao()
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "summary",
                 packageName = "com.example.chat",
@@ -200,7 +250,7 @@ class SignalDatabaseTest {
     @Test
     fun historyQueryAppliesMetadataSelectorsAndAHardResultLimit() = runBlocking {
         val dao = database.notificationDao()
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "chat-hidden",
                 packageName = "com.example.chat",
@@ -211,7 +261,7 @@ class SignalDatabaseTest {
                 isGroupSummary = true,
             ),
         )
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "chat-visible",
                 packageName = "com.example.chat",
@@ -220,7 +270,7 @@ class SignalDatabaseTest {
                 groupKey = "conversation",
             ),
         )
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "mail",
                 packageName = "com.example.mail",
@@ -285,7 +335,7 @@ class SignalDatabaseTest {
     @Test
     fun aStarredRecordSurvivesRetentionPruning() = runBlocking {
         val dao = database.notificationDao()
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "kept",
                 packageName = "com.example.chat",
@@ -294,7 +344,7 @@ class SignalDatabaseTest {
                 starred = true,
             ),
         )
-        dao.insert(
+        dao.upsert(
             NotificationEntity(
                 notificationKey = "aged-out",
                 packageName = "com.example.chat",

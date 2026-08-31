@@ -50,6 +50,9 @@ class SignalNotificationListener : NotificationListenerService() {
      */
     private val settings = ListenerSettingsGate()
 
+    /** Collapses a burst of identical reposts into one capture. */
+    private val deduplicator = CaptureDeduplicator()
+
     /**
      * Latest saved rules, kept here so evaluation stays on the callback thread with the payload.
      * Read on the platform's callback thread and written by the collector below.
@@ -156,6 +159,13 @@ class SignalNotificationListener : NotificationListenerService() {
             rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
             else -> evaluateCapture(rules, payload)
         }
+        // An app that reposts to move a progress bar delivers the same notification many times
+        // over. Dropping the unchanged repeats here means one capture, one activity increment,
+        // and one widget refresh, rather than one of each per post.
+        val now = System.currentTimeMillis()
+        val fingerprint = captureFingerprint(sanitized, evaluation.matchedRuleIds, evaluation.state)
+        if (!deduplicator.shouldCapture(sanitized.notificationKey, fingerprint, now)) return
+
         ingestor.offer(CapturedNotification(sanitized, evaluation.matchedRuleIds, evaluation.state))
         SignalObservability.emit(
             SignalEvent(

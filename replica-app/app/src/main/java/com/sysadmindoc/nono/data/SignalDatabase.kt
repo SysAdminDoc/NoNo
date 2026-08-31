@@ -247,8 +247,87 @@ interface NotificationDao {
         )
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(notification: NotificationEntity)
+    /**
+     * REPLACE is deliberately not used here.
+     *
+     * SQLite implements it as a delete followed by an insert, so a repost of a notification the
+     * user had starred silently unstarred it and gave the row a new id. IGNORE leaves the
+     * existing row alone and returns -1, which is the signal to update it in place instead.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(notification: NotificationEntity): Long
+
+    /**
+     * Updates everything a repost can change, and nothing the user owns.
+     *
+     * The star and the row id are the user's; they survive. So does the first-seen timestamp
+     * of the row's primary key, because the key is what makes it one logical capture.
+     */
+    @Query(
+        """
+        UPDATE notification_history
+        SET postedAtEpochMillis = :postedAtEpochMillis,
+            contentState = :contentState,
+            channelId = :channelId,
+            groupKey = :groupKey,
+            overrideGroupKey = :overrideGroupKey,
+            isGroupSummary = :isGroupSummary,
+            groupSummaryOrigin = :groupSummaryOrigin,
+            matchedRuleIds = :matchedRuleIds,
+            matchState = :matchState,
+            importance = :importance,
+            isConversation = :isConversation,
+            category = :category,
+            isOngoing = :isOngoing,
+            identifierScheme = :identifierScheme
+        WHERE notificationKey = :notificationKey
+        """,
+    )
+    suspend fun updateByKey(
+        notificationKey: String,
+        postedAtEpochMillis: Long,
+        contentState: String,
+        channelId: String?,
+        groupKey: String?,
+        overrideGroupKey: String?,
+        isGroupSummary: Boolean,
+        groupSummaryOrigin: String,
+        matchedRuleIds: String?,
+        matchState: String?,
+        importance: Int?,
+        isConversation: Boolean?,
+        category: String?,
+        isOngoing: Boolean,
+        identifierScheme: Int,
+    )
+
+    /**
+     * Writes [notification], updating an existing row with the same key rather than replacing it.
+     *
+     * @return true when the row was new.
+     */
+    @Transaction
+    suspend fun upsert(notification: NotificationEntity): Boolean {
+        if (insertIfAbsent(notification) != -1L) return true
+        updateByKey(
+            notificationKey = notification.notificationKey,
+            postedAtEpochMillis = notification.postedAtEpochMillis,
+            contentState = notification.contentState,
+            channelId = notification.channelId,
+            groupKey = notification.groupKey,
+            overrideGroupKey = notification.overrideGroupKey,
+            isGroupSummary = notification.isGroupSummary,
+            groupSummaryOrigin = notification.groupSummaryOrigin,
+            matchedRuleIds = notification.matchedRuleIds,
+            matchState = notification.matchState,
+            importance = notification.importance,
+            isConversation = notification.isConversation,
+            category = notification.category,
+            isOngoing = notification.isOngoing,
+            identifierScheme = notification.identifierScheme,
+        )
+        return false
+    }
 
     /** Retention never removes a record the user starred. */
     @Query("DELETE FROM notification_history WHERE postedAtEpochMillis < :cutoffEpochMillis AND starred = 0")
@@ -294,7 +373,7 @@ interface NotificationDao {
 
     @Transaction
     suspend fun insertAndPrune(notification: NotificationEntity, cutoffEpochMillis: Long) {
-        insert(notification)
+        upsert(notification)
         deleteBefore(cutoffEpochMillis)
     }
 
