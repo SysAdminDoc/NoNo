@@ -20,8 +20,8 @@ def hasReleaseSigning = keystoreProperties.containsKey('storeFile') &&
     file(keystoreProperties['storeFile'] as String).exists()
 
 android {
-    namespace 'com.sysadmindoc.nono'
-    compileSdk 37
+    namespace = 'com.sysadmindoc.nono'
+    compileSdk = 37
 
     signingConfigs {
         if (hasReleaseSigning) {
@@ -32,49 +32,49 @@ android {
                 keyPassword keystoreProperties['keyPassword'] as String
                 // v1 is omitted deliberately: minSdk is 24, so v2 is understood everywhere this
                 // app runs, and a v1 signature would put the signer's name in the APK listing.
-                enableV1Signing false
-                enableV2Signing true
-                enableV3Signing true
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
 
     defaultConfig {
-        applicationId 'com.sysadmindoc.nono'
-        minSdk 24
-        targetSdk 36
-        versionCode 8
-        versionName '1.4.0-reconstruction'
+        applicationId = 'com.sysadmindoc.nono'
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 8
+        versionName = '1.4.0-reconstruction'
 
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix '.debug'
-            versionNameSuffix '-debug'
-            debuggable true
+            applicationIdSuffix = '.debug'
+            versionNameSuffix = '-debug'
+            debuggable = true
         }
         release {
-            debuggable false
-            minifyEnabled true
-            shrinkResources true
+            debuggable = false
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (hasReleaseSigning) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
         }
     }
 
     buildFeatures {
-        compose true
-        buildConfig true
+        compose = true
+        buildConfig = true
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlin {
@@ -100,9 +100,9 @@ android {
     }
 
     lint {
-        abortOnError true
-        checkDependencies true
-        warningsAsErrors false
+        abortOnError = true
+        checkDependencies = true
+        warningsAsErrors = false
     }
 
 }
