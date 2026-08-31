@@ -1,6 +1,7 @@
 package com.sysadmindoc.nono.data
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.preferencesDataStoreFile
@@ -10,7 +11,10 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 /**
@@ -75,6 +79,17 @@ object SignalPreferences {
     @Volatile
     private var instance: DataStore<Preferences>? = null
 
+    /**
+     * Held so the file can be released again.
+     *
+     * DataStore registers the backing file in a process-wide set and only removes it when the
+     * store scope completes. Deleting the file is not enough: reopening the same path while the
+     * old scope is alive throws. Nothing in shipping code releases the store, so this exists for
+     * [resetForTest] alone.
+     */
+    @Volatile
+    private var storeScope: CoroutineScope? = null
+
     @Volatile
     private var recoveredFromCorruption = false
 
@@ -91,7 +106,7 @@ object SignalPreferences {
      */
     fun get(context: Context): DataStore<Preferences> = instance ?: synchronized(this) {
         instance ?: create(
-            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO).also { storeScope = it },
             produceFile = {
                 resolveStoreFile(
                     noBackupFilesDir = context.applicationContext.noBackupFilesDir,
@@ -100,6 +115,30 @@ object SignalPreferences {
             },
             onCorruption = { recoveredFromCorruption = true },
         ).also { instance = it }
+    }
+
+    /**
+     * Discards the process-wide store and the file behind it.
+     *
+     * A test that exercises the view model has to start from a known preference state, and the
+     * store is deliberately a singleton, so without this every test would inherit whatever the
+     * previous one saved. DataStore permits one instance per file per process, so the file has to
+     * go along with the reference: reopening the same path while the old instance is alive throws.
+     *
+     * Never called from shipping code, and there is no path that reaches it from the UI.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun resetForTest(context: Context) {
+        synchronized(this) {
+            // The scope has to finish before the path is free again, hence the join.
+            storeScope?.coroutineContext?.get(Job)?.let { job -> runBlocking { job.cancelAndJoin() } }
+            storeScope = null
+            instance = null
+            recoveredFromCorruption = false
+            val noBackup = context.applicationContext.noBackupFilesDir
+            File(noBackup, STORE_DIRECTORY).resolve(STORE_FILE).delete()
+            context.applicationContext.preferencesDataStoreFile(STORE_NAME).delete()
+        }
     }
 
     /**

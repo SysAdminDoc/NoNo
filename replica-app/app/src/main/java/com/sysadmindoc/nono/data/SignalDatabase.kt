@@ -1,6 +1,7 @@
 package com.sysadmindoc.nono.data
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -15,6 +16,7 @@ import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -675,6 +677,24 @@ abstract class SignalDatabase : RoomDatabase() {
          */
         fun get(context: Context): SignalDatabase = instance ?: synchronized(this) {
             instance ?: build(context).also { instance = it }
+        }
+
+        /**
+         * Discards the process-wide handle and the file behind it.
+         *
+         * The counterpart to [SignalPreferences.resetForTest]: a view-model test needs an empty
+         * history, and the instance is deliberately shared and never closed in normal operation.
+         *
+         * Never called from shipping code.
+         */
+        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+        fun resetForTest(context: Context) {
+            synchronized(this) {
+                instance?.close()
+                instance = null
+                val file = context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME)
+                listOf(file, File("${file.path}-wal"), File("${file.path}-shm")).forEach { it.delete() }
+            }
         }
 
         private fun build(context: Context): SignalDatabase = Room.databaseBuilder(
