@@ -143,6 +143,55 @@ The signer certificate SHA-256 is
 `f64b4691203ed903ddd4007d7630a65045ef2ad20d579388444bce22c482a724`. Every release is signed with
 that key, so a build reporting a different one did not come from this project.
 
+## Android 17 behavior changes, checked against this app
+
+The app targets SDK 36 today. The behavior changes below are gated on targeting Android 17, so
+none of them is in force yet; this is the check done before that move rather than after it. The
+list was read from the Android 17 behavior-changes page on **2026-08-31** and each entry was
+checked against the code rather than assumed. Recheck it when the target actually moves, and write
+the date you read it.
+
+Changes that would need something from this app: none. What was checked, and why each one is inert
+here:
+
+- **RemoteViews memory limit.** The home-screen widget is the only RemoteViews this app builds.
+  `widget_signal_status.xml` is three `TextView`s and it sets text only, so no bitmap or icon ever
+  enters the tree and the limit cannot be reached.
+- **Lock-free MessageQueue, and static final fields becoming unmodifiable.** Both only affect code
+  that reflects into platform internals. This app contains no reflection.
+- **Local network permission.** Applies to apps that discover or connect to devices on the LAN.
+  This app has no `INTERNET` permission and opens no sockets.
+- **Encrypted Client Hello, and certificate transparency on by default.** Both are about outgoing
+  HTTPS, which this app never makes.
+- **Background Activity Launch restrictions extended to IntentSender.** The only `PendingIntent`
+  here is the widget's tap target, which starts `MainActivity` from a user's tap on the widget.
+  Nothing launches an activity from the background.
+- **Native code loaded with `System.load` must be read-only.** This app ships no native libraries.
+- **Contacts Provider column and SQL restrictions.** No contacts access.
+- **Background audio hardening.** No audio.
+- **RFCOMM `BluetoothSocket.read()` returning -1.** No Bluetooth.
+- **Accessibility events for complex IME typing.** No custom input method.
+- **Password masking with a physical keyboard.** The rule-transfer passphrase field is the only
+  password input, and the platform decides masking either way.
+- **Orientation, resizability and aspect-ratio constraints ignored on large screens.** The manifest
+  already sets no `screenOrientation`, and the API 36 opt-out property was never used.
+
+Two are worth stating even though they need no code change:
+
+- **OTP SMS withheld for three hours.** This app is a notification listener with no SMS permission;
+  it records only what an app chooses to post. If a messaging app posts less, less is captured, and
+  the counts simply reflect that.
+- **The four permissions WorkManager adds.** See the permissions note above. They arrived with the
+  backup scheduler rather than with the target change, and none of them is affected by Android 17.
+
+The bump itself is held back for one reason only: no Android 17 emulator on this machine stays up
+long enough to run the instrumented suite. Every `android-37.0` image tried here crash-loops
+`surfaceflinger` inside `mapper.ranchu.so`, taking `system_server` with it. A target change nobody
+has run on the target platform is not one worth shipping, so `targetSdk` stays at 36 until the
+suite can be run on Android 17. `RemovalReasonPlatformTest` covers the part that can be checked
+without one: it compiles against SDK 37 and compares every hard-coded platform reason code against
+the constant the running device reports.
+
 ## Android developer verification, and what it does and does not cover
 
 Android is introducing a requirement that the developer behind an app be verified. It matters for
