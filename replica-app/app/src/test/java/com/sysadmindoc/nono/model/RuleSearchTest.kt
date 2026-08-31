@@ -113,11 +113,17 @@ class RuleSearchTest {
 
         // Warm the JIT so the measurement is of the filter and not of class loading.
         repeat(5) { filterRules(many, "phrase 7") }
-        val elapsed = measureTimeMillis { repeat(10) { filterRules(many, "phrase 7") } }
+        // The best of several attempts, not one. A single timing is a measurement of whatever else
+        // the machine was doing, and this failed at 17ms on 2026-08-31 with an emulator and a
+        // Gradle daemon running beside it while the same code passed minutes earlier. The fastest
+        // attempt is the one where the filter had the CPU to itself, which is what is being
+        // measured. Noise can only make an attempt slower, so this cannot hide a regression: work
+        // that has become quadratic is far slower than the budget in every attempt.
+        val elapsed = (1..7).minOf { measureTimeMillis { repeat(10) { filterRules(many, "phrase 7") } } }
 
         // A frame is about 16ms. Ten passes inside one frame leaves an order of magnitude of head
-        // room, which is what stops this failing on a loaded machine for no real reason.
-        assertTrue("ten passes over 1000 rules took ${elapsed}ms", elapsed < 16L)
+        // room for a linear scan over a thousand rules.
+        assertTrue("the fastest of seven attempts at ten passes over 1000 rules took ${elapsed}ms", elapsed < 16L)
         // "phrase 7", then 70-79, then 700-799.
         assertEquals(111, filterRules(many, "phrase 7").size)
     }
