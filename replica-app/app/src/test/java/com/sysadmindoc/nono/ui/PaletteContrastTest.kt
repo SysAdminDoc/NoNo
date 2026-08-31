@@ -58,13 +58,16 @@ class PaletteContrastTest {
             // Accent text: the yellow is used for labels and selected values, not decoration.
             assertContrast("$theme accent text on $surfaceName", palette.yellow, surface, normalText)
             assertContrast("$theme error text on $surfaceName", palette.error, surface, normalText)
+            // Muted reads as body text in a dozen places - timestamps, the enabled/disabled label,
+            // the bottom-navigation labels - so it is held to the text threshold, not the
+            // component one it used to be checked against.
+            assertContrast("$theme muted text on $surfaceName", palette.muted, surface, normalText)
 
             // Meaningful non-text: the outline that identifies a control, secondary icon tints,
             // and the accent used on rule cards. `border` is deliberately absent: it is a
             // decorative hairline beside a fill that already separates the two surfaces, and
             // WCAG 1.4.11 covers what a user needs in order to operate something.
             assertContrast("$theme control outline on $surfaceName", palette.controlOutline, surface, component)
-            assertContrast("$theme muted text on $surfaceName", palette.muted, surface, component)
             assertContrast("$theme rule accent on $surfaceName", palette.ruleBlue, surface, component)
         }
     }

@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The app tells you what it did again. Around thirty messages, including the confirmation that a rule saved and the warning that one did not, were being built in a way the snackbar could not see, so they never appeared.
+- Importing a rule file gives every new rule an id from this device instead of the one the file names. A file could otherwise claim an id that belonged to a rule you had deleted, and an old history record would then say it was caught by the rule that just arrived.
+- The Dismiss control on the capture warning is a real button. It sat inside the tappable banner, so a screen reader announced one control, activating it opened notification access instead of dismissing anything, and it was under the minimum touch size.
+- Dismissing the counts covers what the banner is showing, including captures counted since the last time the numbers were written down.
+- What a rule will do is spelled out in full. At a large font size the line was cut off after "Record the match", which reads as though something else happens.
+- Unselected filters, the match-type switch and a focused text field are outlined in a colour you can actually see against the surface behind them.
 - The rule builder, history and settings paths are covered by tests that drive the real app state rather than the functions behind it. Several defects fixed in this round were green under the old tests because the arithmetic was right and the wiring was wrong.
 - The capture warning banner reports what is happening now. Ingestion counters only ever grew, so a single bad minute months ago kept the warning on screen until you learned to ignore it. There is a Dismiss control on the counts, what you dismissed is remembered across restarts, and a fresh failure brings the banner straight back. The counts are kept rather than erased, so the banner still says what it has seen before.
 - Messages that report a database write wait for the write. Starring a record announced success even when the row had already gone, and deleting one said "Record deleted." whether or not anything was removed. Each of those now waits for the database to confirm a row and says plainly when it could not.

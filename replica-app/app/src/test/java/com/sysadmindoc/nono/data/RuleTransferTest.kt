@@ -131,8 +131,57 @@ class RuleTransferTest {
 
         assertEquals(listOf(incoming[1]), preview.additions)
         assertEquals(listOf(existing[0]), preview.conflicts.map { it.existing })
-        assertEquals(existing + incoming[1], RuleTransfer.commit(existing, incoming))
-        assertEquals("Imported", RuleTransfer.commit(existing, incoming, mapOf(1L to ConflictResolution.REPLACE_EXISTING))?.first()?.name)
+        val committed = RuleTransfer.commit(existing, incoming, nextRuleId = 2L)!!
+        assertEquals(listOf("Local", "New"), committed.rules.map { it.name })
+        assertEquals(
+            "Imported",
+            RuleTransfer.commit(existing, incoming, mapOf(1L to ConflictResolution.REPLACE_EXISTING), 2L)
+                ?.rules?.first()?.name,
+        )
+    }
+
+    @Test
+    fun `an imported rule is renumbered from this device's counter, not the file's`() {
+        // The user created rules 1, 2 and 3 here, a history record names rule 3, then rule 3 was
+        // deleted. A file that happens to carry id 3 must not inherit what that record says.
+        val local = listOf(SignalRule(id = 1, name = "Local"))
+        val fromAnotherDevice = listOf(SignalRule(id = 3, name = "From the file"))
+
+        val committed = RuleTransfer.commit(local, fromAnotherDevice, nextRuleId = 4L)!!
+
+        val added = committed.rules.single { it.name == "From the file" }
+        assertNotEquals("a deleted rule's id must not be reissued to an import", 3L, added.id)
+        assertEquals(4L, added.id)
+        assertEquals("the counter must move past what it allocated", 5L, committed.nextRuleId)
+    }
+
+    @Test
+    fun `an import cannot take an id a live rule already holds`() {
+        val local = listOf(SignalRule(id = 1, name = "Local"), SignalRule(id = 2, name = "Also local"))
+        val incomingFile = listOf(SignalRule(id = 9, name = "One"), SignalRule(id = 10, name = "Two"))
+
+        val committed = RuleTransfer.commit(local, incomingFile, nextRuleId = 3L)!!
+
+        assertEquals(4, committed.rules.size)
+        assertEquals(
+            "every id in the result is distinct",
+            committed.rules.size,
+            committed.rules.map { it.id }.toSet().size,
+        )
+        assertEquals(listOf(1L, 2L, 3L, 4L), committed.rules.map { it.id })
+    }
+
+    @Test
+    fun `an id at the top of the range cannot arrive by import`() {
+        // A file naming Long.MAX_VALUE used to put that id into the live set, after which the
+        // allocator permanently fell back to reusing the lowest free id.
+        val local = listOf(SignalRule(id = 1, name = "Local"))
+        val hostile = listOf(SignalRule(id = Long.MAX_VALUE, name = "Extreme"))
+
+        val committed = RuleTransfer.commit(local, hostile, nextRuleId = 2L)!!
+
+        assertTrue(committed.rules.none { it.id == Long.MAX_VALUE })
+        assertEquals(2L, committed.rules.single { it.name == "Extreme" }.id)
     }
 
     @Test

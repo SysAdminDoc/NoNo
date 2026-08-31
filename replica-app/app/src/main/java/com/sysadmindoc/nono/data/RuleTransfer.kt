@@ -1,6 +1,8 @@
 package com.sysadmindoc.nono.data
 
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.advanceRuleCounter
+import com.sysadmindoc.nono.model.nextRuleId
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -108,6 +110,14 @@ data class RuleImportPreview(
  * Explicit portable transfer boundary. The default local storage is unchanged; callers choose
  * encryption for each export and receive a preview before any imported rule replaces local data.
  */
+/**
+ * The result of an import, with the id counter advanced past everything it allocated.
+ *
+ * The counter is part of the result rather than recomputed from the rules, because a rule that
+ * has been deleted is not in the list and its id must still never be handed out again.
+ */
+data class RuleCommit(val rules: List<SignalRule>, val nextRuleId: Long)
+
 object RuleTransfer {
     private val transferJson = Json { encodeDefaults = true; ignoreUnknownKeys = false }
     private val secureRandom = SecureRandom()
@@ -257,13 +267,24 @@ object RuleTransfer {
         )
     }
 
-    /** Pure commit: an exception or cancellation leaves the caller's original list untouched. */
+/**
+ * Pure commit: an exception or cancellation leaves the caller's original list untouched.
+ *
+ * Every rule the file adds is given an id from this device's counter rather than the one it
+ * carries. A file's id space is not this device's: the id it names may have belonged to a rule
+ * the user deleted, and history records the ids that matched them, so honouring it would make an
+ * old record claim it was caught by a rule that did not exist when it arrived. A rule the file
+ * replaces keeps its id, because that is the rule the user is choosing to overwrite.
+ *
+ * @param nextRuleId the first id free to allocate.
+ */
     fun commit(
         existing: List<SignalRule>,
         incoming: List<SignalRule>,
         resolutions: Map<Long, ConflictResolution> = emptyMap(),
+        nextRuleId: Long = 1L,
         cancelled: () -> Boolean = { false },
-    ): List<SignalRule>? {
+    ): RuleCommit? {
         if (cancelled()) return null
         val preview = preview(existing, incoming)
         val replacementById = preview.conflicts.associate { conflict ->
@@ -272,8 +293,15 @@ object RuleTransfer {
                 ConflictResolution.KEEP_EXISTING, null -> conflict.existing
             }
         }
-        return (existing.map { replacementById[it.id] ?: it } + preview.additions)
-            .distinctBy { it.id }
+        val kept = existing.map { replacementById[it.id] ?: it }
+        var counter = nextRuleId
+        val renumbered = mutableListOf<SignalRule>()
+        for (addition in preview.additions) {
+            val allocated = nextRuleId(counter, kept + renumbered)
+            counter = advanceRuleCounter(allocated)
+            renumbered += addition.copy(id = allocated)
+        }
+        return RuleCommit(rules = kept + renumbered, nextRuleId = counter)
     }
 
     /** Binds the derivation parameters to the ciphertext. */

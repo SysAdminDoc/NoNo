@@ -248,7 +248,7 @@ private fun HistoryFilterButton(label: String, selected: Boolean, modifier: Modi
         modifier
             .heightIn(min = 52.dp)
             .background(if (selected) SignalColors.SurfaceSelected else SignalColors.Surface, RoundedCornerShape(SignalMetrics.controlRadius))
-            .border(1.dp, if (selected) SignalColors.Yellow else SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius))
+            .border(1.dp, if (selected) SignalColors.Yellow else SignalColors.ControlOutline, RoundedCornerShape(SignalMetrics.controlRadius))
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -353,7 +353,7 @@ fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
         }
         item { ActivityMetadataHeader(selected) }
         item {
-            Row(Modifier.fillMaxWidth().border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius))) {
+            Row(Modifier.fillMaxWidth().border(1.dp, SignalColors.ControlOutline, RoundedCornerShape(SignalMetrics.controlRadius))) {
                 ActivityTab("Rules", state.historyActivityTab == "Rules", Modifier.weight(1f)) { model.setHistoryActivityTab("Rules") }
                 ActivityTab("Changes", state.historyActivityTab == "Changes", Modifier.weight(1f)) { model.setHistoryActivityTab("Changes") }
             }
@@ -476,7 +476,7 @@ private fun CapturedMetadata(record: HistoryRecord) {
 private fun MetadataRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-        Text(value, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(value, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

@@ -8,9 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.FontScale
 import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasScrollAction
@@ -93,21 +96,57 @@ class LargeTextAccessibilityTest {
         composeRule.onNodeWithText(text, substring = true).assertIsDisplayed()
     }
 
-    /** Every clickable node measures at least 48dp on both axes. */
+    /**
+     * No visible text is cut off.
+     *
+     * `assertIsDisplayed` returns true for a node whose text is ellipsised, so the scroll checks
+     * alone cannot see truncation. This compares the end of the last rendered line against the
+     * length of the string: anything short of it is text the user cannot read.
+     *
+     * `hasVisualOverflow` looks like the obvious API for this and is not usable here. It reports
+     * true for text that plainly fits - "Second rule" laid out at 388px inside a 435px constraint
+     * comes back as overflowing - so a check built on it fails everything and proves nothing.
+     */
+    private fun assertNoClippedText() {
+        val nodes = composeRule.onAllNodes(
+            SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult),
+            useUnmergedTree = true,
+        ).fetchSemanticsNodes()
+        assertTrue("no text node was found, so nothing was asserted", nodes.isNotEmpty())
+        val clipped = nodes.mapNotNull { node ->
+            val results = mutableListOf<TextLayoutResult>()
+            node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
+            val result = results.firstOrNull() ?: return@mapNotNull null
+            val text = result.layoutInput.text.text
+            if (text.isEmpty() || result.lineCount == 0) return@mapNotNull null
+            val rendered = result.getLineEnd(result.lineCount - 1, visibleEnd = true)
+            if (rendered >= text.length) return@mapNotNull null
+            "\"$text\" stops at $rendered of ${text.length}"
+        }
+        assertTrue("text is cut off at this size: $clipped", clipped.isEmpty())
+    }
+
+    /**
+     * Every clickable node measures at least 48dp on both axes.
+     *
+     * Read from the unmerged tree: a small clickable nested inside a larger one is collapsed away
+     * in the merged tree, and that is exactly the shape that produces an unreachable control.
+     */
     private fun assertTouchTargets() {
-        val nodes = composeRule.onAllNodes(hasClickAction()).fetchSemanticsNodes()
+        val nodes = composeRule.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("no clickable node was found, so nothing was asserted", nodes.isNotEmpty())
         val density = composeRule.density
         val undersized = nodes.mapNotNull { node ->
             val width = with(density) { node.size.width.toDp() }
             val height = with(density) { node.size.height.toDp() }
-            if (width >= 47.5.dp && height >= 47.5.dp) return@mapNotNull null
+            if (width >= 48.dp && height >= 48.dp) return@mapNotNull null
             val label = node.config.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull()
                 ?: node.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.text
                 ?: "unlabelled node"
             "$label is ${width}x$height"
         }
         assertTrue("touch targets below 48dp: $undersized", undersized.isEmpty())
+        assertNoClippedText()
     }
 
     @Test

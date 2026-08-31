@@ -2,6 +2,7 @@ package com.sysadmindoc.nono.data
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -84,7 +85,9 @@ data class IngestionDiagnosticsEntity(
      * for good and the user learned to ignore it. Acknowledging records what they have seen
      * rather than erasing it.
      */
+    @ColumnInfo(defaultValue = "0")
     val acknowledgedDropped: Long = 0L,
+    @ColumnInfo(defaultValue = "0")
     val acknowledgedFailed: Long = 0L,
 )
 
@@ -321,10 +324,16 @@ interface NotificationDao {
      * @return true when the acknowledgement was written.
      */
     @Transaction
-    suspend fun acknowledgeIngestionProblems(): Boolean {
+    suspend fun acknowledgeIngestionProblems(liveDropped: Long = 0L, liveFailed: Long = 0L): Boolean {
         val current = readIngestionDiagnostics() ?: return false
         saveIngestionDiagnostics(
-            current.copy(acknowledgedDropped = current.dropped, acknowledgedFailed = current.failed),
+            current.copy(
+                // The banner reports the larger of the live and durable counts, so the
+                // acknowledgement has to cover the same number or the dismissal does nothing
+                // visible while still reporting that it worked.
+                acknowledgedDropped = maxOf(current.dropped, liveDropped),
+                acknowledgedFailed = maxOf(current.failed, liveFailed),
+            ),
         )
         return true
     }

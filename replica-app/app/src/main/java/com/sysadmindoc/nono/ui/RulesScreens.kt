@@ -180,7 +180,9 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(rule.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                // Two lines, because at a 2.0 font scale on a 320dp screen a single line cuts
+                // most rule names in half and the name is how the user tells them apart.
+                Text(rule.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(if (rule.enabled) "Enabled" else "Disabled", color = if (rule.enabled) SignalColors.Yellow else SignalColors.Muted, style = MaterialTheme.typography.bodyMedium)
             }
             Switch(
@@ -234,7 +236,9 @@ private fun RuleFlowRow(step: Int, icon: ImageVector, label: String, value: Stri
         }
         Column(Modifier.weight(1f).padding(start = 14.dp)) {
             Text(label, color = SignalColors.Muted, style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // Uncapped: this is the row that says what a rule will actually do, and at a large
+            // font scale two lines cut "Record the match - no device action" off mid-sentence.
+            Text(value, style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -501,12 +505,12 @@ private fun AppCatalogRow(app: CatalogedApp, selected: Boolean, onClick: () -> U
             }
         }
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(app.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 app.detail,
                 color = SignalColors.Secondary,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
@@ -537,7 +541,7 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(SignalMetrics.controlRadius))
-                    .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius)),
+                    .border(1.dp, SignalColors.ControlOutline, RoundedCornerShape(SignalMetrics.controlRadius)),
             ) {
                 OperatorChoice("Contains", !state.draft.matchType.contains("doesn't", true), Modifier.weight(1f)) {
                     model.updateDraft { it.copy(matchType = "contains") }

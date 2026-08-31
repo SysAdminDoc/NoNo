@@ -23,6 +23,13 @@ object StatusMessages {
     fun deleteOutcome(removed: Boolean): String =
         if (removed) "Record deleted." else "That record could not be deleted."
 
+    /**
+     * The delete worked, but the record the previous snackbar could still have put back did not
+     * go back on the device. Offering an undo here would offer the wrong record.
+     */
+    fun deleteOutcomeWithLostUndo(): String =
+        "Record deleted. The record deleted just before it could not be put back."
+
     fun restoreOutcome(restored: Boolean): String? =
         if (restored) null else "That record could not be restored; it is back on this device."
 

@@ -344,7 +344,7 @@ fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = SignalColors.Surface,
                     unfocusedContainerColor = SignalColors.Surface,
-                    focusedBorderColor = SignalColors.Border,
+                    focusedBorderColor = SignalColors.ControlOutline,
                     unfocusedBorderColor = SignalColors.ControlOutline,
                 ),
                 modifier = Modifier.fillMaxWidth(),

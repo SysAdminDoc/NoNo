@@ -9,6 +9,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -99,42 +102,55 @@ fun ListenerHealthBanner(state: UiState, model: MainViewModel? = null, modifier:
             "since ${age ?: "a long time ago"}. ${vendorGuidance()} Tap to review notification access."
     }
 
-    Row(
+    // The dismiss control is a sibling of the tappable banner, not a child of it. Modifier
+    // .clickable merges its descendants into one accessibility node, so a button nested inside
+    // the banner would be announced as part of it and would run the banner's action instead of
+    // its own: unreachable by TalkBack and by Switch Access.
+    Column(
         modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.cardRadius))
             .border(1.dp, SignalColors.Error, RoundedCornerShape(SignalMetrics.cardRadius))
-            .clickable(role = Role.Button) {
-                SignalNotificationListener.requestRebindIfPossible(context)
-                openListenerSettings(context)
-            }
-            .padding(16.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            Icons.Rounded.Warning,
-            contentDescription = null,
-            tint = SignalColors.Error,
-            modifier = Modifier.size(24.dp),
-        )
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text("Metadata capture needs attention", color = SignalColors.Error, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(detail, color = SignalColors.Secondary, fontSize = 14.sp, lineHeight = 19.sp)
-            // Only the queue counters can be dismissed. Revoked access and a dead listener are
-            // conditions, not counts, and go away by being fixed.
-            if (model != null && problems.hasCurrentProblem) {
-                Text(
-                    "Dismiss these counts",
-                    color = SignalColors.Yellow,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .clickable(role = Role.Button) { model.acknowledgeIngestionProblems() }
-                        .padding(top = 10.dp, bottom = 6.dp, end = 12.dp),
-                )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClickLabel = "Review notification access") {
+                    SignalNotificationListener.requestRebindIfPossible(context)
+                    openListenerSettings(context)
+                }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.Warning,
+                contentDescription = null,
+                tint = SignalColors.Error,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                Text("Metadata capture needs attention", color = SignalColors.Error, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(detail, color = SignalColors.Secondary, fontSize = 14.sp, lineHeight = 19.sp)
             }
+        }
+        // Only the queue counters can be dismissed. Revoked access and a dead listener are
+        // conditions, not counts, and go away by being fixed.
+        if (model != null && problems.hasCurrentProblem) {
+            Text(
+                "Dismiss these counts",
+                color = SignalColors.Yellow,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .padding(start = 36.dp, end = 8.dp, bottom = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(role = Role.Button) { model.acknowledgeIngestionProblems() }
+                    .heightIn(min = 48.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = 12.dp),
+            )
         }
     }
 }

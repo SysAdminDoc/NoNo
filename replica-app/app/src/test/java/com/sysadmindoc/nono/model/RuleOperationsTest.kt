@@ -120,6 +120,11 @@ class RuleOperationsTest {
         val allocated = nextRuleId(counter = 1L, rules = extremes)
 
         assertTrue("must not collide with a live rule", extremes.none { it.id == allocated })
+        // The counter cannot advance past the top of the range, so this is the one case where the
+        // allocator falls back to the lowest free id. Pinned deliberately: it is the branch that
+        // can reattribute history, and it is reachable only if a live rule already holds
+        // Long.MAX_VALUE, which import can no longer introduce.
+        assertEquals(1L, allocated)
     }
 
     @Test
