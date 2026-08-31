@@ -8,8 +8,15 @@
     scratch state. Rules move between devices only through an explicit, user-initiated
     export.
 
-    The preference store additionally lives under noBackupFilesDir, so these rules are the
-    second line of defence rather than the only one.
+    Which entry does the work differs by file, and it is worth being exact about it. The
+    preference store, the history database and the pseudonym key live under noBackupFilesDir,
+    which the platform excludes by itself, so for those the entries below are a second line of
+    defence. The database entry is currently inert: Room opens the file by absolute path inside
+    the no-backup directory, so nothing is ever written to the standard database location this
+    names. It is kept so the rule is already in place if that file ever moves. The listener's
+    scratch preferences are the exception. They are ordinary shared preferences in the backed-up
+    tree, and these entries are the only thing keeping them out of a transfer. Verified on device
+    with a bmgr backup and restore cycle on 2026-08-31.
 -->
 <data-extraction-rules>
     <cloud-backup>
