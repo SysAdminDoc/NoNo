@@ -30,8 +30,15 @@ data class InsightHourCount(val hour: Int, val count: Int)
 data class InsightDayCount(val dayKey: String, val count: Int)
 data class InsightDay(val dayKey: String, val label: String, val count: Int)
 
-/** A complete, display-ready snapshot assembled from bounded Room aggregate rows. */
+/**
+ * A complete, display-ready snapshot assembled from bounded Room aggregate rows.
+ *
+ * @property loaded false until the aggregates have answered. The queries are whole-table scans
+ * started when the screen opens, so the default is what the screen holds for the first frames and
+ * calling that "nothing captured" would state something false about a full history.
+ */
 data class LocalInsights(
+    val loaded: Boolean = false,
     val storedRecordCount: Int = 0,
     val totalCaptured: Int = 0,
     val excludedGroupSummaries: Int = 0,
@@ -60,15 +67,14 @@ data class LocalInsights(
     val busiestHourCount: Int get() = busiestHour?.let(hourlyCounts::get) ?: 0
 
     /**
-     * Whether the three numbers agree with each other.
+     * How many records History holds, which is the same number History itself shows.
      *
-     * All three come from one row of one query, so a disagreement means the row itself was
-     * inconsistent rather than that two reads landed at different moments. Comparing against the
-     * separately collected History total was the earlier version of this and it reported a
-     * mismatch every time a notification arrived between the two flows emitting.
+     * Both are `COUNT(*)` over `notification_history`, so they reconcile by construction rather
+     * than by a check. An earlier version compared this against the separately collected History
+     * total and reported a mismatch every time a notification arrived between the two flows
+     * emitting, which is a race in the check rather than a disagreement in the data.
      */
-    val reconciles: Boolean
-        get() = totalCaptured.toLong() + excludedGroupSummaries.toLong() == storedRecordCount.toLong()
+    val historyRecordCount: Int get() = storedRecordCount
 }
 
 /**
@@ -112,6 +118,7 @@ fun buildLocalInsights(
         .take(INSIGHT_TOP_APP_LIMIT)
 
     return LocalInsights(
+        loaded = true,
         storedRecordCount = totals.storedRecordCount.coerceAtLeast(0),
         totalCaptured = totals.totalCaptured.coerceAtLeast(0),
         excludedGroupSummaries = totals.excludedGroupSummaries.coerceAtLeast(0),

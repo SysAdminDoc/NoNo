@@ -50,7 +50,7 @@ fun SignalApp(model: MainViewModel, onUnlockRequested: () -> Unit = {}) {
         // Returned before anything else composes. A lock that hid content by drawing over it
         // would still have built the screen underneath, and a screenshot or an accessibility
         // traversal would read straight through it.
-        AppLockScreen(onUnlock = onUnlockRequested)
+        AppLockScreen(onUnlock = onUnlockRequested, refused = state.appUnlockRefused)
         return
     }
     // Keyed on the id, not the text: two deletes in a row produce the same string, and keying on

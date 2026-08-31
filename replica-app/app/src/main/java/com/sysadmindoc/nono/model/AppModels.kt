@@ -482,6 +482,8 @@ data class UiState(
     val insights: LocalInsights = LocalInsights(),
     /** True while the lock is hiding every rule and every record behind the unlock screen. */
     val appLocked: Boolean = false,
+    /** True after an unlock the user cancelled or failed, so the lock screen can say so. */
+    val appUnlockRefused: Boolean = false,
     /** Whether Android has a screen lock for the app lock to check against. */
     val deviceCredentialAvailable: Boolean = false,
     /** The chosen backup folder's short name, or null when none has been picked. */

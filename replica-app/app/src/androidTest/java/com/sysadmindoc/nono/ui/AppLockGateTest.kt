@@ -46,9 +46,20 @@ class AppLockGateTest {
 
         composeRule.onNodeWithText("NoNo is locked").assertIsDisplayed()
         composeRule.onNodeWithText("Unlock with your screen lock to see your rules and history.").assertIsDisplayed()
+        composeRule.onNodeWithText("That did not unlock it. NoNo stays locked.").assertDoesNotExist()
         composeRule.onNodeWithText("Unlock").performClick()
 
         assertTrue("the unlock control must reach the credential prompt", unlockRequested)
+    }
+
+    @Test
+    fun aRefusedUnlockSaysSoOnTheLockScreenItself() {
+        // A snackbar cannot carry this: the host lives behind the gate, so the message would be
+        // invisible now and would surface out of nowhere after a later successful unlock.
+        composeRule.setContent { SignalTheme { AppLockScreen(onUnlock = {}, refused = true) } }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("That did not unlock it. NoNo stays locked.").assertIsDisplayed()
     }
 
     @Test
@@ -62,6 +73,22 @@ class AppLockGateTest {
         composeRule.waitForIdle()
 
         assertEquals(false, model.state.value.deviceCredentialAvailable)
+        assertEquals(false, model.state.value.appLocked)
+    }
+
+    @Test
+    fun aResumeWithNoTripAwayDoesNotLockTheAppInTheUsersHands() {
+        // A permission dialog or a multi-window focus change resumes the Activity without a
+        // preceding stop. Answering "was it away long enough?" from a stamp left over from an
+        // earlier trip locks the app while the user is still looking at it.
+        composeRule.runOnUiThread {
+            model.refreshAppLock(leftForeground = true)
+            model.onAppUnlocked()
+            model.refreshAppLock()
+            model.refreshAppLock()
+        }
+        composeRule.waitForIdle()
+
         assertEquals(false, model.state.value.appLocked)
     }
 

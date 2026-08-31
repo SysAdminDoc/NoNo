@@ -149,23 +149,25 @@ class LocalInsightsTest {
     }
 
     @Test
-    fun theThreeTotalsAddUpToEachOther() {
+    fun theStoredCountIsTheNumberHistoryShows() {
+        // Both are COUNT(*) over the same table, so they reconcile by construction. The captured
+        // and excluded numbers are read from the same row, which is why nothing here can drift.
         val insights = build(totals = InsightTotals(storedRecordCount = 10, totalCaptured = 8, excludedGroupSummaries = 2))
 
         assertEquals(8, insights.totalCaptured)
         assertEquals(2, insights.excludedGroupSummaries)
-        assertTrue(insights.reconciles)
+        assertEquals(10, insights.historyRecordCount)
         assertFalse(insights.isEmpty)
         assertFalse(insights.onlyGroupSummaries)
     }
 
     @Test
-    fun totalsThatDoNotAddUpAreReportedAsNotReconciling() {
-        // All three come from one row of one query, so this cannot happen from a normal read. It
-        // is checked anyway, because the screen must never present a contradiction as fact.
-        val insights = build(totals = InsightTotals(storedRecordCount = 10, totalCaptured = 8, excludedGroupSummaries = 1))
-
-        assertFalse(insights.reconciles)
+    fun anUnansweredSnapshotIsNotTreatedAsAnEmptyOne() {
+        // The queries are whole-table scans started when the screen opens. Reporting the default
+        // as "nothing captured" states something false about a full history for as long as they
+        // take to answer.
+        assertFalse("the default must not claim to have answered", LocalInsights().loaded)
+        assertTrue(build().loaded)
     }
 
     @Test
@@ -175,7 +177,7 @@ class LocalInsightsTest {
 
         assertFalse(insights.isEmpty)
         assertTrue(insights.onlyGroupSummaries)
-        assertTrue(insights.reconciles)
+        assertEquals(40, insights.historyRecordCount)
     }
 
     @Test

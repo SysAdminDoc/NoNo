@@ -53,13 +53,6 @@ class InsightsCopyTest {
     }
 
     @Test
-    fun totalsThatDoNotAddUpAreReportedRatherThanStated() {
-        // All three numbers come from one row, so this cannot happen from a normal read. If it
-        // ever does, the screen must not present the contradiction as fact.
-        assertEquals("Counts are still being read.", describeStoredRecords(insights(10, 8, 1)))
-    }
-
-    @Test
     fun aHistoryOfNothingButSummariesIsNotCalledEmpty() {
         // History visibly lists those records. Telling the user there is nothing here would
         // contradict the screen they just came from.
@@ -122,7 +115,6 @@ class InsightsCopyTest {
         val lines = listOfNotNull(
             describeStoredRecords(insights(10, 8, 2)),
             describeStoredRecords(insights(5, 5, 0)),
-            describeStoredRecords(insights(10, 8, 1)),
             emptyInsightsTitle(insights(40, 0, 40)),
             emptyInsightsDetail(insights(40, 0, 40)),
             emptyInsightsTitle(insights(0, 0, 0)),

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
  * point of the lock is that someone holding the unlocked phone learns nothing from this screen.
  */
 @Composable
-fun AppLockScreen(onUnlock: () -> Unit) {
+fun AppLockScreen(onUnlock: () -> Unit, refused: Boolean = false) {
     Column(
         Modifier
             .fillMaxSize()
@@ -54,6 +54,17 @@ fun AppLockScreen(onUnlock: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
+        if (refused) {
+            Text(
+                "That did not unlock it. NoNo stays locked.",
+                color = SignalColors.Error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .semantics { liveRegion = LiveRegionMode.Assertive },
+            )
+        }
         SignalPrimaryButton(
             "Unlock",
             onClick = onUnlock,

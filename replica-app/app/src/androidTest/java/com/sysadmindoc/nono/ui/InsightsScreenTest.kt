@@ -38,6 +38,7 @@ class InsightsScreenTest {
         ruleMatchCounts = mapOf(1L to 9),
         appCatalog = listOf(CatalogedApp(label = "Messages", packageName = "com.example.chat")),
         insights = LocalInsights(
+            loaded = true,
             storedRecordCount = 12,
             totalCaptured = 10,
             excludedGroupSummaries = 2,
@@ -108,10 +109,23 @@ class InsightsScreenTest {
 
     @Test
     fun anEmptyDatabaseExplainsItselfInsteadOfDrawingEmptyCharts() {
-        composeRule.setContent { SignalTheme { InsightsScreen(UiState(), model) } }
+        val nothing = UiState(insights = LocalInsights(loaded = true))
+        composeRule.setContent { SignalTheme { InsightsScreen(nothing, model) } }
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Nothing to count yet").assertIsDisplayed()
+        composeRule.onNodeWithText("By hour of day").assertDoesNotExist()
+    }
+
+    @Test
+    fun aScreenWhoseAggregatesHaveNotAnsweredClaimsNothingEitherWay() {
+        // The queries are whole-table scans started when the screen opens. Showing "Nothing to
+        // count yet" while they run states something false about a full history.
+        composeRule.setContent { SignalTheme { InsightsScreen(UiState(historyTotalCount = 900), model) } }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Insights").assertIsDisplayed()
+        composeRule.onNodeWithText("Nothing to count yet").assertDoesNotExist()
         composeRule.onNodeWithText("By hour of day").assertDoesNotExist()
     }
 
@@ -121,7 +135,7 @@ class InsightsScreenTest {
         // just came from.
         val summariesOnly = UiState(
             historyTotalCount = 40,
-            insights = LocalInsights(storedRecordCount = 40, totalCaptured = 0, excludedGroupSummaries = 40),
+            insights = LocalInsights(loaded = true, storedRecordCount = 40, totalCaptured = 0, excludedGroupSummaries = 40),
         )
         composeRule.setContent { SignalTheme { InsightsScreen(summariesOnly, model) } }
         composeRule.waitForIdle()

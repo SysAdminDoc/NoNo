@@ -53,6 +53,11 @@ fun InsightsScreen(state: UiState, model: MainViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { SignalTopBar("Insights", onBack = { model.selectRoot(RootTab.EXPLORE) }) }
+        if (!insights.loaded) {
+            // The aggregates are whole-table scans started when this screen opened. Saying nothing
+            // for a moment is right; saying "nothing to count yet" over a full history is not.
+            return@LazyColumn
+        }
         if (insights.isEmpty || insights.onlyGroupSummaries) {
             item {
                 InsightsEmptyState(
@@ -151,14 +156,13 @@ private fun TotalsCard(insights: LocalInsights, modifier: Modifier = Modifier) {
  *
  * History shows group summaries as records; the counts here exclude them, exactly as the rest of
  * the app's counting does. Without this line the Insights total reads as a smaller, wrong version
- * of the History total. All three numbers come from one row of one query, so they cannot disagree
- * merely because two reads landed at different moments.
+ * of the History total. The stored count is the same `COUNT(*)` History shows, read from the same
+ * row as the two numbers it is made of, so there is nothing here that can disagree.
  */
 internal fun describeStoredRecords(insights: LocalInsights): String {
     val stored = insights.storedRecordCount
     val summaries = insights.excludedGroupSummaries
     return when {
-        !insights.reconciles -> "Counts are still being read."
         summaries == 0 -> "From $stored stored ${pluralRecords(stored)}."
         else -> "From $stored stored ${pluralRecords(stored)}, excluding $summaries group " +
             if (summaries == 1) "summary." else "summaries."

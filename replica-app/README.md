@@ -2,11 +2,12 @@
 
 NoNo is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
 
-Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. The app checks the
-derived colour on every surface where the accent appears and keeps its built-in accent if the
-wallpaper colour is not readable. The v1.4.0 reference mockups, implementation captures,
-accessibility checks, and side-by-side comparisons are listed in
-[`../design-qa.md`](../design-qa.md).
+Version 1.5.0 adds an Insights screen, scheduled rule backups, an optional app lock, a widget whose
+count you choose, and folder headings on the rules list. Each is described below. Version 1.4.1
+added the optional wallpaper-matched accent on Android 12 and newer: the app checks the derived
+colour on every surface where the accent appears and keeps its built-in accent if the wallpaper
+colour is not readable. The v1.4.0 reference mockups, implementation captures, accessibility
+checks, and side-by-side comparisons are listed in [`../design-qa.md`](../design-qa.md).
 
 Rules can also test the metadata Android supplies with a notification. Channel pseudonym,
 importance, category, conversation status, ongoing status, and group-summary status are available
@@ -144,7 +145,7 @@ Pass `-SkipSigning` on a machine without the keystore to check determinism alone
 To check an APK you already have:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.4.1-reconstruction.apk
+& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.5.0-reconstruction.apk
 ```
 
 The signer certificate SHA-256 is

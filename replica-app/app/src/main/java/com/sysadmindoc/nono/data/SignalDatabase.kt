@@ -560,8 +560,10 @@ interface NotificationDao {
     /**
      * Notifications a saved rule matched when they arrived.
      *
-     * The same condition History's "Rule-triggered" filter uses, so the widget's number and the
-     * screen it leads to cannot disagree.
+     * Group summaries are excluded, as they are from every other count this app reports. That
+     * means this can be smaller than History's Rule-triggered filter shows: a rule carrying a
+     * `SummaryCondition` does match summaries, and History's filters do not exclude them. The
+     * widget counts arrivals, so it counts the same thing its other scopes count.
      */
     @Query(
         "SELECT COUNT(*) FROM notification_history " +
@@ -569,7 +571,7 @@ interface NotificationDao {
     )
     suspend fun readRuleMatchedWidgetCount(): Int
 
-    /** Notifications the user starred, which are also the ones retention keeps. */
+    /** Starred notifications, which are also the ones retention keeps. Summaries excluded. */
     @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 0 AND starred = 1")
     suspend fun readStarredWidgetCount(): Int
 

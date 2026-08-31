@@ -14,6 +14,8 @@ import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.model.NotificationContentState
 import java.text.DateFormat
 import java.util.Date
+import androidx.datastore.preferences.core.emptyPreferences
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +32,26 @@ import kotlinx.coroutines.withContext
  *
  * @property noun what the number is counting, used in the widget label.
  */
-enum class WidgetScope(val label: String, val noun: String) {
-    ALL_CAPTURED("All captured", "notifications"),
-    RULE_MATCHED("Rule-matched", "rule matches"),
-    STARRED("Starred", "starred notifications"),
+enum class WidgetScope(val label: String, val singular: String, val plural: String) {
+    ALL_CAPTURED("All captured", "notification", "notifications"),
+    // Named as History names the same filter, so the two do not look like different things.
+    RULE_MATCHED("Rule-triggered", "rule match", "rule matches"),
+    STARRED("Starred", "starred notification", "starred notifications"),
+    ;
+
+    fun noun(count: Int): String = if (count == 1) singular else plural
+}
+
+/**
+ * Which of the three counts a scope reports.
+ *
+ * A separate function rather than a `when` buried in the update, so a scope wired to the wrong
+ * query fails a test instead of putting a plausible number under a label that means something else.
+ */
+fun countFor(scope: WidgetScope, allCaptured: Int, ruleMatched: Int, starred: Int): Int = when (scope) {
+    WidgetScope.ALL_CAPTURED -> allCaptured
+    WidgetScope.RULE_MATCHED -> ruleMatched
+    WidgetScope.STARRED -> starred
 }
 
 /** Resolves a stored or displayed label, falling back to the default for anything unrecognized. */
@@ -51,16 +69,17 @@ class SignalWidgetProvider : AppWidgetProvider() {
         updateScope.launch {
             try {
                 val dao = SignalDatabase.get(context).notificationDao()
-                val scope = widgetScope(
-                    SignalPreferences.get(context).data.first()[
-                        SignalPreferences.settingKey(SignalPreferences.WIDGET_COUNT_SETTING),
-                    ],
+                // An unreadable store must not take the process down from a home-screen refresh.
+                val stored = SignalPreferences.get(context).data
+                    .catch { emit(emptyPreferences()) }
+                    .first()
+                val scope = widgetScope(stored[SignalPreferences.settingKey(SignalPreferences.WIDGET_COUNT_SETTING)])
+                val count = countFor(
+                    scope,
+                    allCaptured = dao.readWidgetCount(),
+                    ruleMatched = dao.readRuleMatchedWidgetCount(),
+                    starred = dao.readStarredWidgetCount(),
                 )
-                val count = when (scope) {
-                    WidgetScope.ALL_CAPTURED -> dao.readWidgetCount()
-                    WidgetScope.RULE_MATCHED -> dao.readRuleMatchedWidgetCount()
-                    WidgetScope.STARRED -> dao.readStarredWidgetCount()
-                }
                 val summaries = dao.readGroupSummaryCount()
                 val latest = dao.readWidgetLatest()
                 CaptureGate.load(context)
@@ -121,8 +140,8 @@ class SignalWidgetProvider : AppWidgetProvider() {
          * number cannot say which one it is answering.
          */
         internal fun countLabel(scope: WidgetScope, count: Int, groupSummaryCount: Int): String = when {
-            scope != WidgetScope.ALL_CAPTURED && count == 0 -> "No ${scope.noun}"
-            scope != WidgetScope.ALL_CAPTURED -> "$count ${scope.noun}"
+            scope != WidgetScope.ALL_CAPTURED && count == 0 -> "No ${scope.plural}"
+            scope != WidgetScope.ALL_CAPTURED -> "$count ${scope.noun(count)}"
             count == 0 && groupSummaryCount == 0 -> "No metadata captured"
             groupSummaryCount == 0 -> "$count notifications"
             count == 0 -> "$groupSummaryCount group summaries, no notifications"

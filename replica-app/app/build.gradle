@@ -43,8 +43,8 @@ android {
         applicationId = 'com.sysadmindoc.nono'
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = '1.4.1-reconstruction'
+        versionCode = 10
+        versionName = '1.5.0-reconstruction'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true

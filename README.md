@@ -1,6 +1,6 @@
 # NoNo
 
-[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
@@ -27,7 +27,18 @@ for the privacy and capability boundary.
 
 ![NoNo rule deletion with an Undo action](replica-app/docs/screenshots/nono-rule-delete-undo-v1.4.1.png)
 
-Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
+Version 1.5.0 adds five things. Explore leads to an Insights screen that counts what History already
+holds: the total captured, the apps you hear from most, an hour-of-day histogram, a fortnight's
+trend, and a match count per rule, all from stored metadata with nothing new captured to build it.
+Rules can back themselves up to a folder you pick, daily or weekly, without the app open; because a
+job on a timer has nobody to ask for a passphrase, it encrypts with a key held by the device, so
+those files restore there and nowhere else and the encrypted export stays the way to move rules
+between phones. NoNo can put your device's screen lock in front of every rule and record, using the
+lock you already have rather than one of its own. The widget's number answers a question you choose
+and its label says which. And the rules list groups under folder headings once you have filed
+anything.
+
+Version 1.4.1 added an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
 derived colour against every surface where it appears and keeps the built-in accent if the
 wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
 Rules can also require a channel pseudonym, importance, category, conversation status, ongoing

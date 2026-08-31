@@ -3,6 +3,7 @@ package com.sysadmindoc.nono
 import android.app.KeyguardManager
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -19,6 +20,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sysadmindoc.nono.audit.readAuditState
+import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
 import com.sysadmindoc.nono.ui.SignalApp
 import com.sysadmindoc.nono.ui.SignalTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +93,19 @@ class MainActivity : ComponentActivity() {
                         // not replay it and overwrite a draft the user has since edited.
                         intent.removeExtra(EXTRA_RULE_ID)
                     }
+                }
+                // The recents thumbnail is taken as the app leaves, before the grace period has
+                // run out, so without this the lock hides History from the user and shows it to
+                // anyone who opens the task switcher. Applied only while the setting is on: it
+                // also blocks screenshots, which nobody else asked for.
+                val lockEnabled = state.settings[APP_LOCK_SETTING] == "On"
+                DisposableEffect(lockEnabled) {
+                    if (lockEnabled) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                    onDispose { }
                 }
                 DisposableEffect(lifecycleOwner, model) {
                     val observer = LifecycleEventObserver { _, event ->

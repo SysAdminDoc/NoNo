@@ -124,6 +124,44 @@ class BackupScheduleTest {
     }
 
     @Test
+    fun `the file this run wrote is never expired`() {
+        // Names written before the stamp moved to UTC carry a local offset. On a device east of
+        // UTC the first UTC-stamped file sorts below every older one, so the sort alone would name
+        // the backup that was just written as the oldest and delete it seconds later.
+        val legacy = (1..5).map { "nono-rules-backup-2026090${it}-230000.json" }
+        val justWritten = "nono-rules-backup-20260901-100000.json"
+        val present = legacy + justWritten
+
+        // It sorts below every legacy name, so without the guard it is the first thing dropped.
+        assertEquals(justWritten, present.sortedDescending().last())
+
+        assertTrue(
+            "the new backup must survive its own rotation",
+            justWritten !in expiredBackupFileNames(present, keep = 5, justWritten = justWritten),
+        )
+        // Older files are still rotated normally around it.
+        assertEquals(
+            listOf("nono-rules-backup-20260902-230000.json", "nono-rules-backup-20260901-230000.json"),
+            expiredBackupFileNames(present, keep = 3, justWritten = justWritten),
+        )
+    }
+
+    @Test
+    fun `a copy the provider renamed is rotated rather than kept for ever`() {
+        // Two runs in the same second: the provider will not overwrite, so the second document
+        // comes back with a numbered suffix. A pattern that did not accept that shape would leave
+        // those files in the folder permanently.
+        val present = listOf(
+            "nono-rules-backup-20260901-030000.json",
+            "nono-rules-backup-20260901-030000 (1).json",
+            "nono-rules-backup-20260901-030000 (2).json",
+        )
+
+        assertEquals(3, expiredBackupFileNames(present, keep = 0).size)
+        assertEquals(emptyList<String>(), expiredBackupFileNames(present, keep = 3))
+    }
+
+    @Test
     fun `nothing is removed while the folder holds no more than the retained count`() {
         val present = (1..5).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0)) }
 

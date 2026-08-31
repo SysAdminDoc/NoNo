@@ -49,6 +49,34 @@ class WidgetCountLabelTest {
     }
 
     @Test
+    fun oneOfSomethingIsSingular() {
+        assertEquals("1 rule match", SignalWidgetProvider.countLabel(WidgetScope.RULE_MATCHED, 1, 0))
+        assertEquals("1 starred notification", SignalWidgetProvider.countLabel(WidgetScope.STARRED, 1, 0))
+    }
+
+    @Test
+    fun eachScopeReadsTheCountItsLabelNames() {
+        // Wiring a scope to the wrong query would put a plausible number under a label meaning
+        // something else, which is the one failure nobody looking at the widget could detect.
+        assertEquals(7, countFor(WidgetScope.ALL_CAPTURED, allCaptured = 7, ruleMatched = 3, starred = 1))
+        assertEquals(3, countFor(WidgetScope.RULE_MATCHED, allCaptured = 7, ruleMatched = 3, starred = 1))
+        assertEquals(1, countFor(WidgetScope.STARRED, allCaptured = 7, ruleMatched = 3, starred = 1))
+    }
+
+    @Test
+    fun noTwoScopesReadTheSameCount() {
+        val counts = WidgetScope.entries.map { countFor(it, allCaptured = 7, ruleMatched = 3, starred = 1) }
+
+        assertEquals(WidgetScope.entries.size, counts.distinct().size)
+    }
+
+    @Test
+    fun theRuleScopeIsNamedAsHistoryNamesTheSameFilter() {
+        // History calls it "Rule-triggered". Two names for one idea reads as two ideas.
+        assertEquals("Rule-triggered", WidgetScope.RULE_MATCHED.label)
+    }
+
+    @Test
     fun aNarrowedScopeDoesNotRepeatTheSummaryNote() {
         // Group summaries are excluded from every scope. Saying so beside a rule-match count would
         // suggest some of those matches were summaries, which they never are.
@@ -78,7 +106,7 @@ class WidgetCountLabelTest {
     @Test
     fun aStoredScopeResolvesWhateverItsSpacingOrCase() {
         assertEquals(WidgetScope.ALL_CAPTURED, widgetScope("All captured"))
-        assertEquals(WidgetScope.RULE_MATCHED, widgetScope(" rule-matched "))
+        assertEquals(WidgetScope.RULE_MATCHED, widgetScope(" rule-triggered "))
         assertEquals(WidgetScope.STARRED, widgetScope("STARRED"))
     }
 

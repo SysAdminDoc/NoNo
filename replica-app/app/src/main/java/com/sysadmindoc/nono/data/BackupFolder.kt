@@ -55,10 +55,10 @@ object BackupFolder {
      */
     @Throws(IOException::class)
     fun writeDocument(resolver: ContentResolver, treeUri: Uri, displayName: String, bytes: ByteArray) {
-        // Providers do not overwrite: a second document with the same display name comes back as
-        // "name (1).json", which rotation's pattern never matches and which is therefore kept
-        // forever. Two runs landing in the same second is enough to cause it.
-        deleteByName(resolver, treeUri, displayName)
+        // Nothing is removed before the write. A provider that will not create the document, or a
+        // write that fails, must not have cost the user the backup that was already there under
+        // this name. Providers do not overwrite, so a same-second collision comes back as
+        // "name (1).json"; rotation's pattern accepts that shape rather than leaving it forever.
         val target = DocumentsContract.createDocument(resolver, directoryUri(treeUri), "application/json", displayName)
             ?: throw IOException("the folder refused a new file")
         try {
@@ -101,7 +101,11 @@ object BackupFolder {
         return names
     }
 
-    /** @return true when the named document was removed. A name that is not there is not an error. */
+    /**
+     * @return true when the named document is gone, whether this call removed it or it was never
+     * there. A concurrent run having already removed it is not a rotation failure, and reporting
+     * one would put a warning in Settings after a run that did exactly what it should.
+     */
     fun deleteByName(resolver: ContentResolver, treeUri: Uri, displayName: String): Boolean {
         val children = DocumentsContract.buildChildDocumentsUriUsingTree(
             treeUri,
@@ -123,7 +127,7 @@ object BackupFolder {
                 return runCatching { DocumentsContract.deleteDocument(resolver, document) }.getOrDefault(false)
             }
         }
-        return false
+        return true
     }
 
     private fun directoryUri(treeUri: Uri): Uri =

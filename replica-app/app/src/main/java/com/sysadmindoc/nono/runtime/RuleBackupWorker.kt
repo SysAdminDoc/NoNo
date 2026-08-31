@@ -71,8 +71,9 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
 
         val now = System.currentTimeMillis()
         val resolver = context.contentResolver
+        val name = backupFileName(now)
         val written = runCatching {
-            BackupFolder.writeDocument(resolver, folder, backupFileName(now), payload.toByteArray(Charsets.UTF_8))
+            BackupFolder.writeDocument(resolver, folder, name, payload.toByteArray(Charsets.UTF_8))
         }
         if (written.isFailure) {
             return recordFailure(context, "The backup file could not be written to that folder.")
@@ -83,8 +84,10 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
         // cannot be listed is reported as a rotation problem rather than as a failed backup.
         val rotated = runCatching {
             val present = BackupFolder.listNames(resolver, folder) ?: return@runCatching false
-            expiredBackupFileNames(present).all { name ->
-                BackupFolder.deleteByName(resolver, folder, name)
+            // fold rather than all: `all` stops at the first refusal, so one file that cannot be
+            // removed would leave every older one untried and the folder growing for ever.
+            expiredBackupFileNames(present, justWritten = name).fold(true) { removed, expired ->
+                BackupFolder.deleteByName(resolver, folder, expired) && removed
             }
         }.getOrDefault(false)
 

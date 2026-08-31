@@ -180,6 +180,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private var lastUnlockedElapsed: Long? = null
     private var leftForegroundElapsed: Long? = null
+
+    /**
+     * Locked until the stored settings say otherwise.
+     *
+     * The settings are read from disk asynchronously while the Activity is already composing, so
+     * anything that decides the lock from the in-memory defaults decides it from "Off" and lets
+     * the whole app through before the real answer arrives. Starting locked and unlocking once the
+     * read lands is the only ordering that cannot leak.
+     */
+    private var appLockSettingLoaded = false
     private var pendingExportPayload: String? = null
     private var pendingExportIsHistory = false
 
@@ -249,6 +259,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     historyStorage(stored[SignalPreferences.HISTORY_STORAGE_SETTING]).label
                 )
             applyListenerSettings(listenerSettings(values))
+            appLockSettingLoaded = true
             _state.value = _state.value.copy(
                 route = if (values[Keys.Onboarding] == true) Route.ROOT else Route.ONBOARDING,
                 auditState = if (values[Keys.Onboarding] == true) "010_home_empty" else "002_welcome_default",
@@ -258,6 +269,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             ).withMessage(
                 if (SignalPreferences.consumeCorruptionRecovery()) SETTINGS_RESET_MESSAGE else null,
             )
+            // The lock was decided before this read landed, from defaults that say "Off". Decide
+            // it again now that the stored answer exists.
+            refreshAppLock()
             auditOverride?.let(::applyAuditState)
         }
         viewModelScope.launch {
@@ -308,12 +322,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         viewModelScope.launch {
-            historyDatabase.notificationDao().observeMatchedRuleIds().collect { encoded ->
-                val counts = encoded.flatMap(::decodeMatchedRuleIds)
-                    .groupingBy { it }
-                    .eachCount()
-                _state.value = _state.value.copy(ruleMatchCounts = counts)
-            }
+            // The heaviest query in the app: a full scan returning one string per matched row,
+            // decoded on this dispatcher, re-run on every capture. Only two screens read the
+            // result, so it runs only while one of them is on.
+            _state
+                .map { it.route == Route.INSIGHTS || (it.route == Route.ROOT && it.rootTab == RootTab.RULES) }
+                .distinctUntilChanged()
+                .flatMapLatest { needed ->
+                    if (!needed) {
+                        flowOf(emptyList())
+                    } else {
+                        historyDatabase.notificationDao().observeMatchedRuleIds().catch { emit(emptyList()) }
+                    }
+                }
+                .collect { encoded ->
+                    val counts = withContext(Dispatchers.Default) {
+                        encoded.flatMap(::decodeMatchedRuleIds).groupingBy { it }.eachCount()
+                    }
+                    _state.value = _state.value.copy(ruleMatchCounts = counts)
+                }
         }
         viewModelScope.launch {
             historyDatabase.notificationDao().observeIngestionDiagnostics().collect { diagnostics ->
@@ -646,29 +673,55 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val secure = runCatching {
             ContextCompat.getSystemService(app, KeyguardManager::class.java)?.isDeviceSecure == true
         }.getOrDefault(false)
-        if (leftForeground) leftForegroundElapsed = SystemClock.elapsedRealtime()
+        if (leftForeground) {
+            leftForegroundElapsed = SystemClock.elapsedRealtime()
+            _state.value = _state.value.copy(deviceCredentialAvailable = secure)
+            return
+        }
+        // Whether the app was away long enough is a question about the trip that just ended. Left
+        // set, the stamp answers it again for every later resume that had no trip: a permission
+        // dialog or a multi-window focus change would lock the app in the user's hands.
+        val away = leftForegroundElapsed
+        leftForegroundElapsed = null
         val enabled = _state.value.settings[APP_LOCK_SETTING] == "On"
-        val locked = shouldLock(
-            enabled = enabled,
-            deviceSecure = secure,
-            lastUnlockedElapsed = lastUnlockedElapsed,
-            leftForegroundElapsed = leftForegroundElapsed,
-            nowElapsed = SystemClock.elapsedRealtime(),
-        )
+        val locked = if (!appLockSettingLoaded) {
+            // The stored answer has not arrived. Holding the lock closed costs a user with the
+            // setting off nothing they will see; opening it would show everything to someone with
+            // the setting on.
+            secure
+        } else {
+            shouldLock(
+                enabled = enabled,
+                deviceSecure = secure,
+                lastUnlockedElapsed = lastUnlockedElapsed,
+                leftForegroundElapsed = away,
+                nowElapsed = SystemClock.elapsedRealtime(),
+            )
+        }
         if (locked) lastUnlockedElapsed = null
-        _state.value = _state.value.copy(appLocked = locked, deviceCredentialAvailable = secure)
+        _state.value = _state.value.copy(
+            appLocked = locked,
+            deviceCredentialAvailable = secure,
+            appUnlockRefused = if (locked) _state.value.appUnlockRefused else false,
+        )
     }
 
     /** Records a successful unlock, and starts the grace period from now. */
     fun onAppUnlocked() {
         lastUnlockedElapsed = SystemClock.elapsedRealtime()
         leftForegroundElapsed = null
-        _state.value = _state.value.copy(appLocked = false)
+        _state.value = _state.value.copy(appLocked = false, appUnlockRefused = false)
     }
 
-    /** The app stays locked and says so, rather than looking like the tap did nothing. */
+    /**
+     * The app stays locked and the lock screen says so.
+     *
+     * Not a snackbar: nothing behind the lock is composed, the host it would need with it, so a
+     * message set here would be invisible now and would surface out of nowhere after a later
+     * successful unlock.
+     */
     fun onAppUnlockFailed() {
-        _state.value = _state.value.withMessage("NoNo stays locked.")
+        _state.value = _state.value.copy(appUnlockRefused = true)
     }
 
     /** Re-anchors the fourteen-day trend on the day, and the zone, the user is actually in. */
@@ -1613,8 +1666,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val label = BackupFolder.describe(uri)
-        _state.value = _state.value.copy(backupFolderLabel = label).withMessage("Backup folder set to $label.")
         viewModelScope.launch {
+            // Read before the write, so the folder being replaced is known even after it is gone
+            // from the store. A read that fails leaves nothing to hand back, and the new grant is
+            // still the one that matters.
             val previous = runCatching { dataStore.data.first()[SignalPreferences.BACKUP_FOLDER_URI] }.getOrNull()
             try {
                 dataStore.edit {
@@ -1622,9 +1677,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     it[SignalPreferences.BACKUP_FOLDER_LABEL] = label
                 }
             } catch (error: IOException) {
-                _state.value = _state.value.withMessage("Could not save to storage.")
+                // Nothing was stored, so nothing is claimed. Announcing the folder first would
+                // leave the row naming a folder the scheduled job cannot find.
+                BackupFolder.release(app, uri)
+                _state.value = _state.value.withMessage("Could not save the backup folder.")
                 return@launch
             }
+            _state.value = _state.value.copy(backupFolderLabel = label)
+                .withMessage("Backup folder set to $label.")
             // Handed back only once the replacement is stored. Holding on to it would keep this
             // app's access to a folder the user has stopped pointing it at, and the platform caps
             // how many of those an app may hold at once.
@@ -1670,7 +1730,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val app = getApplication<Application>()
             val cadence = backupCadence(value)
             val hasFolder = _state.value.backupFolderLabel != null
-            BackupScheduler.apply(app, cadence)
             _state.value = _state.value.copy(
                 settings = _state.value.settings + (label to value),
                 overlay = Overlay.NONE,
@@ -1687,9 +1746,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _state.value = _state.value.withMessage("Could not save to storage.")
                     return@launch
                 }
-                // The worker reads this cadence back out of the store, so starting it before the
-                // write lands means it reads the old value, decides the schedule is off, and
-                // writes no result at all.
+                // Both the periodic schedule and the immediate run read this cadence back out of
+                // the store. Either one started before the write lands reads the old value,
+                // decides the schedule is off, and writes no result at all.
+                BackupScheduler.apply(app, cadence)
                 if (cadence.enabled && hasFolder) BackupScheduler.runOnce(app)
             }
             return

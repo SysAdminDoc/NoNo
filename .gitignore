@@ -40,3 +40,4 @@ replica-app/keystore.properties
 
 # JVM crash replay dumps left by a killed Kotlin compiler
 replay_pid*.log
+hs_err_pid*.log

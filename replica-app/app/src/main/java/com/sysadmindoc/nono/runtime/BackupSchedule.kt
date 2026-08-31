@@ -13,8 +13,16 @@ const val BACKUP_RETAINED_FILES = 5
 private const val BACKUP_FILE_PREFIX = "nono-rules-backup-"
 private const val BACKUP_FILE_SUFFIX = ".json"
 
-/** Matches only what this app writes, so rotation can never remove somebody else's file. */
-private val backupFileName = Regex("^${Regex.escape(BACKUP_FILE_PREFIX)}\\d{8}-\\d{6}${Regex.escape(BACKUP_FILE_SUFFIX)}$")
+/**
+ * Matches only what this app writes, so rotation can never remove somebody else's file.
+ *
+ * The optional " (n)" is the suffix a document provider adds when a name is already taken, which
+ * happens when two runs land in the same second. Without it those copies match nothing and stay in
+ * the folder for ever.
+ */
+private val backupFileName = Regex(
+    "^${Regex.escape(BACKUP_FILE_PREFIX)}\\d{8}-\\d{6}( \\(\\d+\\))?${Regex.escape(BACKUP_FILE_SUFFIX)}$",
+)
 
 /**
  * How often the backup job runs.
@@ -83,13 +91,22 @@ fun backupFileName(atEpochMillis: Long): String {
  * The folder is the user's, and it may hold anything. Only names this app writes are considered,
  * and only the ones past [keep] are named for deletion, newest first by the timestamp in the name.
  *
+ * @param justWritten the name this run produced, which is never expired whatever the sort says.
+ * Names written before the stamp moved to UTC carry a local offset, so on a device east of UTC the
+ * first UTC-stamped file sorts below every older one and would otherwise be deleted seconds after
+ * being written.
  * @return the names to delete, in the order they should go.
  */
-fun expiredBackupFileNames(present: List<String>, keep: Int = BACKUP_RETAINED_FILES): List<String> {
+fun expiredBackupFileNames(
+    present: List<String>,
+    keep: Int = BACKUP_RETAINED_FILES,
+    justWritten: String? = null,
+): List<String> {
     if (keep < 0) return emptyList()
     return present
         .filter { backupFileName.matches(it) }
         .distinct()
         .sortedDescending()
         .drop(keep)
+        .filterNot { it == justWritten }
 }
