@@ -27,6 +27,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
 import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
@@ -191,6 +194,24 @@ class LargeTextAccessibilityTest {
         setCompactLargeText(theme = "Light") { RulesHomeScreen(populated, model) }
 
         scrollTo("Create rule")
+        assertTouchTargets()
+    }
+
+    @Test
+    fun metadataFiltersRemainReachableAtTwiceTheFontSize() {
+        val state = populated.copy(
+            route = Route.FILTER_GROUP,
+            draft = SignalRule(
+                metadataConditions = listOf(
+                    ChannelCondition("channel-91"),
+                    ImportanceCondition(4),
+                    ConversationCondition(true),
+                ),
+            ),
+        )
+        setCompactLargeText { FilterGroupScreen(state, model) }
+
+        scrollTo("Clear metadata conditions")
         assertTouchTargets()
     }
 }

@@ -15,9 +15,11 @@
 
 ## Capture pipeline
 
-`onNotificationPosted` checks `CaptureGate`, then `NotificationRedaction.sanitizeNotification`
-classifies content provenance as available, hidden by the system, or not available, keeping the
-title and body out of everything it returns. The result goes to `NotificationIngestor`, a bounded
+`onNotificationPosted` checks `CaptureGate`, reads the payload for the lifetime of that callback,
+and passes it to `NotificationRedaction.sanitizeNotification`. The sanitizer keeps title and body
+out of everything it returns, pseudonymizes identifiers, and retains the platform metadata needed
+for rule evaluation. A callback with no text is classified as unavailable because Android exposes
+no supported redaction flag. The sanitized result goes to `NotificationIngestor`, a bounded
 `Channel(64)` drained by a single worker: a full queue drops the newest event and increments a
 counter rather than blocking the platform callback. The worker writes through
 `insertAndPrune`, which inserts and applies the retention cutoff in one transaction, then asks the
@@ -28,25 +30,30 @@ survive process death, and republished through `ListenerHealth` on the next star
 
 ## State and persistence
 
-- **Room** (`SignalDatabase`, version 4, `exportSchema = true`) holds notification metadata and a
-  single-row diagnostics table. Migrations 1 to 4 add grouping, diagnostics, and channel columns;
+- **Room** (`SignalDatabase`, version 11, `exportSchema = true`) holds notification metadata and a
+  single-row diagnostics table. Migrations 1 to 11 add grouping, diagnostics, rule attribution,
+  ranking metadata, pseudonym tracking, stars, and removal reasons;
   the exported schemas under `app/schemas` are packaged into the test APK so
   `SignalDatabaseMigrationTest` can replay them. The database file lives under `noBackupFilesDir`.
 - `SignalDatabase.get` returns one instance per process. Room's invalidation tracker only notifies
   observers registered on the instance that performed the write, so the listener, the view model,
   and the widget must share one or the history flow never updates.
-- **DataStore** holds onboarding state, the rule list (`RuleStore` version 3, encoded by
+- **DataStore** holds onboarding state, the rule list (`RuleStore` version 5, encoded by
   `RuleCodec`), and every observed settings value. It also lives under `noBackupFilesDir`, and a
   corrupt store is replaced with defaults rather than crashing the process.
-- Retention is 30 days, 3 months, or 6 months, applied on every insert and again when the setting
-  changes.
+- The selected retention period is applied on every insert and again when the setting changes.
 
 ## Evaluation
 
-`RuleEvaluation` is pure. It takes saved rules and a sanitized payload and returns per-condition
-traces, deterministic specificity and priority conflict resolution, and an action result that is
-always `NOT_EXECUTED`. Content the platform redacted is never matchable as text. Nothing in the
-evaluator touches the notification manager, a `PendingIntent`, or the ringer.
+`RuleEvaluation` is pure. It takes saved rules, the callback payload, and sanitized metadata, then
+returns per-condition traces with deterministic specificity and priority conflict resolution. The
+typed `MetadataCondition` subtypes cover channel pseudonym, importance, category, conversation,
+ongoing, and group-summary state. Missing metadata fails closed and reports that it was unavailable.
+Free-string extras from stores written before version 5 remain unsupported, visible, and blocking.
+
+Ordinary rules do not see group summaries. A rule must explicitly test summary state to opt in,
+and summary rows remain excluded from counts. The action result is always `NOT_EXECUTED`; nothing
+in the evaluator touches the notification manager, a `PendingIntent`, or the ringer.
 
 ## Transfer
 

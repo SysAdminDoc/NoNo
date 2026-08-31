@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Added an optional "Match my wallpaper" theme on Android 12 and newer. It keeps NoNo's tested dark or light surfaces, then uses a wallpaper-derived accent only when that accent clears every text and control contrast check. Older Android versions keep the choices they already had.
+- Rules can require a channel pseudonym, importance level, category, conversation status, ongoing status, or group-summary status. Every condition has its own live-capture and dry-run trace, and all selected conditions must match.
 
 ### Changed
 
@@ -34,7 +35,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The Notification history setting now offers Metadata only and Off, and both are enforced. The old list included content options this build never performed. Off stops new records being written and leaves everything already stored alone until you delete it.
 - Settings has a separate "Keep history for" row. The retention dialog existed but nothing opened it, and the history row showed the retention value while opening the storage chooser.
 - The phrase condition offers "contains" and "doesn't contain", and both now do what they say. The four older options ("contains any of" and friends) all ran the same single containment check, and a rule saved with any of them keeps working: it is read back as whichever of the two operators it meant.
-- Extra properties, filter groups and the filter operator are shown but cannot be set. Nothing evaluates them, and a rule carrying one silently never matched. A rule that already has some can be cleared in one tap so it starts matching again.
+- The metadata filter screen is functional. The text tester names every metadata value it cannot check, and a history record's Activity screen compares current conditions with the metadata that was captured. Rules written by store version 4 or earlier keep their free-string extras visible and unsupported, so upgrading cannot silently change whether one matches. Those legacy filters can still be cleared in one tap.
+- Group summaries keep their old behavior unless a rule explicitly tests summary state. An opted-in rule can match a summary, while notification and rule-hit counts continue to leave summaries out.
 - History reaches everything it kept. The list loaded 100 records and showed that number as though it were a count of notifications, so anything older was invisible and uncounted. There is a Load more button now, the big number counts what your filters actually select, and it names the total it was narrowed from. A Starred filter reaches a kept record however old it is, and each row shows when it arrived instead of a raw timestamp.
 - The controls in a history record's menu do what they say. Copy puts the record's metadata on the clipboard. Delete removes it, with an Undo in the snackbar. Restore is shown disabled, because a notification belongs to the app that sent it and nothing can post it again. All three used to just close the menu.
 - Creating a launcher shortcut works. Pick any saved rule and NoNo asks your launcher to pin it; tapping it opens that rule. The button used to be permanently disabled, and only ever described the first rule.

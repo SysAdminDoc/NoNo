@@ -40,6 +40,7 @@ private fun searchableFields(rule: SignalRule): List<String> = buildList {
     add(rule.action)
     add(rule.folder)
     add(rule.priority)
+    addAll(rule.metadataConditions.map(MetadataCondition::describe))
     addAll(rule.extras)
     rule.enabledFor?.let(::add)
 }

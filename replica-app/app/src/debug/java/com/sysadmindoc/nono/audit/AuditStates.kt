@@ -3,6 +3,10 @@ package com.sysadmindoc.nono.audit
 import android.content.Intent
 import com.sysadmindoc.nono.data.CatalogedApp
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
@@ -10,6 +14,7 @@ import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.SummaryCondition
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.ui.DYNAMIC_THEME
 
@@ -116,20 +121,18 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
             phraseInputVisible = !id.startsWith("033_"),
             phraseDraft = if (id.startsWith("041_") || id.startsWith("045_") || id.startsWith("046_") || id.startsWith("047_") || id.startsWith("048_")) "audit phrase" else "",
         )
-        // The extras selector and the filter-operator dialog are gone: nothing evaluates either,
-        // so the rule builder no longer offers them. All five ids land on the one screen that
-        // still shows those properties, distinguished by whether the draft carries any. A rule
-        // that arrived by import can, which is the only way they exist now.
+        // The original captures predate typed metadata. Keep their ids while giving each a
+        // distinct, evaluable condition set on the current filter screen.
         id.startsWith("039_") -> base.copy(route = Route.FILTER_GROUP)
         id.startsWith("036_") || id.startsWith("037_") || id.startsWith("038_") || id.startsWith("040_") -> base.copy(
             route = Route.FILTER_GROUP,
             draft = base.draft.copy(
-                extras = when {
-                    id.startsWith("038_") -> listOf("Image", "Category", "Text length")
-                    id.startsWith("037_") -> listOf("Image", "Phone number")
-                    else -> listOf("Image")
+                metadataConditions = when {
+                    id.startsWith("036_") -> listOf(ChannelCondition("messages"))
+                    id.startsWith("037_") -> listOf(ChannelCondition("messages"), ImportanceCondition(3))
+                    id.startsWith("038_") -> listOf(CategoryCondition("msg"), ConversationCondition(true))
+                    else -> listOf(SummaryCondition(true))
                 },
-                filterOperator = if (id.startsWith("040_")) "Doesn't contain any" else base.draft.filterOperator,
             ),
         )
         id.startsWith("044_") -> base.copy(route = Route.RULE_BUILDER, overlay = Overlay.ADD_FILTER)
@@ -164,7 +167,13 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         )
         id.startsWith("902_filter_group_populated") -> base.copy(
             route = Route.FILTER_GROUP,
-            draft = SignalRule(extras = listOf("Conversation")),
+            draft = SignalRule(
+                metadataConditions = listOf(
+                    ChannelCondition("messages"),
+                    ImportanceCondition(3),
+                    ConversationCondition(true),
+                ),
+            ),
         )
         id.startsWith("903_light_rules") -> base.copy(
             route = Route.ROOT,

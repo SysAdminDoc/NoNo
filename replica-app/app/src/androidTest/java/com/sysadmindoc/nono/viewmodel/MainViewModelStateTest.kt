@@ -15,6 +15,8 @@ import com.sysadmindoc.nono.data.SignalDatabase
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.decodeRuleStore
 import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.MetadataField
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
@@ -181,6 +183,27 @@ class MainViewModelStateTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun metadataPickerEditsTheTypedDraftAndCanReturnToAny() {
+        startModel()
+
+        onMain {
+            showMetadataCondition(MetadataField.CHANNEL)
+            setMetadataCondition(ChannelCondition("channel-91"))
+        }
+
+        assertEquals(listOf(ChannelCondition("channel-91")), model.state.value.draft.metadataConditions)
+        assertEquals(Overlay.NONE, model.state.value.overlay)
+
+        onMain {
+            showMetadataCondition(MetadataField.CHANNEL)
+            setMetadataCondition(null)
+        }
+
+        assertTrue(model.state.value.draft.metadataConditions.isEmpty())
+        assertNull(model.state.value.selectedMetadataField)
     }
 
     @Test

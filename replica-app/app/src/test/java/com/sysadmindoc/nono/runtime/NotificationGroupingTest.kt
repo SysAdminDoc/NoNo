@@ -102,7 +102,7 @@ class NotificationGroupingTest {
     }
 
     @Test
-    fun `the listener tests no rule against a summary, however well the rules match it`() {
+    fun `a rule without a summary condition is not tested against a summary`() {
         // The rule matches this app and needs no content, so it would match if it were tested.
         // The summary must still not be evaluated, because it is not an arrival of its own.
         val matchAll = SignalRule(id = 1L, app = "any app", phrase = "anything", action = "Mute")

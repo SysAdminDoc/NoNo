@@ -1,12 +1,22 @@
 package com.sysadmindoc.nono.runtime
 
 import android.os.Build
+import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
+import com.sysadmindoc.nono.model.MetadataCondition
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.OngoingCondition
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.SummaryCondition
 import com.sysadmindoc.nono.model.MatchableFields
 import com.sysadmindoc.nono.model.PhraseMatchFailure
+import com.sysadmindoc.nono.model.categoryLabel
+import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.evaluatePhrase
+import com.sysadmindoc.nono.model.importanceLabel
 import com.sysadmindoc.nono.model.phraseConditionFor
 import com.sysadmindoc.nono.model.matchesSchedule
 import java.util.TimeZone
@@ -18,6 +28,10 @@ enum class EvaluationReason {
     CONTENT_HIDDEN_BY_SYSTEM,
     CONTENT_NOT_AVAILABLE,
     PHRASE_MISMATCH,
+    METADATA_MISMATCH,
+    METADATA_NOT_AVAILABLE,
+    INVALID_METADATA_CONDITION,
+    /** A free-string condition preserved from rule-store versions 1 through 4. */
     EXTRA_FILTER_UNSUPPORTED,
 
     /** The rule's pattern is not valid, so nothing could be tested against it. */
@@ -34,7 +48,24 @@ data class RuleConditionTrace(
     val ruleId: Long,
     val matched: Boolean,
     val reasons: List<EvaluationReason> = emptyList(),
+    val metadataConditions: List<MetadataConditionTrace> = emptyList(),
     val specificity: Int = 0,
+)
+
+/** Why one typed metadata condition could not match. */
+enum class MetadataConditionFailure {
+    VALUE_MISMATCH,
+    METADATA_NOT_AVAILABLE,
+    INVALID_CONDITION,
+}
+
+/** The result for one condition, kept separate so two failures never collapse into one label. */
+data class MetadataConditionTrace(
+    val condition: MetadataCondition,
+    val matched: Boolean,
+    val failure: MetadataConditionFailure? = null,
+    val expectedValue: String = condition.displayValue(),
+    val actualValue: String? = null,
 )
 
 /** A conflict is retained as data so the UI can explain why one candidate won. */
@@ -149,8 +180,8 @@ fun evaluateCapture(
  * The single policy the listener applies to an arriving notification.
  *
  * Extracted from the service so it can be exercised without one. A group summary stands for its
- * group rather than being an arrival of its own, so no rule is tested against it, which is the
- * same rule the stored counts follow when they exclude summaries.
+ * group rather than being an arrival of its own, so only rules that explicitly test summary state
+ * see it. Stored counts still exclude summaries.
  *
  * @param rules null when the saved rules have not been read from disk yet, which the platform can
  * cause by delivering a notification before the store is loaded.
@@ -162,10 +193,35 @@ fun captureEvaluationFor(
     sdkInt: Int = Build.VERSION.SDK_INT,
     atEpochMillis: Long = System.currentTimeMillis(),
     zone: TimeZone = TimeZone.getDefault(),
-): CaptureEvaluation = when {
-    !groupingFor(sanitized).shouldEvaluate -> CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
-    rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
-    else -> evaluateCapture(rules, payload, sdkInt, atEpochMillis, zone)
+): CaptureEvaluation {
+    if (rules == null) {
+        return if (groupingFor(sanitized).shouldEvaluate) {
+            CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
+        } else {
+            CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
+        }
+    }
+
+    val payloadWithMetadata = payload.copy(
+        channelId = sanitized.channelId,
+        importance = sanitized.importance,
+        category = sanitized.category,
+        isConversation = sanitized.isConversation,
+        isOngoing = sanitized.isOngoing,
+        isGroupSummary = sanitized.isGroupSummary,
+    )
+    if (groupingFor(sanitized).shouldEvaluate) {
+        return evaluateCapture(rules, payloadWithMetadata, sdkInt, atEpochMillis, zone)
+    }
+
+    // Existing rules never saw summaries. Preserve that behavior unless a rule explicitly asks
+    // for summary state; this makes summary matching opt-in instead of broadening old rules.
+    val summaryRules = rules.filter { rule ->
+        rule.metadataConditions.any { it is SummaryCondition }
+    }
+    if (summaryRules.isEmpty()) return CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
+    val result = evaluateCapture(summaryRules, payloadWithMetadata, sdkInt, atEpochMillis, zone)
+    return result.copy(state = RuleMatchState.GROUP_SUMMARY_EVALUATED)
 }
 
 private fun evaluateRule(
@@ -178,6 +234,7 @@ private fun evaluateRule(
 ): RuleConditionTrace {
     if (!rule.enabled) return RuleConditionTrace(rule.id, matched = false, reasons = listOf(EvaluationReason.DISABLED))
 
+    val metadataTrace = evaluateMetadataConditions(rule.metadataConditions, payload)
     val reasons = buildList {
         if (!matchesApp(rule, payload)) add(EvaluationReason.APP_MISMATCH)
         // Recorded as its own reason rather than folded into a mismatch: "your rule is right but
@@ -206,13 +263,102 @@ private fun evaluateRule(
                 }
             }
         }
+        metadataTrace.mapNotNull { it.failure }.distinct().forEach { failure ->
+            add(
+                when (failure) {
+                    MetadataConditionFailure.VALUE_MISMATCH -> EvaluationReason.METADATA_MISMATCH
+                    MetadataConditionFailure.METADATA_NOT_AVAILABLE -> EvaluationReason.METADATA_NOT_AVAILABLE
+                    MetadataConditionFailure.INVALID_CONDITION -> EvaluationReason.INVALID_METADATA_CONDITION
+                },
+            )
+        }
         if (rule.extras.isNotEmpty()) add(EvaluationReason.EXTRA_FILTER_UNSUPPORTED)
     }
     return RuleConditionTrace(
         ruleId = rule.id,
         matched = reasons.isEmpty(),
         reasons = reasons,
+        metadataConditions = metadataTrace,
         specificity = specificity(rule),
+    )
+}
+
+/** Evaluates every typed condition independently so the dry-run can explain each failure. */
+fun evaluateMetadataConditions(
+    conditions: List<MetadataCondition>,
+    payload: NotificationPayload,
+): List<MetadataConditionTrace> = conditions.map { condition ->
+    when (condition) {
+        is ChannelCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.channelId,
+            expected = condition.channelPseudonym,
+            actualLabel = payload.channelId,
+            valid = condition.channelPseudonym.isNotBlank(),
+        )
+        is ImportanceCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.importance,
+            expected = condition.level,
+            actualLabel = payload.importance?.let { importanceLabel(it) ?: "Unknown ($it)" },
+            valid = importanceLabel(condition.level) != null,
+        )
+        is CategoryCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.category,
+            expected = condition.category,
+            actualLabel = payload.category?.let(::categoryLabel),
+            valid = condition.category.isNotBlank(),
+        )
+        is ConversationCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.isConversation,
+            expected = condition.required,
+            actualLabel = payload.isConversation?.yesNo(),
+        )
+        is OngoingCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.isOngoing,
+            expected = condition.required,
+            actualLabel = payload.isOngoing?.yesNo(),
+        )
+        is SummaryCondition -> metadataTrace(
+            condition = condition,
+            actual = payload.isGroupSummary,
+            expected = condition.required,
+            actualLabel = payload.isGroupSummary?.yesNo(),
+        )
+    }
+}
+
+private fun <T> metadataTrace(
+    condition: MetadataCondition,
+    actual: T?,
+    expected: T,
+    actualLabel: String?,
+    valid: Boolean = true,
+): MetadataConditionTrace = when {
+    !valid -> MetadataConditionTrace(
+        condition = condition,
+        matched = false,
+        failure = MetadataConditionFailure.INVALID_CONDITION,
+        actualValue = actualLabel,
+    )
+    actual == null -> MetadataConditionTrace(
+        condition = condition,
+        matched = false,
+        failure = MetadataConditionFailure.METADATA_NOT_AVAILABLE,
+    )
+    actual != expected -> MetadataConditionTrace(
+        condition = condition,
+        matched = false,
+        failure = MetadataConditionFailure.VALUE_MISMATCH,
+        actualValue = actualLabel,
+    )
+    else -> MetadataConditionTrace(
+        condition = condition,
+        matched = true,
+        actualValue = actualLabel,
     )
 }
 
@@ -240,7 +386,10 @@ private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean 
 private fun specificity(rule: SignalRule): Int =
     (if (rule.app.isBlank() || rule.app.equals("any app", ignoreCase = true)) 0 else 1) +
         phraseConditionFor(rule).phrases.count { it.isNotBlank() } +
+        rule.metadataConditions.size +
         rule.extras.size
+
+private fun Boolean.yesNo(): String = if (this) "Yes" else "No"
 
 private val ruleComparator = compareBy<SignalRule> { priorityRank(it.priority) }
     .thenBy { specificity(it) }

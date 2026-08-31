@@ -4,6 +4,7 @@ import com.sysadmindoc.nono.model.SignalRule
 import java.nio.charset.StandardCharsets
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RuleCodecGoldenTest {
@@ -48,8 +49,17 @@ class RuleCodecGoldenTest {
         // any time rather than being limited to a window nobody chose.
         assertNull("a v3 rule has no schedule", decoded?.single()?.schedule)
         // A store from a build that knows more than this one is refused rather than half-read. The
-        // number moved because version 4 is this build's own; the guard is unchanged.
-        assertNull(decodeRules("{\"version\":5,\"rules\":[]}"))
+        // number moved because version 5 is this build's own; the guard is unchanged.
+        assertNull(decodeRules("{\"version\":6,\"rules\":[]}"))
+    }
+
+    @Test
+    fun v4FreeStringExtrasRemainVisibleAndUnsupportedAfterMigration() {
+        val decoded = decodeRules(resource("rules-v4.json"))
+
+        assertEquals(listOf("Image", "Phone number"), decoded?.single()?.extras)
+        assertTrue(decoded?.single()?.metadataConditions?.isEmpty() == true)
+        assertEquals(decoded, decodeRules(encodeRules(decoded.orEmpty())))
     }
 
     private fun resource(name: String): String =

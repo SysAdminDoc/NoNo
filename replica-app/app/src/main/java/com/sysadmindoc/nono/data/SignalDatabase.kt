@@ -313,7 +313,10 @@ interface NotificationDao {
      * limit, so counting from it would report a rule as idle simply because History was filtered
      * to another app.
      */
-    @Query("SELECT matchedRuleIds FROM notification_history WHERE matchedRuleIds IS NOT NULL AND matchedRuleIds != ''")
+    @Query(
+        "SELECT matchedRuleIds FROM notification_history " +
+            "WHERE isGroupSummary = 0 AND matchedRuleIds IS NOT NULL AND matchedRuleIds != ''",
+    )
     fun observeMatchedRuleIds(): Flow<List<String>>
 
     /**

@@ -75,11 +75,21 @@ import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
-import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
+import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
+import com.sysadmindoc.nono.model.MetadataCondition
+import com.sysadmindoc.nono.model.MetadataField
 import com.sysadmindoc.nono.model.NO_RULE_EXPIRY_MESSAGE
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.OngoingCondition
+import com.sysadmindoc.nono.model.SummaryCondition
+import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.importanceCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
+import com.sysadmindoc.nono.model.metadataCondition
+import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import com.sysadmindoc.nono.runtime.historyRetentionCatalog
 import com.sysadmindoc.nono.runtime.historyStorageCatalog
 import com.sysadmindoc.nono.runtime.oemListenerChecklist
@@ -99,11 +109,12 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             "Add a filter",
             listOf(
                 MenuItem("Words or phrase", Icons.Rounded.Add) { model.setPhraseDraft(""); model.navigate(Route.PHRASE_EDITOR) },
-                MenuItem("Extra property", Icons.Rounded.FilterAlt, unavailable = NO_FILTER_ENGINE) {},
+                MenuItem("Extra property", Icons.Rounded.FilterAlt) { model.navigate(Route.FILTER_GROUP) },
                 MenuItem("Filter group", Icons.Rounded.Tune) { model.navigate(Route.FILTER_GROUP) },
             ),
             model::dismissOverlay,
         )
+        Overlay.METADATA_CONDITION -> MetadataConditionDialog(state, model)
         Overlay.RULE_MORE -> MenuDialog(
             "Rule options",
             buildList {
@@ -361,6 +372,78 @@ private fun ChoiceDialog(title: String, choices: List<String>, selected: String?
         }
     }
 }
+
+private data class MetadataChoice(val label: String, val condition: MetadataCondition?)
+
+@Composable
+private fun MetadataConditionDialog(state: UiState, model: MainViewModel) {
+    val field = state.selectedMetadataField
+    if (field == null) {
+        DialogFrame("Metadata condition", model::dismissOverlay) {
+            Text("No metadata field was selected.", color = SignalColors.Secondary)
+        }
+        return
+    }
+    val choices = metadataChoices(field, state)
+    if (field == MetadataField.CHANNEL && choices.size == 1) {
+        DialogFrame("Channel", model::dismissOverlay) {
+            Text(
+                "No channel pseudonyms are in the loaded history yet. Capture a notification, then return here.",
+                color = SignalColors.Secondary,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+        return
+    }
+    val current = state.draft.metadataCondition(field)
+    val selected = choices.firstOrNull { it.condition == current }?.label
+    ChoiceDialog(
+        title = field.label,
+        choices = choices.map { it.label },
+        selected = selected,
+        onDismiss = model::dismissOverlay,
+    ) { label ->
+        model.setMetadataCondition(choices.first { it.label == label }.condition)
+    }
+}
+
+private fun metadataChoices(field: MetadataField, state: UiState): List<MetadataChoice> = when (field) {
+    MetadataField.CHANNEL -> {
+        val current = (state.draft.metadataCondition(field) as? ChannelCondition)?.channelPseudonym
+        val channels = (state.history.mapNotNull { it.channelId } + listOfNotNull(current)).distinct().sorted()
+        listOf(MetadataChoice("Any channel", null)) +
+            channels.map { MetadataChoice(it, ChannelCondition(it)) }
+    }
+    MetadataField.IMPORTANCE -> listOf(MetadataChoice("Any importance", null)) +
+        importanceCatalog.map { (level, label) -> MetadataChoice(label, ImportanceCondition(level)) }
+    MetadataField.CATEGORY -> listOf(MetadataChoice("Any category", null)) +
+        notificationCategoryCatalog.map { (value, label) -> MetadataChoice(label, CategoryCondition(value)) }
+    MetadataField.CONVERSATION -> booleanMetadataChoices(
+        anyLabel = "Either",
+        yes = ConversationCondition(true),
+        no = ConversationCondition(false),
+    )
+    MetadataField.ONGOING -> booleanMetadataChoices(
+        anyLabel = "Either",
+        yes = OngoingCondition(true),
+        no = OngoingCondition(false),
+    )
+    MetadataField.GROUP_SUMMARY -> booleanMetadataChoices(
+        anyLabel = "Either",
+        yes = SummaryCondition(true),
+        no = SummaryCondition(false),
+    )
+}
+
+private fun booleanMetadataChoices(
+    anyLabel: String,
+    yes: MetadataCondition,
+    no: MetadataCondition,
+): List<MetadataChoice> = listOf(
+    MetadataChoice(anyLabel, null),
+    MetadataChoice(yes.displayValue(), yes),
+    MetadataChoice(no.displayValue(), no),
+)
 
 
 private val scheduleDayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")

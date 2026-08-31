@@ -113,7 +113,7 @@ class AuditStatesTest {
         assertEquals(
             "every id must produce its own capture",
             states.size,
-            states.map { it.draft.extras to it.draft.filterOperator }.distinct().size,
+            states.map { it.draft.metadataConditions to it.draft.extras }.distinct().size,
         )
     }
 }

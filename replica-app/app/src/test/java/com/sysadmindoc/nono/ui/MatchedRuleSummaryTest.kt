@@ -1,6 +1,9 @@
 package com.sysadmindoc.nono.ui
 
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
@@ -103,6 +106,32 @@ class MatchedRuleSummaryTest {
 
         assertEquals("every state needs its own explanation", RuleMatchState.entries.size, details.distinct().size)
         assertTrue(details.none { it.isBlank() })
+    }
+
+    @Test
+    fun activityExplainsEveryCurrentMetadataMismatchAgainstTheStoredRecord() {
+        val record = HistoryRecord(
+            id = 1L,
+            channelId = "captured-channel",
+            importance = 3,
+            isConversation = null,
+        )
+        val rule = SignalRule(
+            id = 7L,
+            name = "Priority chat",
+            metadataConditions = listOf(
+                ChannelCondition("different-channel"),
+                ImportanceCondition(4),
+                ConversationCondition(true),
+            ),
+        )
+
+        val check = activityMetadataChecks(record, listOf(rule)).single()
+
+        assertEquals(false, check.matched)
+        assertTrue(check.detail.contains("Channel: expected different-channel, recorded captured-channel"))
+        assertTrue(check.detail.contains("Importance: expected High, recorded Default"))
+        assertTrue(check.detail.contains("Conversation: expected Yes, but this record has no value"))
     }
 
     @Test

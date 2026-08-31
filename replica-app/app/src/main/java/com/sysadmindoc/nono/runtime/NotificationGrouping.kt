@@ -4,8 +4,8 @@ import com.sysadmindoc.nono.model.GroupSummaryOrigin
 
 /**
  * Android may group an app's notifications itself and post a summary alongside the children.
- * A summary represents the group, not another arrival, so it must never become a second
- * rule-evaluation event or a second entry in a count of what arrived.
+ * A summary represents the group, not another arrival, so it is excluded from counts and from
+ * ordinary rule evaluation. A rule can opt in by explicitly testing summary state.
  */
 data class NotificationGrouping(
     val notificationKey: String,

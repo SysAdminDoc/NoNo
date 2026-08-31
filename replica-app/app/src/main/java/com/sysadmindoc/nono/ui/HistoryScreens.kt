@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
@@ -69,8 +70,11 @@ import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.field
 import com.sysadmindoc.nono.model.importanceLabel
-import com.sysadmindoc.nono.runtime.EvaluationReason
+import com.sysadmindoc.nono.runtime.MetadataConditionFailure
+import com.sysadmindoc.nono.runtime.NotificationPayload
+import com.sysadmindoc.nono.runtime.evaluateMetadataConditions
 
 @Composable
 fun HistoryScreen(state: UiState, model: MainViewModel) {
@@ -343,6 +347,9 @@ private fun historyMetadataSummary(state: UiState): String = listOfNotNull(
 fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
     val selected = state.history.firstOrNull { it.id == state.selectedHistoryId }
     val attribution = selected?.let { captureAttribution(it, state.rules) }
+    val metadataChecks = remember(selected, state.rules) {
+        selected?.let { activityMetadataChecks(it, state.rules) }.orEmpty()
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
@@ -390,6 +397,24 @@ fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
             }
             item { Text("CAPTURED METADATA", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
             item { CapturedMetadata(selected) }
+            if (metadataChecks.isNotEmpty()) {
+                item { Text("CURRENT METADATA CHECK", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+                item {
+                    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                        metadataChecks.forEachIndexed { index, check ->
+                            ActivityRow(check.ruleName, check.detail)
+                            if (index != metadataChecks.lastIndex) SignalDivider()
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        "This comparison uses the rules saved now. Capture attribution above remains the historical record.",
+                        color = SignalColors.Muted,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         } else {
             item { Text("CHANGES", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
             item {
@@ -470,6 +495,12 @@ private fun CapturedMetadata(record: HistoryRecord) {
         SignalDivider()
         MetadataRow("Importance", importanceLabel(record.importance) ?: "Not available")
         SignalDivider()
+        MetadataRow("Category", record.category?.let(::categoryLabel) ?: "Not available")
+        SignalDivider()
+        MetadataRow("Conversation", record.isConversation?.let { if (it) "Yes" else "No" } ?: "Not available")
+        SignalDivider()
+        MetadataRow("Ongoing", if (record.isOngoing) "Yes" else "No")
+        SignalDivider()
         MetadataRow("Content storage", "Not stored")
         SignalDivider()
         MetadataRow("Left the shade", describeRemoval(record))
@@ -493,16 +524,55 @@ private fun ActivityRow(title: String, body: String) {
 }
 
 
-private fun EvaluationReason.displayName(): String = when (this) {
-    EvaluationReason.DISABLED -> "disabled"
-    EvaluationReason.APP_MISMATCH -> "app mismatch"
-    EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM -> "recorded as hidden by an earlier build"
-    EvaluationReason.CONTENT_NOT_AVAILABLE -> "no content arrived"
-    EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
-    EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
-    EvaluationReason.OUTSIDE_SCHEDULE -> "outside its schedule"
-    EvaluationReason.INVALID_PATTERN -> "its pattern is not valid"
-    EvaluationReason.NO_FIELD_SELECTED -> "no field is selected to search"
+internal data class ActivityMetadataCheck(
+    val ruleId: Long,
+    val ruleName: String,
+    val matched: Boolean,
+    val detail: String,
+)
+
+/** Compares current typed conditions with the metadata the selected record actually retained. */
+internal fun activityMetadataChecks(
+    record: HistoryRecord,
+    rules: List<SignalRule>,
+): List<ActivityMetadataCheck> {
+    val payload = NotificationPayload(
+        title = null,
+        text = null,
+        appLabel = record.app,
+        packageName = record.appPackageName,
+        contentStateOverride = record.contentState,
+        channelId = record.channelId,
+        importance = record.importance,
+        category = record.category,
+        isConversation = record.isConversation,
+        isOngoing = record.isOngoing,
+        isGroupSummary = record.isGroupSummary,
+    )
+    return rules.filter { it.metadataConditions.isNotEmpty() }.map { rule ->
+        val traces = evaluateMetadataConditions(rule.metadataConditions, payload)
+        val failures = traces.filterNot { it.matched }
+        val detail = if (failures.isEmpty()) {
+            if (traces.size == 1) {
+                "The current metadata condition matches this record."
+            } else {
+                "All ${traces.size} current metadata conditions match this record."
+            }
+        } else {
+            failures.joinToString(separator = "; ") { trace ->
+                when (trace.failure) {
+                    MetadataConditionFailure.VALUE_MISMATCH ->
+                        "${trace.condition.field.label}: expected ${trace.expectedValue}, recorded ${trace.actualValue ?: "not available"}"
+                    MetadataConditionFailure.METADATA_NOT_AVAILABLE ->
+                        "${trace.condition.field.label}: expected ${trace.expectedValue}, but this record has no value"
+                    MetadataConditionFailure.INVALID_CONDITION ->
+                        "${trace.condition.field.label}: the saved condition value is invalid"
+                    null -> "${trace.condition.field.label}: matches"
+                }
+            } + "."
+        }
+        ActivityMetadataCheck(rule.id, rule.name, failures.isEmpty(), detail)
+    }
 }
 
 /**
@@ -547,6 +617,7 @@ internal fun captureAttribution(record: HistoryRecord, rules: List<SignalRule>):
         attributed.size == 1 -> "Matched ${attributed.single().name}"
         attributed.isNotEmpty() -> "Matched ${attributed.size} rules"
         record.matchState == RuleMatchState.GROUP_SUMMARY -> "Group summary: no rule was tested"
+        record.matchState == RuleMatchState.GROUP_SUMMARY_EVALUATED -> "Group summary: no explicit rule matched"
         record.matchState == RuleMatchState.NOT_EVALUATED -> "No rules were saved yet"
         record.matchState == RuleMatchState.RULES_NOT_LOADED -> "Arrived before the rules were read"
         record.matchState == RuleMatchState.CONTENT_HIDDEN -> "No content arrived to test"
@@ -558,6 +629,11 @@ internal fun captureAttribution(record: HistoryRecord, rules: List<SignalRule>):
             "This arrived before the saved rules had been read from disk, so none were tested."
         RuleMatchState.GROUP_SUMMARY ->
             "A group summary stands for its group rather than being an arrival of its own."
+        RuleMatchState.GROUP_SUMMARY_EVALUATED -> if (attributed.isEmpty()) {
+            "Checked against rules that explicitly test summary state. None matched."
+        } else {
+            "Checked against rules that explicitly test summary state."
+        }
         RuleMatchState.CONTENT_HIDDEN ->
             "No content arrived, so any rule testing a phrase could not be checked."
         RuleMatchState.EVALUATED -> if (attributed.isEmpty()) {

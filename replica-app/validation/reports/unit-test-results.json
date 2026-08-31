@@ -1,11 +1,11 @@
 {
-    "suite":  "unit",
-    "source":  "C:\\repos\\NoNo\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
-    "generated_at":  "2026-08-31T10:31:13-04:00",
-    "tests":  329,
-    "failures":  0,
-    "errors":  0,
-    "skipped":  0,
-    "suite_files":  37,
-    "status":  "PASS"
+  "suite": "unit",
+  "source": "C:\\repos\\NoNo\\replica-app\\app\\build\\test-results\\testDebugUnitTest",
+  "generated_at": "2026-08-31T11:23:30-04:00",
+  "tests": 339,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "suite_files": 38,
+  "status": "PASS"
 }

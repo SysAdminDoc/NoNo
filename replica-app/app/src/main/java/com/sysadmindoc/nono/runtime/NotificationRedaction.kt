@@ -27,6 +27,13 @@ data class NotificationPayload(
     val packageName: String? = null,
     /** Used by metadata-only previews to preserve provenance without supplying content. */
     val contentStateOverride: NotificationContentState? = null,
+    /** Per-install channel pseudonym. Raw channel ids never cross the sanitizer boundary. */
+    val channelId: String? = null,
+    val importance: Int? = null,
+    val category: String? = null,
+    val isConversation: Boolean? = null,
+    val isOngoing: Boolean? = null,
+    val isGroupSummary: Boolean? = null,
 )
 
 /**

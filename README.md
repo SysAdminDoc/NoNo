@@ -13,16 +13,22 @@ The reconstructed app uses the independent package identity `com.sysadmindoc.non
 
 **NoNo is a local notification rule manager built around redacted metadata.** The listener persists
 bounded package, channel, grouping, timestamp, and content-provenance metadata; a pure dry-run
-evaluator explains how saved rules would treat a selected history record. Live notification
-mutation and action execution remain intentionally absent, and unavailable controls are shown
-disabled with their reason inline. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do)
+evaluator checks app, text, schedule, and typed notification metadata while content is still in
+memory. History keeps the rule ids that matched, and its Activity view can compare current
+metadata conditions with a selected record. Notification mutation and action execution remain
+intentionally absent. See [`replica-app/README.md`](replica-app/README.md#what-this-build-does-not-do)
 for the privacy and capability boundary.
 
 ![NoNo rules screen with a wallpaper-matched accent](replica-app/docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
+![NoNo metadata condition editor](replica-app/docs/screenshots/nono-metadata-filters-v1.4.1.png)
+
 Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
 derived colour against every surface where it appears and keeps the built-in accent if the
 wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
+Rules can also require a channel pseudonym, importance, category, conversation status, ongoing
+status, or group-summary status. These conditions are checked during live capture and explained
+against stored records without saving notification content.
 The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
 [`design-qa.md`](design-qa.md).
 

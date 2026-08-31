@@ -5,6 +5,7 @@ import androidx.compose.foundation.selection.toggleable
 import com.sysadmindoc.nono.model.MatchField
 import com.sysadmindoc.nono.model.MatchMode
 import com.sysadmindoc.nono.model.MatchableFields
+import com.sysadmindoc.nono.model.MetadataField
 import com.sysadmindoc.nono.model.PhraseCondition
 import com.sysadmindoc.nono.model.PhraseMatchResult
 import com.sysadmindoc.nono.model.PhraseQuantifier
@@ -38,7 +39,6 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
@@ -47,7 +47,6 @@ import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Search
@@ -96,7 +95,7 @@ import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.UNSUPPORTED_ACTION_MESSAGE
 import com.sysadmindoc.nono.model.isExecutableAction
 import com.sysadmindoc.nono.model.renderActionSummary
-import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
+import com.sysadmindoc.nono.model.LEGACY_FILTER_MESSAGE
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
@@ -105,8 +104,14 @@ import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.actionCatalog
 import com.sysadmindoc.nono.model.describeSchedule
+import com.sysadmindoc.nono.model.describe
+import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.filterRules
+import com.sysadmindoc.nono.model.field
+import com.sysadmindoc.nono.model.metadataCondition
 import com.sysadmindoc.nono.model.normalizeMatchType
+import com.sysadmindoc.nono.runtime.NotificationPayload
+import com.sysadmindoc.nono.runtime.evaluateMetadataConditions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -345,8 +350,16 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
                     modifier = Modifier.padding(top = 10.dp),
                 )
             }
+            if (rule.metadataConditions.isNotEmpty()) {
+                Text(
+                    "Metadata: ${rule.metadataConditions.joinToString { it.describe() }}",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
             if (rule.extras.isNotEmpty()) {
-                Text("Filters: ${rule.extras.joinToString()}", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
+                Text("Legacy filters: ${rule.extras.joinToString()}", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
             }
             if (matchCount > 0) {
                 Text(
@@ -429,9 +442,22 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
                 onSecondaryAction = { model.showOverlay(Overlay.ADD_FILTER) },
             )
         }
+        if (state.draft.metadataConditions.isNotEmpty()) {
+            item {
+                SignalStatusPanel(
+                    "Metadata conditions",
+                    state.draft.metadataConditions.joinToString(separator = " · ") { it.describe() },
+                    icon = Icons.Rounded.FilterAlt,
+                )
+            }
+        }
         if (state.draft.extras.isNotEmpty()) {
             item {
-                SignalStatusPanel("Extra filters", state.draft.extras.joinToString(), icon = Icons.Rounded.FilterAlt)
+                SignalStatusPanel(
+                    "Legacy filters block this rule",
+                    state.draft.extras.joinToString() + ". " + LEGACY_FILTER_MESSAGE,
+                    icon = Icons.Rounded.Shield,
+                )
             }
         }
         item {
@@ -765,6 +791,12 @@ private fun MatchTester(state: UiState, model: MainViewModel) {
         text = state.testerText.takeIf(String::isNotBlank),
     )
     val result = remember(condition, fields) { evaluatePhrase(condition, fields) }
+    val metadataTraces = remember(state.draft.metadataConditions) {
+        evaluateMetadataConditions(
+            state.draft.metadataConditions,
+            NotificationPayload(title = null, text = null, appLabel = null),
+        )
+    }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("TRY IT", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
         OutlinedTextField(
@@ -795,6 +827,16 @@ private fun MatchTester(state: UiState, model: MainViewModel) {
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 6.dp),
                 )
+                if (state.draft.metadataConditions.isNotEmpty()) {
+                    Text(
+                        "Metadata cannot be checked here: " + metadataTraces.joinToString { trace ->
+                            "${trace.condition.field.label} expects ${trace.expectedValue}, but the sample has no value"
+                        } + ". Open a captured record's Activity screen for an exact comparison.",
+                        color = SignalColors.Secondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
             }
         }
     }
@@ -886,75 +928,69 @@ private fun OperatorChoice(label: String, selected: Boolean, modifier: Modifier,
 @Composable
 fun FilterGroupScreen(state: UiState, model: MainViewModel) {
     val metadataFilters = listOf(
-        Triple("Channel", "Any channel", Icons.Rounded.Notifications),
-        Triple("Importance", "Any importance", Icons.Rounded.Star),
-        Triple("Category", "Any category", Icons.Rounded.Category),
-        Triple("Conversation", "Either", Icons.Rounded.Group),
-    )
-    val systemFilters = listOf(
-        Triple("Screen state", "Any state", Icons.Rounded.PhoneAndroid),
-        Triple("Charging", "Either", Icons.Rounded.BatteryChargingFull),
-        Triple("Day and time", "Always", Icons.Rounded.Schedule),
+        Triple(MetadataField.CHANNEL, "Any channel", Icons.Rounded.Notifications),
+        Triple(MetadataField.IMPORTANCE, "Any importance", Icons.Rounded.Star),
+        Triple(MetadataField.CATEGORY, "Any category", Icons.Rounded.Category),
+        Triple(MetadataField.CONVERSATION, "Either", Icons.Rounded.Group),
+        Triple(MetadataField.ONGOING, "Either", Icons.Rounded.Schedule),
+        Triple(MetadataField.GROUP_SUMMARY, "Either", Icons.Rounded.FilterAlt),
     )
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { SignalTopBar("Extra filters", onBack = { model.navigate(Route.RULE_BUILDER) }, actionIcon = Icons.Rounded.Info, onAction = { model.showMessage(NO_FILTER_ENGINE) }) }
-        item { SignalSectionHeading("Narrow this match", NO_FILTER_ENGINE) }
+        item {
+            SignalTopBar(
+                "Metadata filters",
+                onBack = { model.navigate(Route.RULE_BUILDER) },
+                actionIcon = Icons.Rounded.Info,
+                onAction = { model.showMessage("Every selected metadata condition must match.") },
+            )
+        }
+        item { SignalSectionHeading("Narrow this match", "Every selected condition is checked during capture.") }
         item { Text("NOTIFICATION METADATA", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                metadataFilters.forEachIndexed { index, (title, _, icon) ->
+                metadataFilters.forEachIndexed { index, (field, fallback, icon) ->
+                    val condition = state.draft.metadataCondition(field)
                     SignalListRow(
                         icon = icon,
-                        title = title,
-                        subtitle = NO_FILTER_ENGINE,
-                        selected = state.draft.extras.contains(title),
-                        enabled = false,
+                        title = field.label,
+                        subtitle = when (field) {
+                            MetadataField.CHANNEL -> "Per-install pseudonym from captured history"
+                            MetadataField.GROUP_SUMMARY -> "Summary rules opt in to summary evaluation"
+                            else -> null
+                        },
+                        value = condition?.displayValue() ?: fallback,
+                        selected = condition != null,
+                        onClick = { model.showMetadataCondition(field) },
                     )
                     if (index != metadataFilters.lastIndex) SignalDivider()
                 }
             }
         }
-        item { Text("SYSTEM STATE", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
-        item {
-            SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                systemFilters.forEachIndexed { index, (title, _, icon) ->
-                    SignalListRow(
-                        icon = icon,
-                        title = title,
-                        subtitle = NO_FILTER_ENGINE,
-                        selected = state.draft.extras.contains(title),
-                        enabled = false,
-                    )
-                    if (index != systemFilters.lastIndex) SignalDivider()
-                }
-            }
-        }
         item {
             SignalStatusPanel(
-                "Not evaluated",
-                "A rule carrying any of these never matches. Clear them to make the rule work again.",
+                "All conditions must match",
+                "NoNo checks each metadata value alongside the app, phrase, and schedule. Activity shows the exact reason when a current condition differs from a captured record.",
                 icon = Icons.Rounded.Shield,
             )
         }
         item { SignalPrimaryButton("Back to the rule", { model.navigate(Route.RULE_BUILDER) }) }
-        if (state.draft.extras.isNotEmpty()) {
-            item { SignalOutlineButton("Clear these filters", model::clearExtraFilters, Modifier.fillMaxWidth()) }
+        if (state.draft.metadataConditions.isNotEmpty()) {
+            item { SignalOutlineButton("Clear metadata conditions", model::clearMetadataConditions, Modifier.fillMaxWidth()) }
         }
-        item { Text("MATCH LOGIC", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
-        item {
-            SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                SignalListRow(
-                    Icons.Rounded.FilterAlt,
-                    "Operator",
-                    subtitle = NO_FILTER_ENGINE,
-                    value = state.draft.filterOperator,
-                    enabled = false,
+        if (state.draft.extras.isNotEmpty()) {
+            item { Text("LEGACY FILTERS", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+            item {
+                SignalStatusPanel(
+                    "Unsupported legacy filters",
+                    state.draft.extras.joinToString() + ". " + LEGACY_FILTER_MESSAGE,
+                    icon = Icons.Rounded.Shield,
                 )
             }
+            item { SignalOutlineButton("Clear legacy filters", model::clearExtraFilters, Modifier.fillMaxWidth()) }
         }
     }
 }

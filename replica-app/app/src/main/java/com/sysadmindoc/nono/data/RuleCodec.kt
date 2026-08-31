@@ -7,6 +7,7 @@ import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.ANY_APP_LABEL
 import com.sysadmindoc.nono.model.appOptionForLabel
 import com.sysadmindoc.nono.model.normalizeMatchType
+import com.sysadmindoc.nono.model.field
 import kotlinx.serialization.json.Json
 
 /**
@@ -78,7 +79,7 @@ private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule
         // Every version so far has only added optional fields, so an older store reads with the
         // new ones at their defaults: schedule null, which means the rule keeps matching at any
         // time rather than suddenly being limited to a window nobody chose.
-        1, 2, 3, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
+        1, 2, 3, 4, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
         else -> emptyList()
     }
 
@@ -124,6 +125,9 @@ private fun normalizeRule(rule: SignalRule): SignalRule {
         // Older stores carry the four-value phrase-group vocabulary. Collapsing it here means a
         // decoded rule always names an operator the evaluator implements.
         matchType = normalizeMatchType(rule.matchType),
+        // The editor allows one condition per metadata field. Keep the first from a hand-edited
+        // import so normalization is deterministic without silently broadening the rule.
+        metadataConditions = rule.metadataConditions.distinctBy { it.field },
         extras = rule.extras.distinct(),
         enabledFor = rule.enabledFor?.ifBlank { null },
     )

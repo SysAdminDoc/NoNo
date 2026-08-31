@@ -51,10 +51,13 @@ import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.MINUTES_PER_DAY
 import com.sysadmindoc.nono.model.MatchField
 import com.sysadmindoc.nono.model.MatchMode
+import com.sysadmindoc.nono.model.MetadataCondition
+import com.sysadmindoc.nono.model.MetadataField
 import com.sysadmindoc.nono.model.PhraseCondition
 import com.sysadmindoc.nono.model.PhraseQuantifier
 import com.sysadmindoc.nono.model.phraseConditionFor
 import com.sysadmindoc.nono.model.withPhraseCondition
+import com.sysadmindoc.nono.model.withMetadataCondition
 import com.sysadmindoc.nono.model.RuleSchedule
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.StatusMessages
@@ -390,9 +393,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }
     fun selectRoot(tab: RootTab) { _state.value = _state.value.copy(route = Route.ROOT, rootTab = tab, overlay = Overlay.NONE, transientMessage = null) }
-    fun navigate(route: Route) { _state.value = _state.value.copy(route = route, overlay = Overlay.NONE, transientMessage = null, phraseInputVisible = false) }
+    fun navigate(route: Route) { _state.value = _state.value.copy(route = route, overlay = Overlay.NONE, transientMessage = null, phraseInputVisible = false, selectedMetadataField = null) }
     fun showOverlay(overlay: Overlay) { _state.value = _state.value.copy(overlay = overlay) }
-    fun dismissOverlay() { _state.value = _state.value.copy(overlay = Overlay.NONE) }
+    fun dismissOverlay() { _state.value = _state.value.copy(overlay = Overlay.NONE, selectedMetadataField = null) }
     fun updateDraft(transform: (SignalRule) -> SignalRule) { _state.value = _state.value.copy(draft = transform(_state.value.draft), validationError = null) }
     fun setPhraseDraft(text: String) { _state.value = _state.value.copy(phraseDraft = text) }
     /**
@@ -445,6 +448,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setTesterTitle(text: String) { _state.value = _state.value.copy(testerTitle = text) }
 
     fun setTesterText(text: String) { _state.value = _state.value.copy(testerText = text) }
+
+    fun showMetadataCondition(field: MetadataField) {
+        _state.value = _state.value.copy(
+            selectedMetadataField = field,
+            overlay = Overlay.METADATA_CONDITION,
+        )
+    }
+
+    /** Applies the choice for the metadata row whose picker is open. Null means "Any". */
+    fun setMetadataCondition(condition: MetadataCondition?) {
+        val field = _state.value.selectedMetadataField ?: return
+        _state.value = _state.value.copy(
+            draft = _state.value.draft.withMetadataCondition(field, condition),
+            overlay = Overlay.NONE,
+            selectedMetadataField = null,
+            validationError = null,
+        )
+    }
+
+    fun clearMetadataConditions() {
+        updateDraft { it.copy(metadataConditions = emptyList()) }
+    }
     /**
      * Turns the draft's schedule on or off.
      *
@@ -1282,4 +1307,3 @@ private data class HistoryLoadResult(
     val records: List<HistoryRecord> = emptyList(),
     val error: String? = null,
 )
-

@@ -1,6 +1,9 @@
 package com.sysadmindoc.nono.data
 
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.MetadataCondition
 import com.sysadmindoc.nono.model.advanceRuleCounter
 import com.sysadmindoc.nono.model.nextRuleId
 import java.io.ByteArrayOutputStream
@@ -68,7 +71,7 @@ object RuleTransferLimits {
 
     const val MAX_RULES = 10_000
 
-    /** Every string a rule carries, including each entry in its extras list. */
+    /** Every string a rule carries, including metadata and legacy extra values. */
     const val MAX_FIELD_CHARS = 4 * 1024
 }
 
@@ -251,7 +254,7 @@ object RuleTransfer {
                 rule.matchType,
                 rule.filterOperator,
                 rule.enabledFor.orEmpty(),
-            ) + rule.extras
+            ) + rule.extras + rule.metadataConditions.mapNotNull(MetadataCondition::boundedStringValue)
             fields.any { it.length > RuleTransferLimits.MAX_FIELD_CHARS }
         }
         return if (overlong) ImportRejection.FIELD_TOO_LONG else null
@@ -319,6 +322,12 @@ object RuleTransfer {
             spec.clearPassword()
         }
     }
+}
+
+private fun MetadataCondition.boundedStringValue(): String? = when (this) {
+    is ChannelCondition -> channelPseudonym
+    is CategoryCondition -> category
+    else -> null
 }
 
 /** What a bounded read produced, so a caller can tell "too big" from "could not read". */

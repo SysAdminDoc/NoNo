@@ -2,9 +2,16 @@ package com.sysadmindoc.nono.data
 
 import com.sysadmindoc.nono.model.DEFAULT_MATCH_TYPE
 import com.sysadmindoc.nono.model.NEGATED_MATCH_TYPE
+import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.ChannelCondition
+import com.sysadmindoc.nono.model.ConversationCondition
+import com.sysadmindoc.nono.model.ImportanceCondition
+import com.sysadmindoc.nono.model.OngoingCondition
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.SummaryCondition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RuleCodecTest {
@@ -33,6 +40,26 @@ class RuleCodecTest {
         )
 
         assertEquals(configured, decodeRules(encodeRules(configured)))
+    }
+
+    @Test
+    fun roundTripsEveryTypedMetadataConditionInAVersion5Store() {
+        val configured = SignalRule(
+            id = 15L,
+            metadataConditions = listOf(
+                ChannelCondition("channel-a3"),
+                ImportanceCondition(4),
+                CategoryCondition("msg"),
+                ConversationCondition(true),
+                OngoingCondition(false),
+                SummaryCondition(false),
+            ),
+        )
+
+        val encoded = encodeRules(listOf(configured))
+
+        assertTrue(encoded.contains("\"version\":5"))
+        assertEquals(listOf(configured), decodeRules(encoded))
     }
 
     @Test

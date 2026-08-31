@@ -1,0 +1,1 @@
+{"version":4,"nextRuleId":22,"rules":[{"id":21,"name":"Legacy extras","app":"any app","phrase":"anything","action":"Record only","extras":["Image","Phone number"],"filterOperator":"Contains all"}]}

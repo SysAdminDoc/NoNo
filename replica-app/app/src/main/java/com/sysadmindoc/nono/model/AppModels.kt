@@ -23,6 +23,7 @@ enum class Overlay {
     NONE,
     CONDITION_TYPE,
     ADD_FILTER,
+    METADATA_CONDITION,
     RULE_MORE,
     PRIORITY,
     FOLDER,
@@ -74,6 +75,14 @@ data class SignalRule(
     val priority: String = "Normal",
     val folder: String = "No folder",
     val matchType: String = DEFAULT_MATCH_TYPE,
+    /** Metadata conditions authored by this build. Every entry is evaluated. */
+    val metadataConditions: List<MetadataCondition> = emptyList(),
+    /**
+     * Free-string conditions written by rule-store versions 1 through 4.
+     *
+     * Kept visible and unsupported so upgrading cannot silently change whether an old rule
+     * matches. New UI never adds to this list.
+     */
     val extras: List<String> = emptyList(),
     val filterOperator: String = DEFAULT_FILTER_OPERATOR,
     val enabledFor: String? = null,
@@ -229,8 +238,8 @@ fun isNegatedMatchType(matchType: String): Boolean =
     normalizeMatchType(matchType) == NEGATED_MATCH_TYPE
 
 
-/** Why the filter-group and extra-property controls cannot be used. */
-const val NO_FILTER_ENGINE = "This build evaluates app and phrase conditions only."
+/** Why a legacy free-string condition cannot be evaluated. */
+const val LEGACY_FILTER_MESSAGE = "Imported from an older build and not safe to interpret."
 
 /**
  * Versioned persisted form of the rule list. The version field exists so a store written
@@ -251,7 +260,7 @@ data class RuleStore(
     val nextRuleId: Long = 1L,
 )
 
-const val CURRENT_RULE_STORE_VERSION = 4
+const val CURRENT_RULE_STORE_VERSION = 5
 
 data class HistoryRecord(
     val id: Long = 1L,
@@ -320,8 +329,8 @@ val historyFilterCatalog = listOf("All", "Rule-triggered", "Starred", "Dismissed
 /**
  * Android's channel importance levels, as the platform numbers them.
  *
- * NotificationManager names these IMPORTANCE_NONE through IMPORTANCE_HIGH. The labels are for the
- * history filter, where a raw 0 to 4 would mean nothing to anyone.
+ * NotificationManager names these IMPORTANCE_NONE through IMPORTANCE_MAX. The labels are for the
+ * history filter, where a raw 0 to 5 would mean nothing to anyone.
  */
 val importanceCatalog: List<Pair<Int, String>> = listOf(
     0 to "None",
@@ -329,6 +338,7 @@ val importanceCatalog: List<Pair<Int, String>> = listOf(
     2 to "Low",
     3 to "Default",
     4 to "High",
+    5 to "Max",
 )
 
 fun importanceLabel(importance: Int?): String? =
@@ -357,6 +367,9 @@ enum class RuleMatchState {
 
     /** Evaluated, but the system redacted the text, so phrase conditions could not be tested. */
     CONTENT_HIDDEN,
+
+    /** A group summary was evaluated against rules that explicitly test summary state. */
+    GROUP_SUMMARY_EVALUATED,
 
     /**
      * A group summary. It stands for the group rather than being an arrival of its own, so no
@@ -466,6 +479,8 @@ data class UiState(
     /** Sample text typed into the match tester. Never stored and never leaves the screen. */
     val testerTitle: String = "",
     val testerText: String = "",
+    /** The metadata row whose picker is open. */
+    val selectedMetadataField: MetadataField? = null,
     /** Apps the picker offers: launchable ones merged with everything history has seen. */
     val appCatalog: List<CatalogedApp> = emptyList(),
     val renameDraft: String = "",

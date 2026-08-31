@@ -8,9 +8,15 @@ wallpaper colour is not readable. The v1.4.0 reference mockups, implementation c
 accessibility checks, and side-by-side comparisons are listed in
 [`../design-qa.md`](../design-qa.md).
 
+Rules can also test the metadata Android supplies with a notification. Channel pseudonym,
+importance, category, conversation status, ongoing status, and group-summary status are available
+in the filter editor. Every selected condition must match.
+
 ![NoNo rules screen with a wallpaper-matched accent](docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
 ![NoNo theme chooser with wallpaper matching available](docs/screenshots/nono-theme-dialog-v1.4.1.png)
+
+![NoNo metadata condition editor](docs/screenshots/nono-metadata-filters-v1.4.1.png)
 
 ## Project identity
 
@@ -21,7 +27,7 @@ accessibility checks, and side-by-side comparisons are listed in
 - Android support: API 24 and newer; target SDK 36; compiled with SDK 37
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
-  The current Room history schema is version 11; the DataStore rule payload is version 4.
+  The current Room history schema is version 11; the DataStore rule payload is version 5.
 
 ## Requirements
 
@@ -184,9 +190,10 @@ The reconstruction reproduces the audited interface while providing a safe local
 runtime. It is not a live notification action manager, and the UI states the boundary at each
 control rather than leaving the reader to infer it:
 
-- **Live evaluation and actions are absent.** The app includes a pure, redaction-aware dry-run
-  evaluator for history activity and rule explanations; it never changes a notification, sound,
-  setting, or `PendingIntent`.
+- **Rule evaluation is local; device actions are absent.** The listener evaluates app identity,
+  transient notification text, schedules, and typed metadata while the callback is in memory.
+  It records matching rule ids, but never changes a notification, sound, setting, or
+  `PendingIntent`.
 - **No notification content is stored.** The listener records package identity, notification key,
   posted time, channel/group/summary metadata, content provenance, bounded ingestion counters, and
   failure timestamps. Titles and bodies are never persisted.
@@ -202,11 +209,13 @@ control rather than leaving the reader to infer it:
   Language row stays unavailable and the app follows the system locale.
 - **History is bounded and queryable.** Search and package/channel/group/content-provenance and
   summary filters are backed by Room migrations and explicit loading/error/retry states. Debug
-  captures remain available for deterministic audit states.
+  captures remain available for deterministic audit states. A record's Activity view preserves
+  the attribution written at capture time and separately explains how current metadata conditions
+  compare with the stored channel, importance, category, conversation, ongoing, and summary state.
 
-The runtime boundary records metadata in a bounded Room queue. Android 15 sensitive-notification
-redaction is treated as provenance (`content hidden by system`) and is never matchable as real
-text. Preferences and history live under the no-backup boundary; listener diagnostics restore
+The runtime boundary records metadata in a bounded Room queue. Android publishes no supported flag
+that proves sensitive content was redacted, so a new callback with no text is recorded as content
+unavailable and is never matchable as real text. Preferences and history live under the no-backup boundary; listener diagnostics restore
 after process restart. Companion-device listener exemptions are not implemented in this local
 reconstruction, and no special permission or companion association is requested.
 Notification capture can be paused from the Quick Settings tile or Settings without revoking

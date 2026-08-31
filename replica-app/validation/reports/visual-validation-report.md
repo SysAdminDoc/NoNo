@@ -1,8 +1,8 @@
 # Visual validation report
 
 - Compared: 76
-- Passed configured threshold: 68
-- Below threshold: 8
+- Passed configured threshold: 65
+- Below threshold: 11
 - Operational failures: 0
 - Missing or invalid result: 0
 - Matrix: validation/screen-validation-matrix.csv
@@ -37,11 +37,11 @@
 | 033_phrase_filter_editor | condition_builder | 0.91842369 | 0.85 | PASS |
 | 034_phrase_filter_input | phrase_editor | 0.91486708 | 0.85 | PASS |
 | 035_filter_with_phrase | condition_builder | 0.87341457 | 0.85 | PASS |
-| 036_extras_filter_selector | condition_extras_menu | 0.86311674 | 0.85 | PASS |
-| 037_extras_filter_selector_scrolled | condition_extras_menu | 0.86415477 | 0.85 | PASS |
-| 038_extras_filter_selector_bottom | condition_extras_menu | 0.86415477 | 0.85 | PASS |
-| 039_filter_group_default | nested_filter_group | 0.87876324 | 0.85 | PASS |
-| 040_filter_operator_dialog | filter_operator_menu | 0.85796284 | 0.85 | PASS |
+| 036_extras_filter_selector | condition_extras_menu | 0.84545345 | 0.85 | FAIL |
+| 037_extras_filter_selector_scrolled | condition_extras_menu | 0.84557574 | 0.85 | FAIL |
+| 038_extras_filter_selector_bottom | condition_extras_menu | 0.84539138 | 0.85 | FAIL |
+| 039_filter_group_default | nested_filter_group | 0.85413702 | 0.85 | PASS |
+| 040_filter_operator_dialog | filter_operator_menu | 0.86355316 | 0.85 | PASS |
 | 041_phrase_input_filled | phrase_editor | 0.91500283 | 0.85 | PASS |
 | 042_filter_phrase_added | condition_builder | 0.87663839 | 0.85 | PASS |
 | 043_rule_builder_filtered | rule_builder | 0.87915762 | 0.85 | PASS |
