@@ -10,12 +10,15 @@ function Resolve-AdbPath {
     if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_SDK_ROOT)) { $candidates += (Join-Path $env:ANDROID_SDK_ROOT 'platform-tools\adb.exe') }
     if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_HOME)) { $candidates += (Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe') }
     $candidates += 'D:\tools\android-sdk\platform-tools\adb.exe'
+    # Android Studio installs the SDK here by default on Windows and sets neither variable above,
+    # so without this entry a machine with a working emulator still reports that adb is missing.
+    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { $candidates += (Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe') }
     $command = Get-Command adb.exe -ErrorAction SilentlyContinue
     if ($null -ne $command) { $candidates += $command.Source }
     foreach ($candidate in $candidates) {
         if (Test-Path -LiteralPath $candidate -PathType Leaf) { return [System.IO.Path]::GetFullPath($candidate) }
     }
-    throw 'ADB was not found. Set ANDROID_SDK_ROOT or install Android platform-tools.'
+    throw "ADB was not found. Set ANDROID_SDK_ROOT, put adb.exe on PATH, or install the platform-tools. Searched: $($candidates -join '; ')"
 }
 
 $script:SupportedJavaMajors = @(21)
