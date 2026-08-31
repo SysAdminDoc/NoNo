@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Explore has an Insights screen. It counts what History already holds and shows the total captured, the apps you hear from most, a bar per hour of the day, and one per day for the last two weeks, along with how often each saved rule would have fired. Nothing new is captured to build it. Group summaries stay out of the counts the same way they stay out of every other count in the app, and the screen says so rather than leaving two numbers to contradict each other. With no history yet, it explains that instead of drawing empty charts.
+
 ## [1.4.1] (2026-08-31)
 
 ### Added

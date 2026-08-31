@@ -69,6 +69,7 @@ fun SignalApp(model: MainViewModel) {
         when (state.route) {
             Route.APP_SELECTOR, Route.PHRASE_EDITOR, Route.FILTER_GROUP, Route.ACTION_SELECTOR -> model.navigate(Route.RULE_BUILDER)
             Route.HISTORY_ACTIVITY -> model.selectRoot(RootTab.HISTORY)
+            Route.INSIGHTS -> model.selectRoot(RootTab.EXPLORE)
             Route.SHORTCUT_EDITOR -> model.selectRoot(RootTab.SETTINGS)
             else -> model.selectRoot(RootTab.RULES)
         }
@@ -104,6 +105,7 @@ fun SignalApp(model: MainViewModel) {
                     Route.FILTER_GROUP -> FilterGroupScreen(state, model)
                     Route.ACTION_SELECTOR -> ActionSelectorScreen(state, model)
                     Route.HISTORY_ACTIVITY -> HistoryActivityScreen(state, model)
+                    Route.INSIGHTS -> InsightsScreen(state, model)
                     Route.SHORTCUT_EDITOR -> ShortcutEditorScreen(state, model)
                 }
                 if (state.overlay != Overlay.NONE) SignalOverlay(state, model)

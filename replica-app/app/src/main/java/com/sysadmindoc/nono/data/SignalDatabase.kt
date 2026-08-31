@@ -23,6 +23,10 @@ import java.util.Date
 import java.util.Locale
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.InsightAppCount
+import com.sysadmindoc.nono.model.InsightDayCount
+import com.sysadmindoc.nono.model.InsightHourCount
+import com.sysadmindoc.nono.model.InsightTotals
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RemovalReason
 import com.sysadmindoc.nono.model.RuleMatchState
@@ -305,6 +309,57 @@ interface NotificationDao {
     /** Everything retained, whatever the user has filtered to. */
     @Query("SELECT COUNT(*) FROM notification_history")
     fun observeTotalCount(): Flow<Int>
+
+    /** One exact row that reconciles retained History with notification-only insight counts. */
+    @Query(
+        """
+        SELECT COUNT(*) AS storedRecordCount,
+            COALESCE(SUM(CASE WHEN isGroupSummary = 0 THEN 1 ELSE 0 END), 0) AS totalCaptured,
+            COALESCE(SUM(CASE WHEN isGroupSummary = 1 THEN 1 ELSE 0 END), 0) AS excludedGroupSummaries
+        FROM notification_history
+        """,
+    )
+    fun observeInsightTotals(): Flow<InsightTotals>
+
+    /** The result is capped even when history contains notifications from many packages. */
+    @Query(
+        """
+        SELECT packageName, COUNT(*) AS count
+        FROM notification_history
+        WHERE isGroupSummary = 0
+        GROUP BY packageName
+        ORDER BY count DESC, packageName ASC
+        LIMIT :limit
+        """,
+    )
+    fun observeTopInsightApps(limit: Int): Flow<List<InsightAppCount>>
+
+    /** SQLite groups on the device's local wall clock; the result can contain at most 24 rows. */
+    @Query(
+        """
+        SELECT CAST(strftime('%H', postedAtEpochMillis / 1000, 'unixepoch', 'localtime') AS INTEGER) AS hour,
+            COUNT(*) AS count
+        FROM notification_history
+        WHERE isGroupSummary = 0
+        GROUP BY hour
+        ORDER BY hour ASC
+        """,
+    )
+    fun observeInsightHours(): Flow<List<InsightHourCount>>
+
+    /** Fourteen local calendar days, bounded by both the cutoff and the output limit. */
+    @Query(
+        """
+        SELECT strftime('%Y-%m-%d', postedAtEpochMillis / 1000, 'unixepoch', 'localtime') AS dayKey,
+            COUNT(*) AS count
+        FROM notification_history
+        WHERE isGroupSummary = 0 AND postedAtEpochMillis >= :fromEpochMillis
+        GROUP BY dayKey
+        ORDER BY dayKey ASC
+        LIMIT :limit
+        """,
+    )
+    fun observeInsightDays(fromEpochMillis: Long, limit: Int): Flow<List<InsightDayCount>>
 
     /**
      * Every stored match, for counting how often each rule would have fired.

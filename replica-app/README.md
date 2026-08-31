@@ -19,6 +19,12 @@ seconds for the real listener callback, then reports Pass or Fail. The check is 
 History or counted as ingestion. The adjacent share action creates a plain-text diagnostics report
 without notification content or posting-app identifiers.
 
+Explore leads to an Insights screen built entirely from stored metadata. It reports the total
+captured, the most active apps, an hour-of-day histogram, a fourteen-day trend, and a match count
+for every saved rule. The counts exclude group summaries, as every other count in the app does, and
+the screen states the relationship between its total and the History total instead of leaving the
+two to disagree.
+
 Rule deletion is immediate and recoverable. Deleting one rule offers Undo, as does deleting the
 whole list. A second deletion restores the earlier pending rule before it takes over the snackbar.
 

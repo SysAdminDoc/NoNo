@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.Search
@@ -117,6 +118,16 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
                 title = "Explore",
             )
         }
+        item {
+            SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                SignalListRow(
+                    Icons.Rounded.BarChart,
+                    "Insights",
+                    describeInsightsEntry(state),
+                    onClick = model::openInsights,
+                )
+            }
+        }
         item { SignalSectionHeading("Ideas for quieter days", "Learn the patterns, then adapt a rule.") }
         item { Text("GUIDES", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
@@ -148,6 +159,12 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
         }
         item { Spacer(Modifier.height(12.dp)) }
     }
+}
+
+/** Says what the row leads to without promising numbers that are not there yet. */
+internal fun describeInsightsEntry(state: UiState): String = when {
+    state.insights.isEmpty -> "Counts appear once History has something in it."
+    else -> "${state.insights.totalCaptured} captured, and what they add up to."
 }
 
 @Composable

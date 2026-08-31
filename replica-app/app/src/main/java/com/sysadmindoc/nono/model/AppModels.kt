@@ -16,7 +16,8 @@ enum class Route {
     FILTER_GROUP,
     ACTION_SELECTOR,
     HISTORY_ACTIVITY,
-    SHORTCUT_EDITOR
+    SHORTCUT_EDITOR,
+    INSIGHTS
 }
 
 enum class Overlay {
@@ -474,6 +475,8 @@ data class UiState(
     val historyFilteredCount: Int = 0,
     /** Everything retained, ignoring the filters. */
     val historyTotalCount: Int = 0,
+    /** Aggregates over everything retained, for the Insights screen. */
+    val insights: LocalInsights = LocalInsights(),
     val transferExportRequest: Int = 0,
     /** True when the pending export is history CSV rather than the encrypted rule file. */
     val transferExportIsHistory: Boolean = false,

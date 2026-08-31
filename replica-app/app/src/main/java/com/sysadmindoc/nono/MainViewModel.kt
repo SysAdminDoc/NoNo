@@ -50,6 +50,11 @@ import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.ChannelCondition
 import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
 import com.sysadmindoc.nono.model.HistoryQuery
+import com.sysadmindoc.nono.model.INSIGHT_DAY_COUNT
+import com.sysadmindoc.nono.model.INSIGHT_TOP_APP_LIMIT
+import com.sysadmindoc.nono.model.InsightTotals
+import com.sysadmindoc.nono.model.buildLocalInsights
+import com.sysadmindoc.nono.model.insightsStartEpochMillis
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import com.sysadmindoc.nono.model.deriveRuleDraft
@@ -136,6 +141,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var auditOverride: String? = null
     private val historyRetry = MutableStateFlow(0)
+
+    /**
+     * The clock the fourteen-day trend is anchored to.
+     *
+     * The day window has to be fixed while the query runs, or the SQL cutoff and the labels
+     * disagree. Opening Insights re-reads the clock, so a session left open past midnight does not
+     * keep charting yesterday.
+     */
+    private val insightsNow = MutableStateFlow(System.currentTimeMillis())
     private var pendingExportPayload: String? = null
     private var pendingExportIsHistory = false
 
@@ -266,6 +280,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             historyDatabase.notificationDao().observeTotalCount()
                 .catch { emit(0) }
                 .collect { total -> _state.value = _state.value.copy(historyTotalCount = total) }
+        }
+        viewModelScope.launch {
+            val dao = historyDatabase.notificationDao()
+            combine(
+                dao.observeInsightTotals().catch { emit(InsightTotals()) },
+                dao.observeTopInsightApps(INSIGHT_TOP_APP_LIMIT).catch { emit(emptyList()) },
+                dao.observeInsightHours().catch { emit(emptyList()) },
+                insightsNow.flatMapLatest { now ->
+                    dao.observeInsightDays(insightsStartEpochMillis(now), INSIGHT_DAY_COUNT)
+                        .catch { emit(emptyList()) }
+                        .map { days -> now to days }
+                },
+            ) { totals, apps, hours, (now, days) ->
+                buildLocalInsights(totals, apps, hours, days, now)
+            }.collect { insights -> _state.value = _state.value.copy(insights = insights) }
         }
         viewModelScope.launch {
             // Counted separately from the page, so a row past the limit is still counted. The
@@ -543,6 +572,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }
     fun selectRoot(tab: RootTab) { _state.value = _state.value.copy(route = Route.ROOT, rootTab = tab, overlay = Overlay.NONE, transientMessage = null) }
     fun navigate(route: Route) { _state.value = _state.value.copy(route = route, overlay = Overlay.NONE, transientMessage = null, phraseInputVisible = false, selectedMetadataField = null) }
+    /** Re-anchors the fourteen-day trend on the day the user is actually looking at. */
+    fun openInsights() {
+        insightsNow.value = System.currentTimeMillis()
+        navigate(Route.INSIGHTS)
+    }
+
     fun showOverlay(overlay: Overlay) { _state.value = _state.value.copy(overlay = overlay) }
     fun dismissOverlay() { _state.value = _state.value.copy(overlay = Overlay.NONE, selectedMetadataField = null) }
     fun updateDraft(transform: (SignalRule) -> SignalRule) { _state.value = _state.value.copy(draft = transform(_state.value.draft), validationError = null) }
