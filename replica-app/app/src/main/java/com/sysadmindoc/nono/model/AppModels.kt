@@ -378,6 +378,21 @@ enum class RuleMatchState {
     GROUP_SUMMARY,
 }
 
+/** Where the user-triggered listener check has reached. */
+enum class CaptureSelfTestStatus {
+    NOT_RUN,
+    WAITING_FOR_PERMISSION,
+    RUNNING,
+    PASSED,
+    FAILED,
+}
+
+/** Persistent Settings-row state for the current process. No test token or notification data. */
+data class CaptureSelfTestState(
+    val status: CaptureSelfTestStatus = CaptureSelfTestStatus.NOT_RUN,
+    val detail: String = "Post one temporary notification and check that the listener receives it.",
+)
+
 /**
  * Who created a group summary, as far as a supported public API can tell.
  *
@@ -464,6 +479,7 @@ data class UiState(
     val transferAdditions: Int = 0,
     val transferConflicts: Int = 0,
     val capturePaused: Boolean = false,
+    val captureSelfTest: CaptureSelfTestState = CaptureSelfTestState(),
     val historyActivityTab: String = "Rules",
     val selectedHistoryId: Long? = null,
     val draft: SignalRule = SignalRule(name = "New rule"),

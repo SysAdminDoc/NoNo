@@ -18,11 +18,11 @@
 | 013_history_empty | history | 0.93686402 | 0.85 | PASS |
 | 014_history_search_empty | history | 0.98499503 | 0.85 | PASS |
 | 015_history_search_no_results | history | 0.98298038 | 0.85 | PASS |
-| 016_settings_default | settings | 0.92506371 | 0.85 | PASS |
-| 017_settings_scrolled_1 | settings | 0.92320062 | 0.85 | PASS |
-| 018_settings_scrolled_2 | settings | 0.93757147 | 0.85 | PASS |
-| 019_settings_scrolled_3 | settings | 0.92639955 | 0.85 | PASS |
-| 020_settings_scrolled_4 | settings | 0.91805727 | 0.85 | PASS |
+| 016_settings_default | settings | 0.90647735 | 0.85 | PASS |
+| 017_settings_scrolled_1 | settings | 0.90097648 | 0.85 | PASS |
+| 018_settings_scrolled_2 | settings | 0.90753967 | 0.85 | PASS |
+| 019_settings_scrolled_3 | settings | 0.90247229 | 0.85 | PASS |
+| 020_settings_scrolled_4 | settings | 0.90349702 | 0.85 | PASS |
 | 021_mute_mode_dialog | mute_mode_dialog | 0.93518899 | 0.85 | PASS |
 | 022_mute_importance_dialog | mute_importance_dialog | 0.93264651 | 0.85 | PASS |
 | 023_notification_history_dialog | history_storage_dialog | 0.92225164 | 0.85 | PASS |

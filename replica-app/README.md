@@ -12,11 +12,18 @@ Rules can also test the metadata Android supplies with a notification. Channel p
 importance, category, conversation status, ongoing status, and group-summary status are available
 in the filter editor. Every selected condition must match.
 
+Settings includes a capture self-test. It posts one temporary NoNo notification, waits up to eight
+seconds for the real listener callback, then reports Pass or Fail. The check is never written to
+History or counted as ingestion. The adjacent share action creates a plain-text diagnostics report
+without notification content or posting-app identifiers.
+
 ![NoNo rules screen with a wallpaper-matched accent](docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
 ![NoNo theme chooser with wallpaper matching available](docs/screenshots/nono-theme-dialog-v1.4.1.png)
 
 ![NoNo metadata condition editor](docs/screenshots/nono-metadata-filters-v1.4.1.png)
+
+![NoNo capture self-test result](docs/screenshots/nono-capture-self-test-v1.4.1.png)
 
 ## Project identity
 
@@ -28,6 +35,9 @@ in the filter editor. Every selected condition must match.
 - Reference device: Android 16/API 36, 1080 × 2400 px, 420 dpi, `en-US`, font scale 1.0, gesture navigation
 - Backend: none. Notification metadata, rules, and diagnostics are local and deterministic.
   The current Room history schema is version 11; the DataStore rule payload is version 5.
+- Permissions: normal capture uses Android's notification-listener access. On Android 13 and newer,
+  `POST_NOTIFICATIONS` is requested only after the user taps the capture self-test, because that
+  check must post one temporary notification. Denying it does not affect normal capture.
 
 ## Requirements
 
@@ -147,6 +157,10 @@ regulatory deadline is worth nothing without the date it was true.
 .\scripts\run-full-validation.ps1 -Serial emulator-5554
 ```
 
+`CaptureSelfTestRoundTripTest` enables listener access on the isolated test device, posts through
+Android's notification manager, waits for the service callback, and confirms that neither History
+nor the ingestion counters changed.
+
 The visual command intentionally returns a nonzero result while any configured threshold miss remains. See `validation\reports\visual-validation-report.md` and `validation\reports\final-coverage-report.md` before interpreting that exit code.
 
 Gradle dependency verification is enabled through `gradle\verification-metadata.xml`, which
@@ -217,7 +231,8 @@ The runtime boundary records metadata in a bounded Room queue. Android publishes
 that proves sensitive content was redacted, so a new callback with no text is recorded as content
 unavailable and is never matchable as real text. Preferences and history live under the no-backup boundary; listener diagnostics restore
 after process restart. Companion-device listener exemptions are not implemented in this local
-reconstruction, and no special permission or companion association is requested.
+reconstruction, and no companion association or exemption is requested. The optional self-test is
+the only feature that asks to post a notification, and it does so only after the user starts it.
 Notification capture can be paused from the Quick Settings tile or Settings without revoking
 listener access; paused callbacks are ignored before sanitization and the gate survives restart.
 The optional home-screen widget shows only the bounded metadata count, latest timestamp,

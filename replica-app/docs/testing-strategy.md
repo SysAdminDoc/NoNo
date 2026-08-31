@@ -1,6 +1,7 @@
 # Testing strategy
 
-- Pure Kotlin unit tests cover action-catalog order, exact validation copy, sentence rendering, and history filtering.
+- Pure Kotlin unit tests cover action-catalog order, exact validation copy, sentence rendering, history filtering, the one-shot self-test key, and the content-free diagnostics report.
+- An instrumented round-trip posts the self-test notification through Android, observes the real listener callback, and proves that History and ingestion counters do not change.
 - Compose instrumentation verifies that the installed activity creates an accessible semantics root on the authorized emulator.
 - PowerShell smoke tests validate the SDK/JDK/device, build the debug APK, install by explicit serial, and launch audited debug states.
 - Visual validation compares every enabled native audit capture at native dimensions and emits side-by-side, 50% overlay, raw diff, heatmap, and JSON metrics.

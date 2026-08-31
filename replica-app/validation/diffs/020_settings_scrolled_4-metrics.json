@@ -13,10 +13,10 @@
   ],
   "dimensions_match": true,
   "compared_pixel_ratio": 0.93,
-  "mean_absolute_error": 20.895397,
-  "root_mean_square_error": 55.723946,
-  "pixel_similarity": 0.91805727,
-  "windowed_structural_similarity": 0.67891729,
+  "mean_absolute_error": 24.608261,
+  "root_mean_square_error": 55.069405,
+  "pixel_similarity": 0.90349702,
+  "windowed_structural_similarity": 0.60406023,
   "threshold": 0.85,
   "result": "PASS"
 }

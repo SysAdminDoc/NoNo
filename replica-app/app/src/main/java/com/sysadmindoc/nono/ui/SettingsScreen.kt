@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.ui
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.automirrored.rounded.Shortcut
 import androidx.compose.material.icons.rounded.Tune
@@ -69,9 +71,11 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.BuildConfig
+import com.sysadmindoc.nono.CaptureSelfTestAction
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.R
 import com.sysadmindoc.nono.model.Overlay
+import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
@@ -88,6 +92,10 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
     val historyExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
         if (uri == null) model.exportCancelled() else model.writeExport(uri)
     }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+        model::onCaptureSelfTestPermissionResult,
+    )
     LaunchedEffect(state.transferExportRequest) {
         if (state.transferExportRequest == 0) return@LaunchedEffect
         if (state.transferExportIsHistory) {
@@ -154,6 +162,34 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
             }
         }
 
+        item { SettingsSectionLabel("CAPTURE HEALTH") }
+        item {
+            SettingsGroup {
+                PreferenceRow(
+                    Icons.Rounded.Notifications,
+                    "Run capture self-test",
+                    state.captureSelfTest.detail,
+                    value = state.captureSelfTest.status.displayName(),
+                    onClick = {
+                        if (model.beginCaptureSelfTest() == CaptureSelfTestAction.REQUEST_NOTIFICATION_PERMISSION) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                )
+                SignalDivider()
+                PreferenceRow(
+                    Icons.Rounded.Share,
+                    "Share diagnostics",
+                    "Share app version, listener state, counters, and last capture age. No notification details.",
+                    onClick = {
+                        if (!shareCaptureDiagnostics(context, model.captureDiagnosticsReport())) {
+                            model.showMessage("No app is available to share diagnostics.")
+                        }
+                    },
+                )
+            }
+        }
+
         item { SettingsSectionLabel("RULES & TRANSFER") }
         item {
             SettingsGroup {
@@ -198,6 +234,23 @@ private const val NO_ACTION_ENGINE = "No notification action engine is present."
 private fun openUrl(context: android.content.Context, url: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }
+
+private fun CaptureSelfTestStatus.displayName(): String = when (this) {
+    CaptureSelfTestStatus.NOT_RUN -> "Not run"
+    CaptureSelfTestStatus.WAITING_FOR_PERMISSION -> "Permission"
+    CaptureSelfTestStatus.RUNNING -> "Running"
+    CaptureSelfTestStatus.PASSED -> "Passed"
+    CaptureSelfTestStatus.FAILED -> "Failed"
+}
+
+private fun shareCaptureDiagnostics(context: android.content.Context, report: String): Boolean =
+    runCatching {
+        val intent = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_SUBJECT, "NoNo capture diagnostics")
+            .putExtra(Intent.EXTRA_TEXT, report)
+        context.startActivity(Intent.createChooser(intent, "Share NoNo diagnostics"))
+    }.isSuccess
 
 @Composable
 private fun SettingsSectionLabel(label: String) {

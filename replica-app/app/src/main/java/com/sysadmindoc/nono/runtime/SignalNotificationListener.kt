@@ -140,6 +140,7 @@ class SignalNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?, rankingMap: RankingMap?) {
         if (!acceptingCallbacks.get()) return
         val notification = sbn ?: return
+        if (CaptureSelfTest.consumeIfExpected(notification, packageName)) return
         if (notification.packageName == packageName) return
         if (CaptureGate.isPaused()) return
         // This callback runs on the main thread from API 24 onward. Sanitization is in-memory;

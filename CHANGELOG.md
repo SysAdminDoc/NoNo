@@ -11,8 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Added an optional "Match my wallpaper" theme on Android 12 and newer. It keeps NoNo's tested dark or light surfaces, then uses a wallpaper-derived accent only when that accent clears every text and control contrast check. Older Android versions keep the choices they already had.
 - Rules can require a channel pseudonym, importance level, category, conversation status, ongoing status, or group-summary status. Every condition has its own live-capture and dry-run trace, and all selected conditions must match.
+- Settings can post one temporary notification and prove that the listener received it within eight seconds. The one matching callback is consumed before History, rules, and ingestion counters. A nearby share action opens Android's share sheet with app version, access and connection state, counters, and last capture age. It includes no notification content or posting-app identifiers.
 
 ### Changed
+
+- `POST_NOTIFICATIONS` is now declared for the capture self-test. Android 13 and newer asks for it only after the user starts that check. Normal capture still needs only notification-listener access, and denying the posting permission does not disable normal capture.
 
 - Matching does what you tell it to. A rule can look for a plain phrase or a pattern, in the title, the text, the expanded body or the conversation name separately, with or without case mattering, and across several phrases at once with any, all or none of them. Invisible characters some apps put inside words no longer stop a phrase matching: a rule written by reading the screen works. A pattern that is not valid cannot be saved, so a rule can never sit in the list looking active while testing nothing.
 - The match editor has a tester. Type a sample title and body and it says whether the rule would match, which field it found the phrase in, or which phrase it could not find. Nothing typed there is stored. A rule that will not fire is the hardest thing to work out in an app like this, because the notification is gone by the time you look.

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Requested only when the user runs the capture self-test. Normal capture needs no runtime permission. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!--
         Package visibility for the app picker and for opening the app a history record came from.
         Android 11 and newer hide other packages by default: getLaunchIntentForPackage returns null
         and queryIntentActivities returns nothing for anything not visible. This declares the
         narrow shape actually needed, a launchable activity, rather than QUERY_ALL_PACKAGES, which
-        is a policy-restricted permission. This app declares no permissions at all.
+        is a policy-restricted permission. POST_NOTIFICATIONS is the only declared permission and
+        is requested only when the user explicitly runs the capture self-test.
 
         Apps with no launcher activity stay invisible to this query. The picker covers them from
         notification history instead, which needs no visibility at all.

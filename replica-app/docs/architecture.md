@@ -15,6 +15,12 @@
 
 ## Capture pipeline
 
+The user-triggered self-test arms one random package/tag/id tuple, posts one local alerting
+notification, and waits eight seconds for the real listener callback. `SignalNotificationListener`
+checks that tuple before its normal self-package rejection. A match is consumed once and returns
+before sanitization, rule evaluation, the bounded queue, History, observability events, and capture
+counters. Every other notification from NoNo remains ignored.
+
 `onNotificationPosted` checks `CaptureGate`, reads the payload for the lifetime of that callback,
 and passes it to `NotificationRedaction.sanitizeNotification`. The sanitizer keeps title and body
 out of everything it returns, pseudonymizes identifiers, and retains the platform metadata needed
@@ -27,6 +33,10 @@ widget to refresh.
 
 Ingestion counters (persisted, dropped, failed, last failure time) are mirrored into Room so they
 survive process death, and republished through `ListenerHealth` on the next start.
+
+`CaptureDiagnostics` combines the live queue depth with durable totals and the last-capture clock.
+Its plain-text report has only the app version, listener access and connection states, counters,
+and relative capture age. Its type does not accept notification content or identifiers.
 
 ## State and persistence
 

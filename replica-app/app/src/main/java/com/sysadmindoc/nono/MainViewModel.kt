@@ -1,10 +1,14 @@
 package com.sysadmindoc.nono
 
+import android.Manifest
 import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -41,6 +45,8 @@ import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.encodeRules
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.HistoryLoadState
+import com.sysadmindoc.nono.model.CaptureSelfTestState
+import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
 import com.sysadmindoc.nono.model.HistoryQuery
 import com.sysadmindoc.nono.model.NotificationContentState
@@ -73,7 +79,15 @@ import com.sysadmindoc.nono.model.UndoableAction
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.defaultSettings
 import com.sysadmindoc.nono.runtime.ListenerHealth
+import com.sysadmindoc.nono.runtime.ListenerActivityLog
 import com.sysadmindoc.nono.runtime.CaptureGate
+import com.sysadmindoc.nono.runtime.CAPTURE_SELF_TEST_TIMEOUT_MILLIS
+import com.sysadmindoc.nono.runtime.CaptureDiagnosticsSnapshot
+import com.sysadmindoc.nono.runtime.CaptureSelfTest
+import com.sysadmindoc.nono.runtime.CaptureSelfTestOutcome
+import com.sysadmindoc.nono.runtime.buildCaptureDiagnosticsReport
+import com.sysadmindoc.nono.runtime.captureSelfTestFailureGuidance
+import com.sysadmindoc.nono.runtime.combinedIngestionMetrics
 import com.sysadmindoc.nono.runtime.HistoryRetentionSettings
 import com.sysadmindoc.nono.runtime.HistoryStorageSettings
 import com.sysadmindoc.nono.runtime.applyListenerSettings
@@ -105,6 +119,11 @@ const val SETTINGS_RESET_MESSAGE = "Saved settings could not be read and were re
 
 /** Launchers truncate long shortcut labels; keeping it short avoids an ellipsis on the icon. */
 private const val SHORTCUT_LABEL_LIMIT = 24
+
+enum class CaptureSelfTestAction {
+    NONE,
+    REQUEST_NOTIFICATION_PERMISSION,
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -371,9 +390,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshCapabilities() {
         if (auditOverride != null) return
         val app = getApplication<Application>()
-        val listenerGranted = runCatching {
-            NotificationManagerCompat.getEnabledListenerPackages(app).contains(app.packageName)
-        }.getOrDefault(false)
+        val listenerGranted = hasNotificationListenerAccess(app)
 
         when (ListenerHealth.capabilityAction(listenerGranted, ListenerHealth.connection.value)) {
             // The platform documents requestRebind for the disconnected window only.
@@ -384,11 +401,133 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(listenerAccessGranted = listenerGranted)
 
         if (auditOverride != null || _state.value.route != Route.ONBOARDING) return
-        // Notification-listener access is the only capability this build actually consumes.
-        // It does not post notifications, execute actions, or require an exemption from Doze.
+        // Listener access is the only capability normal capture consumes. A temporary local
+        // notification is posted only after the user starts the self-test.
         val step = if (listenerGranted) 1 else 0
         _state.value = _state.value.copy(onboardingStep = step)
         if (step == 1) completeOnboarding()
+    }
+
+    /** Starts the test or tells Settings to request the one permission needed to post it. */
+    fun beginCaptureSelfTest(): CaptureSelfTestAction {
+        if (_state.value.captureSelfTest.status in setOf(
+                CaptureSelfTestStatus.WAITING_FOR_PERMISSION,
+                CaptureSelfTestStatus.RUNNING,
+            )
+        ) {
+            return CaptureSelfTestAction.NONE
+        }
+        val app = getApplication<Application>()
+        val accessGranted = hasNotificationListenerAccess(app)
+        _state.value = _state.value.copy(listenerAccessGranted = accessGranted)
+        if (!accessGranted) {
+            failCaptureSelfTest("Notification access is off, so the listener cannot receive the test.")
+            return CaptureSelfTestAction.NONE
+        }
+        if (_state.value.capturePaused) {
+            failCaptureSelfTest("Notification capture is paused. Turn it back on before running the test.")
+            return CaptureSelfTestAction.NONE
+        }
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(app, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            _state.value = _state.value.copy(
+                captureSelfTest = CaptureSelfTestState(
+                    CaptureSelfTestStatus.WAITING_FOR_PERMISSION,
+                    "Allow one temporary NoNo notification to run the listener check.",
+                ),
+            )
+            return CaptureSelfTestAction.REQUEST_NOTIFICATION_PERMISSION
+        }
+        startCaptureSelfTest()
+        return CaptureSelfTestAction.NONE
+    }
+
+    fun onCaptureSelfTestPermissionResult(granted: Boolean) {
+        if (_state.value.captureSelfTest.status != CaptureSelfTestStatus.WAITING_FOR_PERMISSION) return
+        if (!granted) {
+            failCaptureSelfTest(
+                "Notification permission was not granted. It is used only to post the temporary test.",
+            )
+            return
+        }
+        startCaptureSelfTest()
+    }
+
+    private fun startCaptureSelfTest() {
+        val app = getApplication<Application>()
+        val accessGranted = hasNotificationListenerAccess(app)
+        _state.value = _state.value.copy(listenerAccessGranted = accessGranted)
+        if (!accessGranted) {
+            failCaptureSelfTest("Notification access turned off before the test could start.")
+            return
+        }
+        if (_state.value.capturePaused) {
+            failCaptureSelfTest("Notification capture was paused before the test could start.")
+            return
+        }
+        SignalNotificationListener.requestRebindIfPossible(app)
+        _state.value = _state.value.copy(
+            captureSelfTest = CaptureSelfTestState(
+                CaptureSelfTestStatus.RUNNING,
+                "Waiting for the listener to receive the temporary notification.",
+            ),
+        )
+        viewModelScope.launch {
+            when (val outcome = CaptureSelfTest.run(app)) {
+                is CaptureSelfTestOutcome.Passed -> {
+                    _state.value = _state.value.copy(
+                        captureSelfTest = CaptureSelfTestState(
+                            CaptureSelfTestStatus.PASSED,
+                            "The listener received the test in ${outcome.elapsedMillis} ms. Nothing was added to History.",
+                        ),
+                    ).withMessage("Capture self-test passed.")
+                }
+                CaptureSelfTestOutcome.TimedOut -> failCaptureSelfTest(
+                    "The listener did not receive the test within " +
+                        "${CAPTURE_SELF_TEST_TIMEOUT_MILLIS / 1_000L} seconds.",
+                )
+                CaptureSelfTestOutcome.NotificationsBlocked -> failCaptureSelfTest(
+                    "NoNo could not post the temporary notification. Check its notification permission.",
+                )
+                CaptureSelfTestOutcome.AlreadyRunning -> failCaptureSelfTest(
+                    "Another capture self-test is already running.",
+                )
+                CaptureSelfTestOutcome.PostFailed -> failCaptureSelfTest(
+                    "Android could not post the temporary notification.",
+                )
+            }
+        }
+    }
+
+    private fun failCaptureSelfTest(reason: String) {
+        val guidance = captureSelfTestFailureGuidance(Build.MANUFACTURER, Build.VERSION.SDK_INT)
+        _state.value = _state.value.copy(
+            captureSelfTest = CaptureSelfTestState(
+                CaptureSelfTestStatus.FAILED,
+                "$reason $guidance",
+            ),
+        ).withMessage("Capture self-test failed.")
+    }
+
+    /** Builds the shareable report at tap time so every counter and state is current. */
+    fun captureDiagnosticsReport(): String {
+        val app = getApplication<Application>()
+        return buildCaptureDiagnosticsReport(
+            CaptureDiagnosticsSnapshot(
+                appVersion = BuildConfig.VERSION_NAME,
+                accessGranted = hasNotificationListenerAccess(app),
+                connection = ListenerHealth.connection.value,
+                metrics = combinedIngestionMetrics(
+                    ListenerHealth.ingestionMetrics.value,
+                    ListenerHealth.durableIngestionMetrics.value,
+                ),
+                lastCaptureAtEpochMillis = ListenerActivityLog.lastEventAt(app),
+                nowEpochMillis = System.currentTimeMillis(),
+            ),
+        )
     }
 
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }
@@ -1301,6 +1440,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
     }
 }
+
+private fun hasNotificationListenerAccess(application: Application): Boolean = runCatching {
+    NotificationManagerCompat.getEnabledListenerPackages(application).contains(application.packageName)
+}.getOrDefault(false)
 
 private data class HistoryLoadResult(
     val state: HistoryLoadState,

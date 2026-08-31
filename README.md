@@ -23,12 +23,18 @@ for the privacy and capability boundary.
 
 ![NoNo metadata condition editor](replica-app/docs/screenshots/nono-metadata-filters-v1.4.1.png)
 
+![NoNo capture self-test result](replica-app/docs/screenshots/nono-capture-self-test-v1.4.1.png)
+
 Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
 derived colour against every surface where it appears and keeps the built-in accent if the
 wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
 Rules can also require a channel pseudonym, importance, category, conversation status, ongoing
 status, or group-summary status. These conditions are checked during live capture and explained
 against stored records without saving notification content.
+Settings can also post one temporary notification to prove that Android delivers it to NoNo's
+listener. The check never enters History or the ingestion counters. A shareable plain-text report
+contains the app version, listener state, counters, and last capture age, with no notification
+content or posting-app identifiers.
 The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
 [`design-qa.md`](design-qa.md).
 

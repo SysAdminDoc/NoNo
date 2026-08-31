@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.data
 
+import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
@@ -11,8 +12,8 @@ import org.junit.runner.RunWith
 
 /**
  * The picker has to see other apps without asking for the permission that would let it see
- * everything. This checks both halves on a real device: no permissions are declared, and the
- * `<queries>` element still returns launchable apps.
+ * everything. This checks both halves on a real device: the only platform permission supports
+ * the user-triggered capture self-test, and the `<queries>` element still returns launchable apps.
  */
 @RunWith(AndroidJUnit4::class)
 class AppCatalogVisibilityTest {
@@ -20,18 +21,23 @@ class AppCatalogVisibilityTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun theAppRequestsNoPlatformPermission() {
+    fun theAppDeclaresOnlyTheSelfTestPostingPermission() {
         val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
         val declared = info.requestedPermissions?.toList().orEmpty()
 
         // The merged manifest is not empty: AGP adds
         // <applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION, a signature permission the app
         // defines for itself so androidx can register a non-exported receiver on API 33+. It
-        // grants nothing outside this app. What must stay absent is any permission the platform
-        // or another app defines.
+        // grants nothing outside this app. POST_NOTIFICATIONS is declared for the explicit capture
+        // self-test and requested only when the user runs it. No other platform permission belongs
+        // in the merged manifest.
         val fromElsewhere = declared.filterNot { it.startsWith(context.packageName) }
 
-        assertEquals("this app must request no platform permission, found: $fromElsewhere", emptyList<String>(), fromElsewhere)
+        assertEquals(
+            "unexpected platform permissions: $fromElsewhere",
+            listOf(Manifest.permission.POST_NOTIFICATIONS),
+            fromElsewhere,
+        )
         assertTrue(
             "package visibility must come from <queries>, never a permission",
             declared.none { it.contains("QUERY_ALL_PACKAGES") },

@@ -90,8 +90,7 @@ fun CatalogedApp.matches(query: String): Boolean =
  * Reads the apps with a launcher activity.
  *
  * The manifest declares a `<queries>` element for exactly this shape, so no package-visibility
- * permission is involved: `QUERY_ALL_PACKAGES` is a policy-restricted permission and this app has
- * no permissions at all.
+ * permission is involved: `QUERY_ALL_PACKAGES` is a policy-restricted permission and is not used.
  */
 fun loadLaunchableApps(packageManager: PackageManager): List<CatalogedApp> {
     val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
