@@ -104,7 +104,7 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { ListenerHealthBanner(state) }
+        item { ListenerHealthBanner(state, model) }
         item {
             SignalPageHeader(
                 title = "Rules",

@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The capture warning banner reports what is happening now. Ingestion counters only ever grew, so a single bad minute months ago kept the warning on screen until you learned to ignore it. There is a Dismiss control on the counts, what you dismissed is remembered across restarts, and a fresh failure brings the banner straight back. The counts are kept rather than erased, so the banner still says what it has seen before.
+- Messages that report a database write wait for the write. Starring a record announced success even when the row had already gone, and deleting one said "Record deleted." whether or not anything was removed. Each of those now waits for the database to confirm a row and says plainly when it could not.
 - The Notification history setting now offers Metadata only and Off, and both are enforced. The old list included content options this build never performed. Off stops new records being written and leaves everything already stored alone until you delete it.
 - Settings has a separate "Keep history for" row. The retention dialog existed but nothing opened it, and the history row showed the retention value while opening the storage chooser.
 - The phrase condition offers "contains" and "doesn't contain", and both now do what they say. The four older options ("contains any of" and friends) all ran the same single containment check, and a rule saved with any of them keeps working: it is read back as whichever of the two operators it meant.

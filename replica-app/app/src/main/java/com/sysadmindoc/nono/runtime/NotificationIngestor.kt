@@ -14,7 +14,46 @@ data class IngestionMetrics(
     val dropped: Long = 0L,
     val failed: Long = 0L,
     val lastFailureAtEpochMillis: Long? = null,
+    /** Counts the user has already seen and dismissed. Only the durable record carries these. */
+    val acknowledgedDropped: Long = 0L,
+    val acknowledgedFailed: Long = 0L,
 )
+
+/**
+ * What the health banner should report right now.
+ *
+ * A count that only ever grows means one bad minute keeps the warning on screen forever, so the
+ * user learns to ignore it. Subtracting what they acknowledged leaves the banner reporting what
+ * is happening rather than what once happened, without discarding the history.
+ */
+data class IngestionProblems(
+    val dropped: Long,
+    val failed: Long,
+    val acknowledgedDropped: Long,
+    val acknowledgedFailed: Long,
+    val lastFailureAtEpochMillis: Long?,
+) {
+    val hasCurrentProblem: Boolean get() = dropped > 0L || failed > 0L
+    val hasAcknowledgedHistory: Boolean get() = acknowledgedDropped > 0L || acknowledgedFailed > 0L
+}
+
+/**
+ * @param live counters for this process, which reset when it restarts.
+ * @param durable the accumulated record, which is what acknowledgement applies to.
+ */
+fun outstandingIngestionProblems(live: IngestionMetrics, durable: IngestionMetrics): IngestionProblems {
+    // The durable record accumulates the live deltas, so it is normally the larger. Taking the
+    // maximum covers the window before the first merge has been written.
+    val dropped = maxOf(live.dropped, durable.dropped)
+    val failed = maxOf(live.failed, durable.failed)
+    return IngestionProblems(
+        dropped = (dropped - durable.acknowledgedDropped).coerceAtLeast(0L),
+        failed = (failed - durable.acknowledgedFailed).coerceAtLeast(0L),
+        acknowledgedDropped = durable.acknowledgedDropped,
+        acknowledgedFailed = durable.acknowledgedFailed,
+        lastFailureAtEpochMillis = durable.lastFailureAtEpochMillis,
+    )
+}
 
 /**
  * Bounded hand-off from the main-thread listener callback to storage. The callback performs no

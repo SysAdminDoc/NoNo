@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.sp
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.runtime.ListenerActivity
 import com.sysadmindoc.nono.runtime.ListenerActivityLog
+import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.runtime.ListenerHealth
+import com.sysadmindoc.nono.runtime.outstandingIngestionProblems
 import com.sysadmindoc.nono.runtime.listenerActivity
 import com.sysadmindoc.nono.runtime.SignalNotificationListener
 
@@ -48,14 +50,16 @@ import com.sysadmindoc.nono.runtime.SignalNotificationListener
  * below that.
  */
 @Composable
-fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
+fun ListenerHealthBanner(state: UiState, model: MainViewModel? = null, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val connection by ListenerHealth.connection.collectAsState()
     val lastEventAt by ListenerHealth.lastEventAt.collectAsState()
     val ingestionMetrics by ListenerHealth.ingestionMetrics.collectAsState()
     val durableMetrics by ListenerHealth.durableIngestionMetrics.collectAsState()
-    val dropped = maxOf(ingestionMetrics.dropped, durableMetrics.dropped)
-    val failed = maxOf(ingestionMetrics.failed, durableMetrics.failed)
+    // Counts the user already dismissed are history, not a current problem.
+    val problems = outstandingIngestionProblems(ingestionMetrics, durableMetrics)
+    val dropped = problems.dropped
+    val failed = problems.failed
 
     // Keyed on the live event count so a capture arriving while this screen is open clears the
     // warning. Reading once would leave the banner insisting the listener is dead while it works.
@@ -78,9 +82,13 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
     val detail = if (!state.listenerAccessGranted) {
         "Notification access is off, so NoNo cannot capture metadata or preview matches. Tap to review access."
     } else if (dropped > 0L || failed > 0L) {
-        val failure = durableMetrics.lastFailureAtEpochMillis?.let { " Last failure: ${describeWallClock(it)}." }.orEmpty()
-        "Listener queue diagnostics: $dropped dropped, $failed failed.$failure " +
-            "Tap to request a safe rebind and review notification access."
+        val failure = problems.lastFailureAtEpochMillis?.let { " Last failure: ${describeWallClock(it)}." }.orEmpty()
+        val seenBefore = if (problems.hasAcknowledgedHistory) {
+            " Not counting ${problems.acknowledgedDropped} dropped and ${problems.acknowledgedFailed} failed you have already seen."
+        } else {
+            ""
+        }
+        "Since you last dismissed this: $dropped dropped, $failed failed.$failure$seenBefore"
     } else if (connection == ListenerHealth.Connection.DISCONNECTED) {
         val age = lastEventAt?.let { describeAge(SystemClock.elapsedRealtime() - it) }
         val seen = if (age == null) "No notifications seen yet." else "Last notification seen $age."
@@ -114,6 +122,19 @@ fun ListenerHealthBanner(state: UiState, modifier: Modifier = Modifier) {
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text("Metadata capture needs attention", color = SignalColors.Error, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(detail, color = SignalColors.Secondary, fontSize = 14.sp, lineHeight = 19.sp)
+            // Only the queue counters can be dismissed. Revoked access and a dead listener are
+            // conditions, not counts, and go away by being fixed.
+            if (model != null && problems.hasCurrentProblem) {
+                Text(
+                    "Dismiss these counts",
+                    color = SignalColors.Yellow,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clickable(role = Role.Button) { model.acknowledgeIngestionProblems() }
+                        .padding(top = 10.dp, bottom = 6.dp, end = 12.dp),
+                )
+            }
         }
     }
 }

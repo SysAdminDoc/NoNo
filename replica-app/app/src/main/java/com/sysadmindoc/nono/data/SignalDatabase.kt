@@ -75,6 +75,15 @@ data class IngestionDiagnosticsEntity(
     val failed: Long = 0L,
     val lastFailureAtEpochMillis: Long? = null,
     val updatedAtEpochMillis: Long = 0L,
+    /**
+     * Counts the user has acknowledged.
+     *
+     * The totals never go down, so without this one bad minute kept the warning banner on screen
+     * for good and the user learned to ignore it. Acknowledging records what they have seen
+     * rather than erasing it.
+     */
+    val acknowledgedDropped: Long = 0L,
+    val acknowledgedFailed: Long = 0L,
 )
 
 data class WidgetLatestRow(
@@ -87,6 +96,8 @@ fun IngestionDiagnosticsEntity.toMetrics(): IngestionMetrics = IngestionMetrics(
     dropped = dropped,
     failed = failed,
     lastFailureAtEpochMillis = lastFailureAtEpochMillis,
+    acknowledgedDropped = acknowledgedDropped,
+    acknowledgedFailed = acknowledgedFailed,
 )
 
 /**
@@ -299,6 +310,23 @@ interface NotificationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveIngestionDiagnostics(diagnostics: IngestionDiagnosticsEntity)
 
+    /**
+     * Records the counts the user has seen, so the banner reports what is happening now.
+     *
+     * Nothing is erased: the totals stay, and what was acknowledged stays alongside them, so a
+     * later failure still raises the banner.
+     *
+     * @return true when the acknowledgement was written.
+     */
+    @Transaction
+    suspend fun acknowledgeIngestionProblems(): Boolean {
+        val current = readIngestionDiagnostics() ?: return false
+        saveIngestionDiagnostics(
+            current.copy(acknowledgedDropped = current.dropped, acknowledgedFailed = current.failed),
+        )
+        return true
+    }
+
     @Transaction
     suspend fun mergeIngestionMetrics(
         persistedDelta: Long,
@@ -405,8 +433,9 @@ interface NotificationDao {
     @Query("DELETE FROM notification_history WHERE postedAtEpochMillis < :cutoffEpochMillis AND starred = 0")
     suspend fun deleteBefore(cutoffEpochMillis: Long): Int
 
+    /** @return rows updated, so a caller can tell a real change from a record that has gone. */
     @Query("UPDATE notification_history SET starred = :starred WHERE id = :id")
-    suspend fun setStarred(id: Long, starred: Boolean)
+    suspend fun setStarred(id: Long, starred: Boolean): Int
 
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
@@ -471,8 +500,9 @@ interface NotificationDao {
         overrideGroupKey: String?,
     )
 
+    /** @return rows removed, so "deleted" is only said when a row actually went. */
     @Query("DELETE FROM notification_history WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    suspend fun deleteById(id: Long): Int
 
     /** Read before a delete, so the row can be put back if the user takes it back. */
     @Query("SELECT * FROM notification_history WHERE id = :id LIMIT 1")
@@ -521,7 +551,7 @@ interface NotificationDao {
     }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 9, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 10, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -619,6 +649,14 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /** Lets the user acknowledge ingestion counts that would otherwise warn for ever. */
+        val MIGRATION_9_10: Migration = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE ingestion_diagnostics ADD COLUMN acknowledgedDropped INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE ingestion_diagnostics ADD COLUMN acknowledgedFailed INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -652,6 +690,7 @@ abstract class SignalDatabase : RoomDatabase() {
             MIGRATION_6_7,
             MIGRATION_7_8,
             MIGRATION_8_9,
+            MIGRATION_9_10,
         ).build()
     }
 }

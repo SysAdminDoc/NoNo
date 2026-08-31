@@ -49,6 +49,7 @@ import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.StatusMessages
 import com.sysadmindoc.nono.model.applyToRule
 import com.sysadmindoc.nono.model.duplicateRule as duplicateRuleIn
 import com.sysadmindoc.nono.model.advanceRuleCounter
@@ -736,16 +737,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /**
+     * Records the ingestion counts the user has seen.
+     *
+     * Durable, so it survives a restart: an acknowledgement held only in memory would let the
+     * same warning come back the next time the app opened.
+     */
+    fun acknowledgeIngestionProblems() {
+        viewModelScope.launch {
+            val acknowledged = runCatching {
+                historyDatabase.notificationDao().acknowledgeIngestionProblems()
+            }.getOrDefault(false)
+            _state.value = _state.value.withMessage(StatusMessages.acknowledgementOutcome(acknowledged))
+        }
+    }
+
     /** Stars or unstars a record. A starred record outlives the retention period. */
     fun setHistoryStarred(historyId: Long, starred: Boolean) {
+        _state.value = _state.value.copy(overlay = Overlay.NONE)
         viewModelScope.launch {
-            runCatching { historyDatabase.notificationDao().setStarred(historyId, starred) }
+            // The message follows the write. It used to be shown before it, so a failed update
+            // told the user their record was kept when it was about to be pruned.
+            val updated = runCatching {
+                historyDatabase.notificationDao().setStarred(historyId, starred) > 0
+            }.getOrDefault(false)
+            _state.value = _state.value.withMessage(StatusMessages.starOutcome(updated, starred))
         }
-        _state.value = _state.value.copy(
-            overlay = Overlay.NONE,
-            transientMessage = if (starred) "Kept until you unstar it." else "No longer kept.",
-            transientUndo = null,
-        )
     }
 
     /**
@@ -759,10 +776,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val dao = historyDatabase.notificationDao()
             val removed = runCatching {
-                dao.readById(historyId)?.also { dao.deleteById(historyId) }
+                // Only treated as removed when the delete reported a row. A record that fell off
+                // under retention between the read and the delete must not claim a deletion the
+                // undo would then have nothing to reverse.
+                dao.readById(historyId)?.takeIf { dao.deleteById(historyId) > 0 }
             }.getOrNull()
             _state.value = if (removed == null) {
-                _state.value.withMessage("That record could not be deleted.")
+                _state.value.withMessage(StatusMessages.deleteOutcome(removed = false))
             } else {
                 // A second delete before the first snackbar resolves would otherwise overwrite
                 // this slot and lose the earlier record with no way back and nothing said.
@@ -770,7 +790,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     runCatching { historyDatabase.notificationDao().upsert(pending) }
                 }
                 deletedHistoryRecord = removed
-                _state.value.withMessage("Record deleted.", UndoableAction.RESTORE_DELETED_HISTORY)
+                _state.value.withMessage(
+                    StatusMessages.deleteOutcome(removed = true),
+                    UndoableAction.RESTORE_DELETED_HISTORY,
+                )
             }
         }
     }
@@ -792,9 +815,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val restored = runCatching {
                         historyDatabase.notificationDao().restore(record)
                     }.getOrDefault(false)
-                    _state.value = _state.value.withMessage(
-                        if (restored) null else "That record could not be restored; it is back on this device.",
-                    )
+                    _state.value = _state.value.withMessage(StatusMessages.restoreOutcome(restored))
                 }
             }
         }
@@ -1118,10 +1139,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
         }
-    }
-
-    fun addTestHistory() {
-        _state.value = _state.value.copy(history = listOf(HistoryRecord()), rootTab = RootTab.HISTORY, route = Route.ROOT)
     }
 
     fun clearTransient() { _state.value = _state.value.withMessage(null) }
