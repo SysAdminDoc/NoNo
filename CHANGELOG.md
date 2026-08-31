@@ -5,9 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.5.1] (2026-08-31)
+
 ### Fixed
 
 - Typing a filter into the action chooser and then rotating the phone no longer clears what you typed. Everything else on that screen came back, so the search box emptying itself read as the screen resetting on its own.
+
+### Changed
+
+- The promise that nothing derived from your notifications leaves the device through an Android backup has now been checked against a real device rather than only against the code. A backup and restore cycle ran on Android 16 with capture history present. A control file placed where backups do reach came back intact, so the transfer itself worked, while the history database, the store holding your rules, the pseudonym key and the listener's scratch state did not come back at all.
 
 ## [1.5.0] (2026-08-31)
 

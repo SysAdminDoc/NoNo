@@ -2,7 +2,9 @@
 
 NoNo is an independent clean-room Android reconstruction of the native interface and observable behavior documented in `../app-audit`. It does not use the original package identity, proprietary source, branding, illustrations, font files, signing material, private data, or APK assets.
 
-Version 1.5.0 adds an Insights screen, scheduled rule backups, an optional app lock, a widget whose
+Version 1.5.1 fixes the action chooser losing a typed filter when the screen is recreated, and
+records the first on-device check of the no-backup boundary. Version 1.5.0 added an Insights
+screen, scheduled rule backups, an optional app lock, a widget whose
 count you choose, and folder headings on the rules list. Each is described below. Version 1.4.1
 added the optional wallpaper-matched accent on Android 12 and newer: the app checks the derived
 colour on every surface where the accent appears and keeps its built-in accent if the wallpaper
@@ -145,7 +147,7 @@ Pass `-SkipSigning` on a machine without the keystore to check determinism alone
 To check an APK you already have:
 
 ```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.5.0-reconstruction.apk
+& "$env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\apksigner.bat" verify --print-certs NoNo-v1.5.1-reconstruction.apk
 ```
 
 The signer certificate SHA-256 is

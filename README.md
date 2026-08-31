@@ -1,6 +1,6 @@
 # NoNo
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
@@ -27,7 +27,12 @@ for the privacy and capability boundary.
 
 ![NoNo rule deletion with an Undo action](replica-app/docs/screenshots/nono-rule-delete-undo-v1.4.1.png)
 
-Version 1.5.0 adds five things. Explore leads to an Insights screen that counts what History already
+Version 1.5.1 is a small fix. Type a filter in the action chooser, rotate the phone, and what you
+typed is still there; it used to clear itself while the rest of the screen came back. This release
+also records the first check of the no-backup boundary against a real device, described in the app
+README.
+
+Version 1.5.0 added five things. Explore leads to an Insights screen that counts what History already
 holds: the total captured, the apps you hear from most, an hour-of-day histogram, a fortnight's
 trend, and a match count per rule, all from stored metadata with nothing new captured to build it.
 Rules can back themselves up to a folder you pick, daily or weekly, without the app open; because a
