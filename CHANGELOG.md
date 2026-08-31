@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Typing a filter into the action chooser and then rotating the phone no longer clears what you typed. Everything else on that screen came back, so the search box emptying itself read as the screen resetting on its own.
+
 ## [1.5.0] (2026-08-31)
 
 ### Added

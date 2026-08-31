@@ -71,6 +71,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1009,7 +1010,9 @@ fun FilterGroupScreen(state: UiState, model: MainViewModel) {
 
 @Composable
 fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
-    var query by remember { mutableStateOf("") }
+    // Everything else on this screen comes from the view model and survives a recreation, so a
+    // plain remember here loses only the typed filter, which reads as the screen resetting itself.
+    var query by rememberSaveable { mutableStateOf("") }
     val filtered = actionCatalog.filter { it.contains(query, ignoreCase = true) }
     Column(Modifier.fillMaxSize()) {
         SignalTopBar("Choose action", onBack = { model.navigate(Route.RULE_BUILDER) })

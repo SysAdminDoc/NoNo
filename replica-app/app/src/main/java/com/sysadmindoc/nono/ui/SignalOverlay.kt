@@ -687,6 +687,9 @@ private fun TransferPassphraseDialog(
     onDismiss: () -> Unit,
     onDone: (String) -> Unit,
 ) {
+    // Deliberately not rememberSaveable, unlike the other text fields in this app. Saved instance
+    // state is written out by the system, and a transfer passphrase does not belong there. Losing
+    // it on a rotation is the correct trade.
     var passphrase by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
         Column(
