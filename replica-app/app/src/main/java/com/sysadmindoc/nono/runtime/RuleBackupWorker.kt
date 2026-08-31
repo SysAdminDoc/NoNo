@@ -17,16 +17,15 @@ import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.decodeRuleStore
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.Flow
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
 
 /** The one periodic job name, so a cadence change replaces the schedule rather than stacking one. */
 private const val BACKUP_WORK_NAME = "nono-rule-backup"
 
 /** Kept apart from the schedule, so an immediate run cannot displace the periodic one. */
 private const val BACKUP_NOW_WORK_NAME = "nono-rule-backup-now"
+
+/** Said alongside a success, because the backup was written and only the tidying was not done. */
+const val ROTATION_INCOMPLETE = "Older backups could not be removed from that folder."
 
 /**
  * Writes an encrypted copy of the saved rules into the folder the user picked.
@@ -41,7 +40,11 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
     override suspend fun doWork(): Result {
         val context = applicationContext
         val store = SignalPreferences.get(context)
-        val values = store.data.catchToEmpty().first()
+        // Distinguished from an empty store: a damaged preferences file would otherwise read as
+        // cadence off, and the schedule would report nothing while writing nothing, forever.
+        val values = runCatching { store.data.first() }.getOrElse {
+            return recordFailure(context, "The app's settings could not be read for this backup.")
+        }
         val cadence = backupCadence(values[SignalPreferences.settingKey(SignalPreferences.AUTOMATIC_BACKUP_SETTING)])
         if (!cadence.enabled) {
             // The schedule was turned off between this run being queued and it starting. Nothing
@@ -76,16 +79,23 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
         }
 
         // Rotation runs only after a successful write, so a failed run never costs the user the
-        // copy it could not replace.
-        runCatching {
-            expiredBackupFileNames(BackupFolder.listNames(resolver, folder)).forEach { name ->
+        // copy it could not replace. The backup itself is on disk either way, so a folder that
+        // cannot be listed is reported as a rotation problem rather than as a failed backup.
+        val rotated = runCatching {
+            val present = BackupFolder.listNames(resolver, folder) ?: return@runCatching false
+            expiredBackupFileNames(present).all { name ->
                 BackupFolder.deleteByName(resolver, folder, name)
             }
-        }
+        }.getOrDefault(false)
 
         store.edit {
             it[SignalPreferences.BACKUP_STATUS] = encodeBackupStatus(
-                BackupStatus(BackupOutcome.SUCCEEDED, now, rules.size),
+                BackupStatus(
+                    BackupOutcome.SUCCEEDED,
+                    now,
+                    rules.size,
+                    if (rotated) "" else ROTATION_INCOMPLETE,
+                ),
             )
         }
         return Result.success()
@@ -103,8 +113,6 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
         }
         return Result.success()
     }
-
-    private fun Flow<Preferences>.catchToEmpty(): Flow<Preferences> = catch { emit(emptyPreferences()) }
 }
 
 /**

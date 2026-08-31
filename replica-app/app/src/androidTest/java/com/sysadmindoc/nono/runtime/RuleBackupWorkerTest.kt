@@ -103,6 +103,40 @@ class RuleBackupWorkerTest {
     }
 
     @Test
+    fun aRunStartedRightAfterTheSettingIsSavedSeesTheSetting() = runBlocking {
+        // The worker reads the cadence and the folder back out of DataStore. Enqueuing it before
+        // the write landed made it read the old values, decide the schedule was off, and write no
+        // result at all, which is the case the "run it now" call exists to prevent.
+        SignalPreferences.get(context).edit {
+            it[SignalPreferences.settingKey(SignalPreferences.AUTOMATIC_BACKUP_SETTING)] = BackupCadence.DAILY.label
+            it[SignalPreferences.BACKUP_FOLDER_URI] = "content://com.example.provider/tree/backups"
+        }
+
+        run()
+
+        // It got far enough to check the grant, which means it read both values.
+        val status = readStatus()
+        assertEquals(BackupOutcome.FAILED, status.outcome)
+        assertTrue(status.detail, status.detail.contains("withdrawn"))
+    }
+
+    @Test
+    fun aStatusWrittenBeforeThisRunIsReplacedRatherThanLeftStale() = runBlocking {
+        SignalPreferences.get(context).edit {
+            it[SignalPreferences.BACKUP_STATUS] = encodeBackupStatus(
+                BackupStatus(BackupOutcome.SUCCEEDED, 1L, 7),
+            )
+            it[SignalPreferences.settingKey(SignalPreferences.AUTOMATIC_BACKUP_SETTING)] = BackupCadence.DAILY.label
+        }
+
+        run()
+
+        val status = readStatus()
+        assertEquals(BackupOutcome.FAILED, status.outcome)
+        assertEquals("No backup folder is selected.", status.detail)
+    }
+
+    @Test
     fun thisDevicesKeystoreKeyRoundTripsARealBackupFile() = runBlocking {
         val rules = listOf(SignalRule(id = 1L, name = "Group chats", phrase = "standup"))
         val key = DeviceBackupKey.get()

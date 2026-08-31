@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.ui
 
+import com.sysadmindoc.nono.model.INSIGHT_TOP_RULE_LIMIT
 import com.sysadmindoc.nono.model.InsightTotals
 import com.sysadmindoc.nono.model.LocalInsights
 import com.sysadmindoc.nono.model.UiState
@@ -7,10 +8,11 @@ import com.sysadmindoc.nono.model.buildLocalInsights
 import java.util.Locale
 import java.util.TimeZone
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** What the Insights entry point and totals card say, given what the aggregates found. */
+/** What the Insights entry point, the totals card, and the two empty states say. */
 class InsightsCopyTest {
 
     private fun insights(stored: Int, captured: Int, summaries: Int): LocalInsights =
@@ -28,38 +30,55 @@ class InsightsCopyTest {
     fun theTotalsLineNamesTheSummariesItLeftOut() {
         assertEquals(
             "From 10 stored records, excluding 2 group summaries.",
-            describeStoredRecords(insights(10, 8, 2), 10),
+            describeStoredRecords(insights(10, 8, 2)),
         )
     }
 
     @Test
-    fun asingleSummaryReadsAsOne() {
+    fun aSingleSummaryReadsAsOne() {
         assertEquals(
             "From 2 stored records, excluding 1 group summary.",
-            describeStoredRecords(insights(2, 1, 1), 2),
+            describeStoredRecords(insights(2, 1, 1)),
         )
     }
 
     @Test
     fun withNoSummariesTheLineDoesNotMentionAnExclusion() {
-        val line = describeStoredRecords(insights(5, 5, 0), 5)
-
-        assertEquals("From 5 stored records.", line)
+        assertEquals("From 5 stored records.", describeStoredRecords(insights(5, 5, 0)))
     }
 
     @Test
     fun aSingleRecordIsNotCalledRecords() {
-        assertEquals("From 1 stored record.", describeStoredRecords(insights(1, 1, 0), 1))
+        assertEquals("From 1 stored record.", describeStoredRecords(insights(1, 1, 0)))
     }
 
     @Test
-    fun aTotalThatDisagreesWithHistorySaysSoRatherThanStatingAWrongNumber() {
-        // The two counts are separate reads. A capture landing between them is normal, and the
-        // screen should say the numbers are moving instead of presenting a contradiction.
-        assertEquals(
-            "Counts are still catching up with History.",
-            describeStoredRecords(insights(10, 8, 2), 11),
-        )
+    fun totalsThatDoNotAddUpAreReportedRatherThanStated() {
+        // All three numbers come from one row, so this cannot happen from a normal read. If it
+        // ever does, the screen must not present the contradiction as fact.
+        assertEquals("Counts are still being read.", describeStoredRecords(insights(10, 8, 1)))
+    }
+
+    @Test
+    fun aHistoryOfNothingButSummariesIsNotCalledEmpty() {
+        // History visibly lists those records. Telling the user there is nothing here would
+        // contradict the screen they just came from.
+        val summariesOnly = insights(40, 0, 40)
+
+        assertTrue(summariesOnly.onlyGroupSummaries)
+        assertTrue(!summariesOnly.isEmpty)
+        assertEquals("Only group summaries so far", emptyInsightsTitle(summariesOnly))
+        assertTrue(emptyInsightsDetail(summariesOnly).contains("40 group summaries"))
+    }
+
+    @Test
+    fun aTrulyEmptyHistorySaysNothingHasBeenCaptured() {
+        val nothing = insights(0, 0, 0)
+
+        assertTrue(nothing.isEmpty)
+        assertTrue(!nothing.onlyGroupSummaries)
+        assertEquals("Nothing to count yet", emptyInsightsTitle(nothing))
+        assertTrue(emptyInsightsDetail(nothing).contains("Once capture has recorded some"))
     }
 
     @Test
@@ -71,20 +90,46 @@ class InsightsCopyTest {
     }
 
     @Test
-    fun theExploreRowReportsTheCapturedTotalOnceThereIsOne() {
-        val state = UiState(insights = insights(10, 8, 2))
+    fun theExploreRowReadsTheHistoryTotalBecauseTheAggregatesAreNotCollectedThere() {
+        // The insight aggregates only run while the Insights screen is open, so on Explore they
+        // are always zero and a row built from them would always claim nothing was captured.
+        assertEquals(
+            "12 stored records, and what they add up to.",
+            describeInsightsEntry(UiState(historyTotalCount = 12, insights = LocalInsights())),
+        )
+        assertEquals(
+            "1 stored record, and what it adds up to.",
+            describeInsightsEntry(UiState(historyTotalCount = 1)),
+        )
+    }
 
-        assertEquals("8 captured, and what they add up to.", describeInsightsEntry(state))
+    @Test
+    fun aCutRuleListSaysItWasCut() {
+        // A rule missing from the list would otherwise read as a rule that never matched.
+        assertNull(describeHiddenRules(INSIGHT_TOP_RULE_LIMIT))
+        assertNull(describeHiddenRules(0))
+        assertEquals(
+            "1 more rule is saved. This list shows the $INSIGHT_TOP_RULE_LIMIT with the most matches.",
+            describeHiddenRules(INSIGHT_TOP_RULE_LIMIT + 1),
+        )
+        assertTrue(
+            describeHiddenRules(INSIGHT_TOP_RULE_LIMIT + 40)!!.startsWith("40 more rules are saved."),
+        )
     }
 
     @Test
     fun noneOfTheCopyUsesADash() {
-        val lines = listOf(
-            describeStoredRecords(insights(10, 8, 2), 10),
-            describeStoredRecords(insights(5, 5, 0), 5),
-            describeStoredRecords(insights(10, 8, 2), 11),
+        val lines = listOfNotNull(
+            describeStoredRecords(insights(10, 8, 2)),
+            describeStoredRecords(insights(5, 5, 0)),
+            describeStoredRecords(insights(10, 8, 1)),
+            emptyInsightsTitle(insights(40, 0, 40)),
+            emptyInsightsDetail(insights(40, 0, 40)),
+            emptyInsightsTitle(insights(0, 0, 0)),
+            emptyInsightsDetail(insights(0, 0, 0)),
             describeInsightsEntry(UiState()),
-            describeInsightsEntry(UiState(insights = insights(10, 8, 2))),
+            describeInsightsEntry(UiState(historyTotalCount = 12)),
+            describeHiddenRules(INSIGHT_TOP_RULE_LIMIT + 3),
         )
 
         assertTrue(lines.none { line -> line.any { it == '—' || it == '–' } })

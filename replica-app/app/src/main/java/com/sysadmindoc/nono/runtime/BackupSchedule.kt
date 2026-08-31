@@ -62,10 +62,17 @@ fun decodeBackupStatus(encoded: String?): BackupStatus {
         .getOrElse { BackupStatus() }
 }
 
-/** The name a run writes. Sorting these as text is the same as sorting them by time. */
-fun backupFileName(atEpochMillis: Long, zone: TimeZone = TimeZone.getDefault()): String {
+/**
+ * The name a run writes, stamped in UTC.
+ *
+ * Rotation sorts these as text, so the stamp has to advance with real time and nothing else. A
+ * local-time stamp does not: fly from UTC+13 to UTC-8 and the next backup sorts *below* the one
+ * before it, which makes rotation name the newest file as the oldest and delete it seconds after
+ * writing it. UTC never steps backwards, so text order and time order are the same order.
+ */
+fun backupFileName(atEpochMillis: Long): String {
     val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT)
-        .apply { timeZone = zone }
+        .apply { timeZone = TimeZone.getTimeZone("UTC") }
         .format(Date(atEpochMillis))
     return "$BACKUP_FILE_PREFIX$stamp$BACKUP_FILE_SUFFIX"
 }

@@ -38,6 +38,7 @@ class LocalInsightsTest {
         val insights = build()
 
         assertTrue(insights.isEmpty)
+        assertFalse(insights.onlyGroupSummaries)
         assertEquals(24, insights.hourlyCounts.size)
         assertEquals(INSIGHT_DAY_COUNT, insights.dailyTrend.size)
         assertTrue(insights.dailyTrend.all { it.count == 0 })
@@ -148,23 +149,33 @@ class LocalInsightsTest {
     }
 
     @Test
-    fun insightTotalsReconcileWithTheHistoryTotal() {
+    fun theThreeTotalsAddUpToEachOther() {
         val insights = build(totals = InsightTotals(storedRecordCount = 10, totalCaptured = 8, excludedGroupSummaries = 2))
 
         assertEquals(8, insights.totalCaptured)
         assertEquals(2, insights.excludedGroupSummaries)
-        assertTrue(insights.reconcilesWith(10))
-        assertFalse(insights.reconcilesWith(11))
+        assertTrue(insights.reconciles)
+        assertFalse(insights.isEmpty)
+        assertFalse(insights.onlyGroupSummaries)
     }
 
     @Test
     fun totalsThatDoNotAddUpAreReportedAsNotReconciling() {
-        // Both numbers come from one row, so this cannot happen from a single read. It can happen
-        // across two reads while capture is writing, and the screen must not present the mismatch
-        // as fact.
+        // All three come from one row of one query, so this cannot happen from a normal read. It
+        // is checked anyway, because the screen must never present a contradiction as fact.
         val insights = build(totals = InsightTotals(storedRecordCount = 10, totalCaptured = 8, excludedGroupSummaries = 1))
 
-        assertFalse(insights.reconcilesWith(10))
+        assertFalse(insights.reconciles)
+    }
+
+    @Test
+    fun aHistoryOfNothingButGroupSummariesIsNotEmpty() {
+        // History lists those rows. Reporting the screen as empty would contradict it.
+        val insights = build(totals = InsightTotals(storedRecordCount = 40, totalCaptured = 0, excludedGroupSummaries = 40))
+
+        assertFalse(insights.isEmpty)
+        assertTrue(insights.onlyGroupSummaries)
+        assertTrue(insights.reconciles)
     }
 
     @Test

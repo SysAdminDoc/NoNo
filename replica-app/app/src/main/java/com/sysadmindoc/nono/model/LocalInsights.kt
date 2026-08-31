@@ -9,6 +9,15 @@ import java.util.TimeZone
 const val INSIGHT_DAY_COUNT = 14
 const val INSIGHT_TOP_APP_LIMIT = 5
 
+/**
+ * Rules listed on the Insights screen.
+ *
+ * A rule list is user-sized and an import may carry ten thousand of them. The card is one item in
+ * a lazy list, so every row it emits is composed and measured at once; capping it is what keeps
+ * opening the screen cheap for someone with a large rule set.
+ */
+const val INSIGHT_TOP_RULE_LIMIT = 10
+
 /** Exact stored-row totals returned by Room. */
 data class InsightTotals(
     val storedRecordCount: Int = 0,
@@ -30,7 +39,17 @@ data class LocalInsights(
     val hourlyCounts: List<Int> = List(24) { 0 },
     val dailyTrend: List<InsightDay> = emptyList(),
 ) {
-    val isEmpty: Boolean get() = totalCaptured == 0
+    /**
+     * True only when there is nothing stored at all.
+     *
+     * Not `totalCaptured == 0`: a history holding nothing but group summaries has rows the user
+     * can see in History, and telling them there is nothing to count would contradict the screen
+     * they just came from. That case has its own line instead.
+     */
+    val isEmpty: Boolean get() = storedRecordCount == 0
+
+    /** Rows are stored, but every one of them is a group summary, which the counts leave out. */
+    val onlyGroupSummaries: Boolean get() = storedRecordCount > 0 && totalCaptured == 0
 
     val busiestHour: Int?
         get() {
@@ -40,10 +59,16 @@ data class LocalInsights(
 
     val busiestHourCount: Int get() = busiestHour?.let(hourlyCounts::get) ?: 0
 
-    /** History retains summaries as visible records, while insight totals exclude them. */
-    fun reconcilesWith(historyTotalCount: Int): Boolean =
-        storedRecordCount == historyTotalCount &&
-            totalCaptured.toLong() + excludedGroupSummaries.toLong() == storedRecordCount.toLong()
+    /**
+     * Whether the three numbers agree with each other.
+     *
+     * All three come from one row of one query, so a disagreement means the row itself was
+     * inconsistent rather than that two reads landed at different moments. Comparing against the
+     * separately collected History total was the earlier version of this and it reported a
+     * mismatch every time a notification arrived between the two flows emitting.
+     */
+    val reconciles: Boolean
+        get() = totalCaptured.toLong() + excludedGroupSummaries.toLong() == storedRecordCount.toLong()
 }
 
 /**

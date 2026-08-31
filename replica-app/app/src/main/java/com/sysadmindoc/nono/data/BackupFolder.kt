@@ -55,28 +55,47 @@ object BackupFolder {
      */
     @Throws(IOException::class)
     fun writeDocument(resolver: ContentResolver, treeUri: Uri, displayName: String, bytes: ByteArray) {
+        // Providers do not overwrite: a second document with the same display name comes back as
+        // "name (1).json", which rotation's pattern never matches and which is therefore kept
+        // forever. Two runs landing in the same second is enough to cause it.
+        deleteByName(resolver, treeUri, displayName)
         val target = DocumentsContract.createDocument(resolver, directoryUri(treeUri), "application/json", displayName)
             ?: throw IOException("the folder refused a new file")
-        val stream = resolver.openOutputStream(target) ?: throw IOException("the new file could not be opened")
-        stream.use { it.write(bytes) }
+        try {
+            val stream = resolver.openOutputStream(target) ?: throw IOException("the new file could not be opened")
+            stream.use { it.write(bytes) }
+        } catch (error: Throwable) {
+            // The document already exists holding a truncated payload. Left there it would match
+            // the rotation pattern, occupy one of the retained slots, and fail to decrypt when
+            // somebody finally reached for it.
+            runCatching { DocumentsContract.deleteDocument(resolver, target) }
+            throw error
+        }
     }
 
-    /** Every display name directly inside the folder. Subfolders are not descended into. */
-    fun listNames(resolver: ContentResolver, treeUri: Uri): List<String> {
+    /**
+     * Every display name directly inside the folder. Subfolders are not descended into.
+     *
+     * @return null when the folder could not be read at all, which is not the same as a folder
+     * holding nothing. Rotation has to be able to tell those apart, or an unreadable provider
+     * looks like a folder with nothing to remove and the files build up unreported.
+     */
+    fun listNames(resolver: ContentResolver, treeUri: Uri): List<String>? {
         val children = DocumentsContract.buildChildDocumentsUriUsingTree(
             treeUri,
             DocumentsContract.getTreeDocumentId(treeUri),
         )
         val names = mutableListOf<String>()
-        resolver.query(
+        val cursor = resolver.query(
             children,
             arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
             null,
             null,
             null,
-        )?.use { cursor ->
-            while (cursor.moveToNext()) {
-                cursor.getString(0)?.let(names::add)
+        ) ?: return null
+        cursor.use {
+            while (it.moveToNext()) {
+                it.getString(0)?.let(names::add)
             }
         }
         return names

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -25,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
+import com.sysadmindoc.nono.model.INSIGHT_TOP_RULE_LIMIT
 import com.sysadmindoc.nono.model.InsightDay
 import com.sysadmindoc.nono.model.LocalInsights
 import com.sysadmindoc.nono.model.RootTab
@@ -51,12 +53,17 @@ fun InsightsScreen(state: UiState, model: MainViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { SignalTopBar("Insights", onBack = { model.selectRoot(RootTab.EXPLORE) }) }
-        if (insights.isEmpty) {
-            item { InsightsEmptyState(Modifier.padding(horizontal = SignalMetrics.pageHorizontal)) }
+        if (insights.isEmpty || insights.onlyGroupSummaries) {
+            item {
+                InsightsEmptyState(
+                    insights,
+                    Modifier.padding(horizontal = SignalMetrics.pageHorizontal),
+                )
+            }
             return@LazyColumn
         }
         item {
-            TotalsCard(insights, state.historyTotalCount, Modifier.padding(horizontal = SignalMetrics.pageHorizontal))
+            TotalsCard(insights, Modifier.padding(horizontal = SignalMetrics.pageHorizontal))
         }
         item {
             HourlyCard(insights, Modifier.padding(horizontal = SignalMetrics.pageHorizontal))
@@ -74,13 +81,12 @@ fun InsightsScreen(state: UiState, model: MainViewModel) {
 }
 
 @Composable
-private fun InsightsEmptyState(modifier: Modifier = Modifier) {
+private fun InsightsEmptyState(insights: LocalInsights, modifier: Modifier = Modifier) {
     SurfaceCard(modifier.fillMaxWidth()) {
         Column {
-            Text("Nothing to count yet", style = MaterialTheme.typography.titleMedium)
+            Text(emptyInsightsTitle(insights), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Insights are built from the notifications already in History. Once capture has " +
-                    "recorded some, the counts appear here.",
+                emptyInsightsDetail(insights),
                 color = SignalColors.Secondary,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 6.dp),
@@ -89,8 +95,28 @@ private fun InsightsEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Two different kinds of nothing.
+ *
+ * A history holding only group summaries is not an empty history, and saying it is would
+ * contradict the History screen the user just came from.
+ */
+internal fun emptyInsightsTitle(insights: LocalInsights): String =
+    if (insights.onlyGroupSummaries) "Only group summaries so far" else "Nothing to count yet"
+
+internal fun emptyInsightsDetail(insights: LocalInsights): String = when {
+    insights.onlyGroupSummaries -> {
+        val stored = insights.excludedGroupSummaries
+        "History holds $stored group ${if (stored == 1) "summary" else "summaries"} and nothing " +
+            "else. A summary stands for its group rather than being a notification of its own, so " +
+            "the counts here leave it out, exactly as every other count in the app does."
+    }
+    else -> "Insights are built from the notifications already in History. Once capture has " +
+        "recorded some, the counts appear here."
+}
+
 @Composable
-private fun TotalsCard(insights: LocalInsights, historyTotalCount: Int, modifier: Modifier = Modifier) {
+private fun TotalsCard(insights: LocalInsights, modifier: Modifier = Modifier) {
     SurfaceCard(modifier.fillMaxWidth()) {
         Column {
             Text("Captured", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium)
@@ -102,7 +128,7 @@ private fun TotalsCard(insights: LocalInsights, historyTotalCount: Int, modifier
                 modifier = Modifier.padding(top = 2.dp),
             )
             Text(
-                describeStoredRecords(insights, historyTotalCount),
+                describeStoredRecords(insights),
                 color = SignalColors.Secondary,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 6.dp),
@@ -125,18 +151,18 @@ private fun TotalsCard(insights: LocalInsights, historyTotalCount: Int, modifier
  *
  * History shows group summaries as records; the counts here exclude them, exactly as the rest of
  * the app's counting does. Without this line the Insights total reads as a smaller, wrong version
- * of the History total.
+ * of the History total. All three numbers come from one row of one query, so they cannot disagree
+ * merely because two reads landed at different moments.
  */
-internal fun describeStoredRecords(insights: LocalInsights, historyTotalCount: Int): String {
+internal fun describeStoredRecords(insights: LocalInsights): String {
     val stored = insights.storedRecordCount
     val summaries = insights.excludedGroupSummaries
-    val base = when {
-        !insights.reconcilesWith(historyTotalCount) -> "Counts are still catching up with History."
+    return when {
+        !insights.reconciles -> "Counts are still being read."
         summaries == 0 -> "From $stored stored ${pluralRecords(stored)}."
         else -> "From $stored stored ${pluralRecords(stored)}, excluding $summaries group " +
             if (summaries == 1) "summary." else "summaries."
     }
-    return base
 }
 
 private fun pluralRecords(count: Int): String = if (count == 1) "record" else "records"
@@ -218,8 +244,14 @@ private fun TopAppsCard(state: UiState, modifier: Modifier = Modifier) {
 
 @Composable
 private fun RuleMatchesCard(state: UiState, modifier: Modifier = Modifier) {
-    val ranked = state.rules
-        .sortedWith(compareByDescending<SignalRule> { state.ruleMatchCounts[it.id] ?: 0 }.thenBy { it.name })
+    // A rule list is user-sized and an import can carry ten thousand. This card is one item in a
+    // lazy list, so every row it emits is composed at once and the list cannot virtualize any of
+    // them. Sorting is remembered for the same reason: recomposition must not re-sort the lot.
+    val ranked = remember(state.rules, state.ruleMatchCounts) {
+        state.rules
+            .sortedWith(compareByDescending<SignalRule> { state.ruleMatchCounts[it.id] ?: 0 }.thenBy { it.name })
+            .take(INSIGHT_TOP_RULE_LIMIT)
+    }
     SurfaceCard(modifier.fillMaxWidth()) {
         Column {
             SignalSectionHeading("Rule matches", "How often each saved rule would have fired.")
@@ -234,8 +266,24 @@ private fun RuleMatchesCard(state: UiState, modifier: Modifier = Modifier) {
             ranked.forEach { rule ->
                 CountRow(rule.name, null, state.ruleMatchCounts[rule.id] ?: 0)
             }
+            describeHiddenRules(state.rules.size)?.let { line ->
+                Text(
+                    line,
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
         }
     }
+}
+
+/** Says that the list was cut, so a missing rule does not read as a rule that never matched. */
+internal fun describeHiddenRules(total: Int): String? {
+    val hidden = total - INSIGHT_TOP_RULE_LIMIT
+    if (hidden <= 0) return null
+    return "$hidden more ${if (hidden == 1) "rule is" else "rules are"} saved. This list shows the " +
+        "$INSIGHT_TOP_RULE_LIMIT with the most matches."
 }
 
 @Composable

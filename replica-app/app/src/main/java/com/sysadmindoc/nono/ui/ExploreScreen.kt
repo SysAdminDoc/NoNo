@@ -161,10 +161,16 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
     }
 }
 
-/** Says what the row leads to without promising numbers that are not there yet. */
-internal fun describeInsightsEntry(state: UiState): String = when {
-    state.insights.isEmpty -> "Counts appear once History has something in it."
-    else -> "${state.insights.totalCaptured} captured, and what they add up to."
+/**
+ * Says what the row leads to without promising numbers that are not there yet.
+ *
+ * Deliberately reads the History total rather than the insight aggregates: those are only
+ * collected while the Insights screen is open, so on Explore they are always zero.
+ */
+internal fun describeInsightsEntry(state: UiState): String = when (state.historyTotalCount) {
+    0 -> "Counts appear once History has something in it."
+    1 -> "1 stored record, and what it adds up to."
+    else -> "${state.historyTotalCount} stored records, and what they add up to."
 }
 
 @Composable

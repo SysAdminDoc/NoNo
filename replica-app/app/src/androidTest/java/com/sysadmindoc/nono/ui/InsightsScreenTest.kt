@@ -114,4 +114,43 @@ class InsightsScreenTest {
         composeRule.onNodeWithText("Nothing to count yet").assertIsDisplayed()
         composeRule.onNodeWithText("By hour of day").assertDoesNotExist()
     }
+
+    @Test
+    fun aHistoryOfNothingButGroupSummariesSaysSoRatherThanClaimingItIsEmpty() {
+        // History lists those rows, so "nothing captured yet" would contradict the screen the user
+        // just came from.
+        val summariesOnly = UiState(
+            historyTotalCount = 40,
+            insights = LocalInsights(storedRecordCount = 40, totalCaptured = 0, excludedGroupSummaries = 40),
+        )
+        composeRule.setContent { SignalTheme { InsightsScreen(summariesOnly, model) } }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Only group summaries so far").assertIsDisplayed()
+        composeRule.onNodeWithText("Nothing to count yet").assertDoesNotExist()
+        composeRule.onNodeWithText("By hour of day").assertDoesNotExist()
+    }
+
+    @Test
+    fun aLargeRuleListIsCutAndTheScreenSaysItWasCut() {
+        // An import can carry ten thousand rules. This card is one item in a lazy list, so every
+        // row it emits is composed at once and none of them can be virtualized.
+        val many = (1L..60L).map { SignalRule(id = it, name = "Rule $it") }
+        val state = populated.copy(rules = many, ruleMatchCounts = many.associate { it.id to it.id.toInt() })
+        composeRule.setContent { SignalTheme { InsightsScreen(state, model) } }
+        composeRule.waitForIdle()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Rule matches"))
+        composeRule.waitForIdle()
+
+        // Composition, not visibility: the claim is that ten rows exist and fifty do not. Which of
+        // the ten happens to be on screen after a scroll is not what the cap is about.
+        // Ranked by matches, so the highest-numbered rules survive the cut.
+        composeRule.onNodeWithText("Rule 60").assertExists()
+        composeRule.onNodeWithText("Rule 51").assertExists()
+        composeRule.onNodeWithText("Rule 50").assertDoesNotExist()
+        composeRule.onNodeWithText("Rule 1").assertDoesNotExist()
+        composeRule
+            .onNode(hasText("50 more rules are saved", substring = true))
+            .assertExists()
+    }
 }

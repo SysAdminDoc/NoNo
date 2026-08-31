@@ -98,7 +98,13 @@ enum class ImportRejection(val message: String) {
     UNSUPPORTED_VERSION("That file was written by a version NoNo does not understand."),
     BAD_PARAMETERS("That file's encryption settings are not valid."),
     WRONG_PASSPHRASE("The passphrase or the file is not valid."),
-    DEVICE_KEY_UNAVAILABLE("That backup can only be restored on the device that wrote it."),
+    // Deliberately names both causes. A scheduled backup that was truncated by a full card fails
+    // exactly the same way as one from another phone, and claiming the wrong device sends the user
+    // looking for a problem that is not there.
+    DEVICE_KEY_UNAVAILABLE(
+        "That scheduled backup could not be opened. It was written by another device, " +
+            "or the file is damaged.",
+    ),
     TOO_MANY_RULES("That file declares more rules than NoNo will import."),
     FIELD_TOO_LONG("A value in that file is longer than NoNo will import."),
 }

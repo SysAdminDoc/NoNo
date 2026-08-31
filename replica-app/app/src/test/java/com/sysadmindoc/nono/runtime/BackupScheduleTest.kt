@@ -46,8 +46,8 @@ class BackupScheduleTest {
 
     @Test
     fun `file names sort as text in the same order as they sort by time`() {
-        val earlier = backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 3), zone)
-        val later = backupFileName(millis(2026, Calendar.SEPTEMBER, 1, 0, 0, 0), zone)
+        val earlier = backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 3))
+        val later = backupFileName(millis(2026, Calendar.SEPTEMBER, 1, 0, 0, 0))
 
         assertEquals("nono-rules-backup-20260831-090503.json", earlier)
         assertEquals("nono-rules-backup-20260901-000000.json", later)
@@ -57,14 +57,43 @@ class BackupScheduleTest {
     @Test
     fun `two runs a second apart do not collide`() {
         assertNotEquals(
-            backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 3), zone),
-            backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 4), zone),
+            backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 3)),
+            backupFileName(millis(2026, Calendar.AUGUST, 31, 9, 5, 4)),
         )
     }
 
     @Test
+    fun `a later backup still sorts above an earlier one after the device changes zone`() {
+        // Rotation sorts these as text. A local-time stamp does not advance with real time across
+        // an offset change: fly from UTC+13 to UTC-8 and the newer file sorts below the older one,
+        // so rotation names the file it just wrote as the oldest and deletes it. Stamping in UTC
+        // is what makes text order and time order the same order.
+        val earlier = millis(2026, Calendar.SEPTEMBER, 1, 11, 0, 0)
+        val later = earlier + 60 * 60 * 1000L
+
+        val earlierName = withDefaultZone("Pacific/Auckland") { backupFileName(earlier) }
+        val laterName = withDefaultZone("America/Los_Angeles") { backupFileName(later) }
+
+        assertTrue("$earlierName must sort below $laterName", earlierName < laterName)
+        assertEquals(
+            emptyList<String>(),
+            expiredBackupFileNames(listOf(earlierName, laterName), keep = 1).filter { it == laterName },
+        )
+    }
+
+    private fun <T> withDefaultZone(id: String, block: () -> T): T {
+        val original = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone(id))
+        return try {
+            block()
+        } finally {
+            TimeZone.setDefault(original)
+        }
+    }
+
+    @Test
     fun `rotation removes the oldest backups past the retained count`() {
-        val present = (1..8).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0), zone) }
+        val present = (1..8).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0)) }
 
         val expired = expiredBackupFileNames(present, keep = 5)
 
@@ -85,7 +114,7 @@ class BackupScheduleTest {
             "nono-rules-backup-2026-08-31-030000.json",
             "nono-rules-backup-20260831-030000.json.bak",
             "NONO-RULES-BACKUP-20260831-030000.json",
-        ) + (1..8).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0), zone) }
+        ) + (1..8).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0)) }
 
         val expired = expiredBackupFileNames(present, keep = 0)
 
@@ -96,7 +125,7 @@ class BackupScheduleTest {
 
     @Test
     fun `nothing is removed while the folder holds no more than the retained count`() {
-        val present = (1..5).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0), zone) }
+        val present = (1..5).map { backupFileName(millis(2026, Calendar.AUGUST, it + 20, 3, 0, 0)) }
 
         assertEquals(emptyList<String>(), expiredBackupFileNames(present, keep = 5))
         assertEquals(emptyList<String>(), expiredBackupFileNames(emptyList(), keep = 5))
@@ -104,7 +133,7 @@ class BackupScheduleTest {
 
     @Test
     fun `a duplicate name is counted once`() {
-        val one = backupFileName(millis(2026, Calendar.AUGUST, 31, 3, 0, 0), zone)
+        val one = backupFileName(millis(2026, Calendar.AUGUST, 31, 3, 0, 0))
 
         assertEquals(emptyList<String>(), expiredBackupFileNames(listOf(one, one, one), keep = 1))
     }

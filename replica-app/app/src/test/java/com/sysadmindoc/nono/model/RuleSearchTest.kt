@@ -1,6 +1,6 @@
 package com.sysadmindoc.nono.model
 
-import kotlin.system.measureTimeMillis
+import kotlin.system.measureNanoTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -119,7 +119,11 @@ class RuleSearchTest {
         // attempt is the one where the filter had the CPU to itself, which is what is being
         // measured. Noise can only make an attempt slower, so this cannot hide a regression: work
         // that has become quadratic is far slower than the budget in every attempt.
-        val elapsed = (1..7).minOf { measureTimeMillis { repeat(10) { filterRules(many, "phrase 7") } } }
+        // Nanos, not millis: measureTimeMillis reads the wall clock, so a clock step backwards
+        // during one attempt would make that attempt measure zero and pass the assertion whatever
+        // the code underneath was doing.
+        val elapsedNanos = (1..7).minOf { measureNanoTime { repeat(10) { filterRules(many, "phrase 7") } } }
+        val elapsed = elapsedNanos / 1_000_000L
 
         // A frame is about 16ms. Ten passes inside one frame leaves an order of magnitude of head
         // room for a linear scan over a thousand rules.

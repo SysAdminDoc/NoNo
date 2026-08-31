@@ -55,6 +55,7 @@ import com.sysadmindoc.nono.model.HistoryQuery
 import com.sysadmindoc.nono.model.INSIGHT_DAY_COUNT
 import com.sysadmindoc.nono.model.INSIGHT_TOP_APP_LIMIT
 import com.sysadmindoc.nono.model.InsightTotals
+import com.sysadmindoc.nono.model.LocalInsights
 import com.sysadmindoc.nono.model.buildLocalInsights
 import com.sysadmindoc.nono.model.insightsStartEpochMillis
 import com.sysadmindoc.nono.model.NotificationContentState
@@ -130,6 +131,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.util.TimeZone
+import kotlinx.coroutines.flow.flowOf
 
 /** Shown once when an unreadable preferences file was replaced with defaults. */
 const val SETTINGS_RESET_MESSAGE = "Saved settings could not be read and were reset."
@@ -150,13 +153,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val historyRetry = MutableStateFlow(0)
 
     /**
-     * The clock the fourteen-day trend is anchored to.
+     * The clock and zone the fourteen-day trend is anchored to.
      *
-     * The day window has to be fixed while the query runs, or the SQL cutoff and the labels
-     * disagree. Opening Insights re-reads the clock, so a session left open past midnight does not
-     * keep charting yesterday.
+     * Both have to be fixed while the query runs, or the SQL cutoff and the labels describe
+     * different fortnights: the cutoff is computed once, and rebuilding the labels from a
+     * `TimeZone.getDefault()` that has since changed shifts the window under them. Opening
+     * Insights re-reads both, so a session left open past midnight, or across a flight, does not
+     * keep charting yesterday in the wrong zone.
      */
-    private val insightsNow = MutableStateFlow(System.currentTimeMillis())
+    private data class InsightsAnchor(val nowEpochMillis: Long, val zone: TimeZone)
+
+    private val insightsNow = MutableStateFlow(InsightsAnchor(System.currentTimeMillis(), TimeZone.getDefault()))
     private var pendingExportPayload: String? = null
     private var pendingExportIsHistory = false
 
@@ -304,18 +311,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             val dao = historyDatabase.notificationDao()
-            combine(
-                dao.observeInsightTotals().catch { emit(InsightTotals()) },
-                dao.observeTopInsightApps(INSIGHT_TOP_APP_LIMIT).catch { emit(emptyList()) },
-                dao.observeInsightHours().catch { emit(emptyList()) },
-                insightsNow.flatMapLatest { now ->
-                    dao.observeInsightDays(insightsStartEpochMillis(now), INSIGHT_DAY_COUNT)
-                        .catch { emit(emptyList()) }
-                        .map { days -> now to days }
-                },
-            ) { totals, apps, hours, (now, days) ->
-                buildLocalInsights(totals, apps, hours, days, now)
-            }.collect { insights -> _state.value = _state.value.copy(insights = insights) }
+            // Only while the screen is on. These are whole-table aggregates and Room re-runs every
+            // one of them on every capture; keeping them subscribed for the life of the view model
+            // would scan the history several times a second for a screen the user may never open.
+            _state
+                .map { it.route == Route.INSIGHTS }
+                .distinctUntilChanged()
+                .flatMapLatest { open ->
+                    if (!open) {
+                        flowOf(LocalInsights())
+                    } else {
+                        combine(
+                            dao.observeInsightTotals().catch { emit(InsightTotals()) },
+                            dao.observeTopInsightApps(INSIGHT_TOP_APP_LIMIT).catch { emit(emptyList()) },
+                            dao.observeInsightHours().catch { emit(emptyList()) },
+                            insightsNow.flatMapLatest { anchor ->
+                                dao.observeInsightDays(
+                                    insightsStartEpochMillis(anchor.nowEpochMillis, anchor.zone),
+                                    INSIGHT_DAY_COUNT,
+                                )
+                                    .catch { emit(emptyList()) }
+                                    .map { days -> anchor to days }
+                            },
+                        ) { totals, apps, hours, (anchor, days) ->
+                            // The same clock and the same zone the SQL cutoff was built from, so
+                            // the labels and the query cannot describe different fortnights.
+                            buildLocalInsights(totals, apps, hours, days, anchor.nowEpochMillis, anchor.zone)
+                        }
+                    }
+                }
+                .collect { insights -> _state.value = _state.value.copy(insights = insights) }
         }
         viewModelScope.launch {
             // Counted separately from the page, so a row past the limit is still counted. The
@@ -593,9 +618,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }
     fun selectRoot(tab: RootTab) { _state.value = _state.value.copy(route = Route.ROOT, rootTab = tab, overlay = Overlay.NONE, transientMessage = null) }
     fun navigate(route: Route) { _state.value = _state.value.copy(route = route, overlay = Overlay.NONE, transientMessage = null, phraseInputVisible = false, selectedMetadataField = null) }
-    /** Re-anchors the fourteen-day trend on the day the user is actually looking at. */
+    /** Re-anchors the fourteen-day trend on the day, and the zone, the user is actually in. */
     fun openInsights() {
-        insightsNow.value = System.currentTimeMillis()
+        insightsNow.value = InsightsAnchor(System.currentTimeMillis(), TimeZone.getDefault())
         navigate(Route.INSIGHTS)
     }
 
@@ -1535,15 +1560,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val label = BackupFolder.describe(uri)
-        editPreferences {
-            it[SignalPreferences.BACKUP_FOLDER_URI] = uri.toString()
-            it[SignalPreferences.BACKUP_FOLDER_LABEL] = label
-        }
         _state.value = _state.value.copy(backupFolderLabel = label).withMessage("Backup folder set to $label.")
-        val cadence = backupCadence(_state.value.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING])
-        if (cadence.enabled) {
-            BackupScheduler.apply(app, cadence)
-            BackupScheduler.runOnce(app)
+        viewModelScope.launch {
+            val previous = runCatching { dataStore.data.first()[SignalPreferences.BACKUP_FOLDER_URI] }.getOrNull()
+            try {
+                dataStore.edit {
+                    it[SignalPreferences.BACKUP_FOLDER_URI] = uri.toString()
+                    it[SignalPreferences.BACKUP_FOLDER_LABEL] = label
+                }
+            } catch (error: IOException) {
+                _state.value = _state.value.withMessage("Could not save to storage.")
+                return@launch
+            }
+            // Handed back only once the replacement is stored. Holding on to it would keep this
+            // app's access to a folder the user has stopped pointing it at, and the platform caps
+            // how many of those an app may hold at once.
+            previous?.takeIf { it.isNotBlank() && it != uri.toString() }
+                ?.let { BackupFolder.release(app, Uri.parse(it)) }
+            // Only after the write lands: the worker reads the folder back out of this store, and
+            // starting it first is how a run reports "No backup folder is selected" about the
+            // folder the user just picked.
+            val cadence = backupCadence(_state.value.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING])
+            if (cadence.enabled) {
+                BackupScheduler.apply(app, cadence)
+                BackupScheduler.runOnce(app)
+            }
         }
     }
 
@@ -1575,18 +1616,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (label == SignalPreferences.AUTOMATIC_BACKUP_SETTING) {
             val app = getApplication<Application>()
             val cadence = backupCadence(value)
+            val hasFolder = _state.value.backupFolderLabel != null
             BackupScheduler.apply(app, cadence)
-            // Turning it on with nowhere to write would schedule a job that can only fail. Saying
-            // so now is the difference between a setting that works and one that looks like it does.
-            if (cadence.enabled && _state.value.backupFolderLabel == null) {
-                _state.value = _state.value.copy(
-                    settings = _state.value.settings + (label to value),
-                    overlay = Overlay.NONE,
-                ).withMessage("Pick a backup folder to finish setting this up.")
-                editPreferences { it[settingKey(label)] = value }
-                return
+            _state.value = _state.value.copy(
+                settings = _state.value.settings + (label to value),
+                overlay = Overlay.NONE,
+            ).let {
+                // Turning it on with nowhere to write would schedule a job that can only fail.
+                // Saying so now is the difference between a setting that works and one that looks
+                // like it does.
+                if (cadence.enabled && !hasFolder) it.withMessage("Pick a backup folder to finish setting this up.") else it
             }
-            if (cadence.enabled) BackupScheduler.runOnce(app)
+            viewModelScope.launch {
+                try {
+                    dataStore.edit { it[settingKey(label)] = value }
+                } catch (error: IOException) {
+                    _state.value = _state.value.withMessage("Could not save to storage.")
+                    return@launch
+                }
+                // The worker reads this cadence back out of the store, so starting it before the
+                // write lands means it reads the old value, decides the schedule is off, and
+                // writes no result at all.
+                if (cadence.enabled && hasFolder) BackupScheduler.runOnce(app)
+            }
+            return
         }
         if (label == SignalPreferences.HISTORY_RETENTION_SETTING) {
             HistoryRetentionSettings.set(value)
