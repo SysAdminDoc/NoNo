@@ -28,15 +28,36 @@ class AppCatalogVisibilityTest {
         // The merged manifest is not empty: AGP adds
         // <applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION, a signature permission the app
         // defines for itself so androidx can register a non-exported receiver on API 33+. It
-        // grants nothing outside this app. POST_NOTIFICATIONS is declared for the explicit capture
-        // self-test and requested only when the user runs it. No other platform permission belongs
-        // in the merged manifest.
+        // grants nothing outside this app.
         val fromElsewhere = declared.filterNot { it.startsWith(context.packageName) }
 
+        // Every one of these is accounted for, and the list is exact so an unexplained arrival
+        // fails here rather than shipping:
+        //  - POST_NOTIFICATIONS is declared for the capture self-test and requested only when the
+        //    user runs it.
+        //  - The other four come from WorkManager, which runs the scheduled rule backup.
+        //    WAKE_LOCK keeps the device awake for the seconds a backup takes.
+        //    RECEIVE_BOOT_COMPLETED is how the schedule survives a restart.
+        //    ACCESS_NETWORK_STATE lets WorkManager read connectivity for constraints this app does
+        //    not set; it permits reading the state, never using the network.
+        //    FOREGROUND_SERVICE belongs to WorkManager's expedited path, which this app never asks
+        //    for.
+        // None of them moves data off the device, and INTERNET is still absent, which is checked
+        // separately below because that is the claim the whole app rests on.
         assertEquals(
             "unexpected platform permissions: $fromElsewhere",
-            listOf(Manifest.permission.POST_NOTIFICATIONS),
-            fromElsewhere,
+            listOf(
+                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.WAKE_LOCK,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.RECEIVE_BOOT_COMPLETED,
+                Manifest.permission.FOREGROUND_SERVICE,
+            ).sorted(),
+            fromElsewhere.sorted(),
+        )
+        assertTrue(
+            "this app must never be able to reach the network",
+            declared.none { it == Manifest.permission.INTERNET },
         )
         assertTrue(
             "package visibility must come from <queries>, never a permission",

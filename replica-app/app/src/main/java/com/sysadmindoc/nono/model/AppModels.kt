@@ -1,6 +1,7 @@
 package com.sysadmindoc.nono.model
 
 import com.sysadmindoc.nono.data.CatalogedApp
+import com.sysadmindoc.nono.runtime.BackupStatus
 import kotlinx.serialization.Serializable
 
 enum class RootTab(val label: String) {
@@ -37,6 +38,7 @@ enum class Overlay {
     MUTE_IMPORTANCE,
     HISTORY_STORAGE,
     HISTORY_RETENTION,
+    BACKUP_CADENCE,
     SCHEDULE,
     TRANSFER_EXPORT_PASSPHRASE,
     TRANSFER_IMPORT_PASSPHRASE,
@@ -477,6 +479,10 @@ data class UiState(
     val historyTotalCount: Int = 0,
     /** Aggregates over everything retained, for the Insights screen. */
     val insights: LocalInsights = LocalInsights(),
+    /** The chosen backup folder's short name, or null when none has been picked. */
+    val backupFolderLabel: String? = null,
+    /** What the scheduled backup last did. Written by the worker, read here. */
+    val backupStatus: BackupStatus = BackupStatus(),
     val transferExportRequest: Int = 0,
     /** True when the pending export is history CSV rather than the encrypted rule file. */
     val transferExportIsHistory: Boolean = false,

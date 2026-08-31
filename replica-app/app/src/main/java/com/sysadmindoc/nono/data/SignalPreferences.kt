@@ -36,6 +36,12 @@ object SignalPreferences {
     const val HISTORY_RETENTION_SETTING = "History retention"
     const val HISTORY_STORAGE_SETTING = "Notification history"
 
+    /** Read by the backup worker, which runs with no Activity and no view model. */
+    const val AUTOMATIC_BACKUP_SETTING = "Automatic backups"
+    val BACKUP_FOLDER_URI = stringPreferencesKey("backup_folder_uri")
+    val BACKUP_FOLDER_LABEL = stringPreferencesKey("backup_folder_label")
+    val BACKUP_STATUS = stringPreferencesKey("backup_status")
+
     /**
      * Derives the preference key for a settings-screen label.
      *

@@ -24,7 +24,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sysadmindoc.nono.audit.auditStateFor
 import com.sysadmindoc.nono.data.SignalPreferences
+import com.sysadmindoc.nono.data.BackupFolder
 import com.sysadmindoc.nono.data.BoundedReadResult
+import com.sysadmindoc.nono.data.DeviceBackupKey
 import com.sysadmindoc.nono.data.describeObservedApp
 import com.sysadmindoc.nono.data.loadLaunchableApps
 import com.sysadmindoc.nono.data.mergeAppCatalog
@@ -88,6 +90,11 @@ import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.UndoableAction
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.defaultSettings
+import com.sysadmindoc.nono.runtime.BackupCadence
+import com.sysadmindoc.nono.runtime.BackupScheduler
+import com.sysadmindoc.nono.runtime.BackupStatus
+import com.sysadmindoc.nono.runtime.backupCadence
+import com.sysadmindoc.nono.runtime.decodeBackupStatus
 import com.sysadmindoc.nono.runtime.ListenerHealth
 import com.sysadmindoc.nono.runtime.ListenerActivityLog
 import com.sysadmindoc.nono.runtime.CaptureGate
@@ -255,6 +262,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                     _state.value = _state.value.copy(appCatalog = catalog)
+                }
+        }
+        viewModelScope.launch {
+            // The worker writes its result with no Activity running, so the screen has to watch
+            // the store rather than read it once at startup.
+            dataStore.data
+                .catch { emit(emptyPreferences()) }
+                .map { it[SignalPreferences.BACKUP_FOLDER_LABEL] to it[SignalPreferences.BACKUP_STATUS] }
+                .distinctUntilChanged()
+                .collect { (label, status) ->
+                    _state.value = _state.value.copy(
+                        backupFolderLabel = label?.takeIf { it.isNotBlank() },
+                        backupStatus = decodeBackupStatus(status),
+                    )
                 }
         }
         viewModelScope.launch {
@@ -911,8 +932,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
             }
-            // Parsing, base64 and any key derivation stay on this dispatcher.
-            val result = RuleTransfer.importRules(encoded)
+            // Parsing, base64 and any key derivation stay on this dispatcher. The device key is
+            // offered so a scheduled backup restores through the same picker as any other file;
+            // it opens nothing else, and a file from another device is refused by name.
+            val result = RuleTransfer.importRules(encoded, deviceKey = DeviceBackupKey.get())
             withContext(Dispatchers.Main.immediate) { applyImportResult(encoded, result) }
         }
     }
@@ -1498,7 +1521,73 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return if (restored == null) current to false else restored to true
     }
 
+    /**
+     * Records the folder the user picked and starts a first backup straight away.
+     *
+     * The grant is taken persistably here, because the job that uses it runs when this process is
+     * gone. A provider that refuses to hand over a lasting grant is reported now rather than at
+     * the first scheduled run, which could be a day later.
+     */
+    fun setBackupFolder(uri: Uri) {
+        val app = getApplication<Application>()
+        if (!BackupFolder.persist(app, uri)) {
+            _state.value = _state.value.withMessage("That folder did not grant lasting access.")
+            return
+        }
+        val label = BackupFolder.describe(uri)
+        editPreferences {
+            it[SignalPreferences.BACKUP_FOLDER_URI] = uri.toString()
+            it[SignalPreferences.BACKUP_FOLDER_LABEL] = label
+        }
+        _state.value = _state.value.copy(backupFolderLabel = label).withMessage("Backup folder set to $label.")
+        val cadence = backupCadence(_state.value.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING])
+        if (cadence.enabled) {
+            BackupScheduler.apply(app, cadence)
+            BackupScheduler.runOnce(app)
+        }
+    }
+
+    /** Stops the schedule and hands the folder grant back. */
+    fun clearBackupFolder() {
+        val app = getApplication<Application>()
+        viewModelScope.launch {
+            val stored = dataStore.data.catch { emit(emptyPreferences()) }.first()[SignalPreferences.BACKUP_FOLDER_URI]
+            stored?.takeIf { it.isNotBlank() }?.let { BackupFolder.release(app, Uri.parse(it)) }
+            BackupScheduler.apply(app, BackupCadence.OFF)
+            editPreferences {
+                it.remove(SignalPreferences.BACKUP_FOLDER_URI)
+                it.remove(SignalPreferences.BACKUP_FOLDER_LABEL)
+                it.remove(SignalPreferences.BACKUP_STATUS)
+                it[settingKey(SignalPreferences.AUTOMATIC_BACKUP_SETTING)] = BackupCadence.OFF.label
+            }
+            _state.value = _state.value
+                .copy(
+                    backupFolderLabel = null,
+                    backupStatus = BackupStatus(),
+                    settings = _state.value.settings +
+                        (SignalPreferences.AUTOMATIC_BACKUP_SETTING to BackupCadence.OFF.label),
+                )
+                .withMessage("Backup folder cleared.")
+        }
+    }
+
     fun setSetting(label: String, value: String) {
+        if (label == SignalPreferences.AUTOMATIC_BACKUP_SETTING) {
+            val app = getApplication<Application>()
+            val cadence = backupCadence(value)
+            BackupScheduler.apply(app, cadence)
+            // Turning it on with nowhere to write would schedule a job that can only fail. Saying
+            // so now is the difference between a setting that works and one that looks like it does.
+            if (cadence.enabled && _state.value.backupFolderLabel == null) {
+                _state.value = _state.value.copy(
+                    settings = _state.value.settings + (label to value),
+                    overlay = Overlay.NONE,
+                ).withMessage("Pick a backup folder to finish setting this up.")
+                editPreferences { it[settingKey(label)] = value }
+                return
+            }
+            if (cadence.enabled) BackupScheduler.runOnce(app)
+        }
         if (label == SignalPreferences.HISTORY_RETENTION_SETTING) {
             HistoryRetentionSettings.set(value)
             pruneHistory()

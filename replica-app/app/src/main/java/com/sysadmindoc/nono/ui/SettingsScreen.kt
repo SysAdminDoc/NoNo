@@ -33,6 +33,8 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Forum
+import androidx.compose.material.icons.rounded.FolderOff
+import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.ImportExport
@@ -79,6 +81,12 @@ import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.data.SignalPreferences
+import com.sysadmindoc.nono.runtime.BackupOutcome
+import com.sysadmindoc.nono.runtime.BackupStatus
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SettingsScreen(state: UiState, model: MainViewModel) {
@@ -96,6 +104,9 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         ActivityResultContracts.RequestPermission(),
         model::onCaptureSelfTestPermissionResult,
     )
+    val backupFolderLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri == null) model.showMessage("Backup folder unchanged.") else model.setBackupFolder(uri)
+    }
     LaunchedEffect(state.transferExportRequest) {
         if (state.transferExportRequest == 0) return@LaunchedEffect
         if (state.transferExportIsHistory) {
@@ -140,7 +151,31 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                 SignalDivider()
                 PreferenceRow(Icons.Rounded.Download, "Export metadata", "Every retained record, as CSV.", value = "CSV", onClick = model::beginHistoryExport)
                 SignalDivider()
-                PreferenceRow(Icons.Rounded.Backup, "Automatic backups", value = "Off", unavailable = NO_AUTOMATIC_BACKUPS)
+                PreferenceRow(
+                    Icons.Rounded.Backup,
+                    "Automatic backups",
+                    describeBackupStatus(state.backupStatus),
+                    value = state.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING],
+                    onClick = { model.showOverlay(Overlay.BACKUP_CADENCE) },
+                )
+                SignalDivider()
+                PreferenceRow(
+                    Icons.Rounded.FolderOpen,
+                    "Backup folder",
+                    BACKUP_FOLDER_EXPLANATION,
+                    value = state.backupFolderLabel ?: "Not set",
+                    onClick = { backupFolderLauncher.launch(null) },
+                )
+                if (state.backupFolderLabel != null) {
+                    SignalDivider()
+                    PreferenceRow(
+                        Icons.Rounded.FolderOff,
+                        "Clear backup folder",
+                        "Stops backups and hands the folder access back to Android.",
+                        destructive = true,
+                        onClick = model::clearBackupFolder,
+                    )
+                }
                 SignalDivider()
                 PreferenceRow(
                     if (state.capturePaused) Icons.Rounded.PauseCircle else Icons.Rounded.Notifications,
@@ -228,7 +263,27 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
 }
 
 private const val NO_SUPPORT_CHANNEL = "This reconstruction has no support channel."
-private const val NO_AUTOMATIC_BACKUPS = "Use encrypted export instead."
+/**
+ * States the limit of the scheduled backup up front.
+ *
+ * A job running on a timer has nobody to ask for a passphrase, so it encrypts with a key held by
+ * this device. That is what makes the file unreadable anywhere else, and the user needs to know it
+ * before they rely on the backup for a phone they no longer have.
+ */
+private const val BACKUP_FOLDER_EXPLANATION =
+    "Backups are encrypted with a key held by this device and restore only here. " +
+        "Use the encrypted export to move rules to another phone."
+
+/** What Settings says the schedule last did. */
+internal fun describeBackupStatus(status: BackupStatus): String = when (status.outcome) {
+    BackupOutcome.NEVER_RUN -> "No backup has run yet."
+    BackupOutcome.SUCCEEDED -> "Last backup ${formatBackupTime(status.atEpochMillis)}, " +
+        "${status.ruleCount} ${if (status.ruleCount == 1) "rule" else "rules"}."
+    BackupOutcome.FAILED -> "Last attempt failed ${formatBackupTime(status.atEpochMillis)}. ${status.detail}"
+}
+
+private fun formatBackupTime(epochMillis: Long): String =
+    SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(epochMillis))
 private const val NO_ACTION_ENGINE = "No notification action engine is present."
 
 private fun openUrl(context: android.content.Context, url: String) {

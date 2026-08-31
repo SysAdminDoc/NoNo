@@ -7,7 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Rules can back themselves up on a schedule. Pick a folder and choose daily or weekly, and a copy is written there without the app being open and across a restart. Five files are kept, older ones go, and nothing else in the folder is touched. Because a job on a timer has nobody to ask for a passphrase, it encrypts with a key held by this device, so those files restore here and nowhere else. Moving rules to another phone is still the encrypted export with a passphrase, and the app says which is which. Notification history is never in a scheduled backup. If access to the folder is withdrawn, Settings says so instead of leaving a schedule that silently does nothing.
 - Explore has an Insights screen. It counts what History already holds and shows the total captured, the apps you hear from most, a bar per hour of the day, and one per day for the last two weeks, along with how often each saved rule would have fired. Nothing new is captured to build it. Group summaries stay out of the counts the same way they stay out of every other count in the app, and the screen says so rather than leaving two numbers to contradict each other. With no history yet, it explains that instead of drawing empty charts.
+
+### Changed
+
+- The app now carries four more install-time permissions, all of them from the library that runs the backup schedule: WAKE_LOCK, RECEIVE_BOOT_COMPLETED, ACCESS_NETWORK_STATE and FOREGROUND_SERVICE. None of them sends anything anywhere. The app still has no internet permission, and a test on a real device checks the exact list so nothing can arrive unnoticed.
 
 ## [1.4.1] (2026-08-31)
 

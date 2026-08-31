@@ -55,6 +55,12 @@ Android does not say who dismissed the bundle.
 - Permissions: normal capture uses Android's notification-listener access. On Android 13 and newer,
   `POST_NOTIFICATIONS` is requested only after the user taps the capture self-test, because that
   check must post one temporary notification. Denying it does not affect normal capture.
+  WorkManager, which runs the scheduled rule backup, adds four install-time permissions to the
+  merged manifest: `WAKE_LOCK` for the seconds a backup takes, `RECEIVE_BOOT_COMPLETED` so the
+  schedule survives a restart, `ACCESS_NETWORK_STATE` for connectivity constraints this app does
+  not set, and `FOREGROUND_SERVICE` for an expedited path this app never asks for. None of them
+  moves data anywhere. `INTERNET` is still absent, and `AppCatalogVisibilityTest` asserts the exact
+  permission list on a real device so an unexplained arrival fails the suite.
 
 ## Requirements
 
@@ -230,14 +236,24 @@ control rather than leaving the reader to infer it:
   failure timestamps. Titles and bodies are never persisted. A posting app can put any string in
   the category field, so only Android's documented category values cross the sanitizer. Unknown
   values in older rows are cleared when the app or listener starts.
-- **Rule transfer and launcher shortcuts work; scheduled backups do not.** Encrypted rule
+- **Rule transfer, launcher shortcuts, and scheduled rule backups all work.** Encrypted rule
   import/export runs through Android's Storage Access Framework with a passphrase, a preview, a
   conflict choice, cancellation and error handling, and no notification history in the file. A
   rule from a file is given an id from this device rather than the one the file names. Pinning a
   rule to the launcher works on any launcher that supports pinned shortcuts, and says so when the
   launcher refuses. Channel pseudonyms are tied to one install, so imported channel filters are
-  blocked and labelled until the user selects a local channel. There is no backup scheduler:
-  nothing runs on a timer.
+  blocked and labelled until the user selects a local channel.
+- **Scheduled backups cover rules, not history, and restore only on the device that wrote them.**
+  Pick a folder and a cadence in Settings and a copy of the saved rules is written there daily or
+  weekly, without the app being open and across a restart. Five files are kept and older ones are
+  removed; nothing in the folder that this app did not write is ever touched. A job running on a
+  timer has nobody to ask for a passphrase, so it encrypts with a key held in this device's
+  keystore. That key cannot be copied out, which is what makes the file unreadable on another
+  phone, and the encrypted export with a passphrase stays the way to move rules between devices.
+  Losing the key, by uninstalling or clearing app data, makes the existing files unreadable.
+  Before every run the folder grant is checked, and a grant the user withdrew is reported in
+  Settings rather than leaving a schedule that quietly does nothing. Notification history is never
+  included; the history CSV remains a separate, explicit export.
 - **Dark, light, system, and wallpaper-matched themes are available** and the choice is persisted.
   Wallpaper matching appears on Android 12 and newer, and keeps the static light or dark palette
   when no derived accent passes the contrast checks. The app ships no translated resources, so the

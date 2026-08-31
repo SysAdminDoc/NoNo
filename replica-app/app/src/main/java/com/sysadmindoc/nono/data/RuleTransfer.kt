@@ -13,6 +13,7 @@ import java.security.SecureRandom
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import javax.crypto.Cipher
+import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
@@ -27,6 +28,16 @@ private const val LEGACY_FORMAT_VERSION = 1
 private const val LEGACY_PBKDF2_ITERATIONS = 120_000
 
 const val PBKDF2_KDF_NAME = "pbkdf2-sha256"
+
+/**
+ * The scheduled backup's key handling.
+ *
+ * A job that runs while nobody is looking cannot ask for a passphrase, so it encrypts with a key
+ * held by the device instead. That key never leaves the device it was created on, which is exactly
+ * why a scheduled backup restores here and nowhere else. The passphrase export stays the portable
+ * path.
+ */
+const val DEVICE_KEY_KDF_NAME = "android-keystore-aes-gcm"
 
 /** OWASP's floor for PBKDF2-HMAC-SHA256. Written into the file so it can be raised again later. */
 const val PBKDF2_ITERATIONS = 600_000
@@ -87,6 +98,7 @@ enum class ImportRejection(val message: String) {
     UNSUPPORTED_VERSION("That file was written by a version NoNo does not understand."),
     BAD_PARAMETERS("That file's encryption settings are not valid."),
     WRONG_PASSPHRASE("The passphrase or the file is not valid."),
+    DEVICE_KEY_UNAVAILABLE("That backup can only be restored on the device that wrote it."),
     TOO_MANY_RULES("That file declares more rules than NoNo will import."),
     FIELD_TOO_LONG("A value in that file is longer than NoNo will import."),
 }
@@ -161,10 +173,39 @@ object RuleTransfer {
         return transferJson.encodeToString(PortableRuleFile.serializer(), file)
     }
 
+    /**
+     * Encrypts with a key this device holds, for a backup nobody is present to unlock.
+     *
+     * @param deviceKey an AES key that never leaves this device. The file it writes is readable
+     * only where that key lives, which is stated in the UI rather than left to be discovered.
+     */
+    fun exportRulesForDevice(rules: List<SignalRule>, deviceKey: SecretKey): String {
+        val rulePayload = encodeRules(rules).toByteArray(StandardCharsets.UTF_8)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        // The keystore generates the IV itself and refuses one supplied by the caller, which is
+        // what `setRandomizedEncryptionRequired` buys: no code path here can reuse an IV under a
+        // key that never rotates. Read it back rather than choosing it.
+        cipher.init(Cipher.ENCRYPT_MODE, deviceKey)
+        val iv = cipher.iv
+        require(iv != null && iv.size == IV_BYTES) { "unexpected GCM nonce length" }
+        cipher.updateAAD(headerAad(TRANSFER_FORMAT_VERSION, DEVICE_KEY_KDF_NAME, 0))
+        val encrypted = cipher.doFinal(rulePayload)
+        return transferJson.encodeToString(
+            PortableRuleFile.serializer(),
+            PortableRuleFile(
+                encrypted = true,
+                payload = encodeBase64(encrypted),
+                iv = encodeBase64(iv),
+                kdf = DEVICE_KEY_KDF_NAME,
+            ),
+        )
+    }
+
     fun importRules(
         encodedFile: String,
         passphrase: CharArray? = null,
         cancelled: () -> Boolean = { false },
+        deviceKey: SecretKey? = null,
     ): RuleImportResult {
         if (cancelled()) return RuleImportResult.Cancelled
         // Checked before parsing: a caller that read the file itself may not have bounded it.
@@ -182,7 +223,14 @@ object RuleTransfer {
         if (file.payload.length.toLong() > RuleTransferLimits.MAX_BASE64_CHARS) {
             return RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE)
         }
-        if (file.encrypted && passphrase == null) return RuleImportResult.NeedsPassphrase
+        // A device-key file has no passphrase to ask for, so asking would be a dead end. Without
+        // the key it is unreadable, and saying that is more useful than a passphrase prompt no
+        // input can satisfy.
+        val deviceKeyFile = file.encrypted && file.kdf == DEVICE_KEY_KDF_NAME
+        if (deviceKeyFile && deviceKey == null) {
+            return RuleImportResult.InvalidFile(ImportRejection.DEVICE_KEY_UNAVAILABLE)
+        }
+        if (file.encrypted && !deviceKeyFile && passphrase == null) return RuleImportResult.NeedsPassphrase
 
         // Set by whichever check refuses the file, so the message names what actually failed
         // rather than being guessed from whether the file claimed to be encrypted.
@@ -197,6 +245,20 @@ object RuleTransfer {
                 return@runCatching null
             }
             if (!file.encrypted) return@runCatching payload
+            if (deviceKeyFile) {
+                failure = ImportRejection.BAD_PARAMETERS
+                // The device path writes neither of these. A file carrying them is claiming two
+                // key derivations at once, and only one of them can be the one that encrypted it.
+                if (file.formatVersion != TRANSFER_FORMAT_VERSION) return@runCatching null
+                if (file.salt != null || file.iterations != null) return@runCatching null
+                val deviceIv = decodeBase64(file.iv ?: return@runCatching null)
+                if (deviceIv.size != IV_BYTES) return@runCatching null
+                failure = ImportRejection.DEVICE_KEY_UNAVAILABLE
+                val deviceCipher = Cipher.getInstance("AES/GCM/NoPadding")
+                deviceCipher.init(Cipher.DECRYPT_MODE, deviceKey, GCMParameterSpec(128, deviceIv))
+                deviceCipher.updateAAD(headerAad(file.formatVersion, DEVICE_KEY_KDF_NAME, 0))
+                return@runCatching deviceCipher.doFinal(payload)
+            }
             failure = ImportRejection.BAD_PARAMETERS
             // Salt and IV are fixed-width by construction. Checking them here refuses a file that
             // would otherwise reach the key derivation with parameters no export ever writes.
