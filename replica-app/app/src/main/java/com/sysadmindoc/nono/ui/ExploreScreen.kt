@@ -111,10 +111,7 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
                 starters.forEachIndexed { index, starter ->
-                    StarterRow(starter) {
-                        model.updateDraft { starter.draft }
-                        model.navigate(Route.RULE_BUILDER)
-                    }
+                    StarterRow(starter) { model.startRuleFromSuggestion(starter.draft) }
                     if (index != starters.lastIndex) SignalDivider()
                 }
             }

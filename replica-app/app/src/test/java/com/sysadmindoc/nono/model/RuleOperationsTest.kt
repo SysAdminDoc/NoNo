@@ -139,4 +139,66 @@ class RuleOperationsTest {
         assertEquals(MISSING_FIELD_MESSAGE, validateRule(SignalRule(action = "nothing")))
         assertNull(validateRule(SignalRule(action = "Mute")))
     }
+
+    @Test
+    fun `a rule built without an id has not been saved`() {
+        assertEquals(UNSAVED_RULE_ID, SignalRule().id)
+        assertEquals(UNSAVED_RULE_ID, SignalRule(name = "Quiet group chats", app = "Messages").id)
+    }
+
+    @Test
+    fun `saving a suggestion never replaces an existing rule`() {
+        // Explore starters carry no id. Before this, the model default was 1 and saving one
+        // overwrote whichever rule already held that id.
+        val suggestion = SignalRule(name = "Quiet group chats", app = "Messages", phrase = "group", action = "Mute")
+
+        val saved = resolveSavedRule(rules, suggestion)
+        val updated = upsertRule(rules, saved)
+
+        assertEquals(4L, saved.id)
+        assertEquals(4, updated.size)
+        assertEquals("First", updated.first { it.id == 1L }.name)
+        assertEquals("Quiet group chats", updated.first { it.id == 4L }.name)
+    }
+
+    @Test
+    fun `an allocated id cannot collide with a saved rule`() {
+        val gapped = listOf(SignalRule(id = 2L, name = "Two"), SignalRule(id = 9L, name = "Nine"))
+
+        val saved = resolveSavedRule(gapped, SignalRule(name = "New"))
+
+        assertEquals(10L, saved.id)
+        assertTrue(gapped.none { it.id == saved.id })
+    }
+
+    @Test
+    fun `editing a disabled rule leaves it disabled`() {
+        val disabled = listOf(SignalRule(id = 1L, name = "Off rule", enabled = false))
+
+        val saved = resolveSavedRule(disabled, disabled.first().copy(phrase = "invoice", action = "Mute"))
+        val updated = upsertRule(disabled, saved)
+
+        assertEquals(1, updated.size)
+        assertEquals(1L, saved.id)
+        assertEquals(false, updated.single().enabled)
+        assertEquals("invoice", updated.single().phrase)
+    }
+
+    @Test
+    fun `editing a saved rule replaces it rather than adding a copy`() {
+        val saved = resolveSavedRule(rules, rules[1].copy(name = "Renamed"))
+        val updated = upsertRule(rules, saved)
+
+        assertEquals(3, updated.size)
+        assertEquals(2L, saved.id)
+        assertEquals("Renamed", updated.first { it.id == 2L }.name)
+    }
+
+    @Test
+    fun `a blank name is filled in without touching the id`() {
+        val saved = resolveSavedRule(rules, SignalRule(name = "", action = "Mute"))
+
+        assertEquals("Rule 4", saved.name)
+        assertEquals(4L, saved.id)
+    }
 }

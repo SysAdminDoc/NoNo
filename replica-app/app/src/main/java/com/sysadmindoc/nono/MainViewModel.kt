@@ -38,6 +38,7 @@ import com.sysadmindoc.nono.model.applyToRule
 import com.sysadmindoc.nono.model.duplicateRule as duplicateRuleIn
 import com.sysadmindoc.nono.model.nextRuleId as nextRuleIdFor
 import com.sysadmindoc.nono.model.removeRule
+import com.sysadmindoc.nono.model.resolveSavedRule
 import com.sysadmindoc.nono.model.upsertRule
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.UiState
@@ -562,6 +563,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /**
+     * Opens a starter suggestion as a new rule.
+     *
+     * The suggestion is a template, not a saved rule, so it is stripped of any id before it
+     * reaches the builder. Editing state is cleared for the same reason.
+     */
+    fun startRuleFromSuggestion(suggestion: SignalRule) {
+        _state.value = _state.value.copy(
+            route = Route.RULE_BUILDER,
+            overlay = Overlay.NONE,
+            draft = suggestion.copy(id = UNSAVED_RULE_ID),
+            selectedRuleId = null,
+            validationError = null,
+            transientMessage = null,
+        )
+    }
+
     fun createRuleFromSelectedHistory() {
         val record = _state.value.history.firstOrNull { it.id == _state.value.selectedHistoryId }
         if (record == null) {
@@ -620,12 +638,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val existing = _state.value.rules
-        val isNew = current.id == UNSAVED_RULE_ID || existing.none { it.id == current.id }
-        val draft = current.copy(
-            id = if (isNew) nextRuleIdFor(existing) else current.id,
-            name = current.name.ifBlank { "Rule ${existing.size + 1}" },
-            enabled = true,
-        )
+        val draft = resolveSavedRule(existing, current)
         val rules = upsertRule(existing, draft)
         _state.value = _state.value.copy(
             route = Route.ROOT,

@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - A notification listener started by the system, with the app never opened, now reads your saved retention period before it prunes anything. It previously used the 30 day default until you opened the app, so a saved 7 day or Forever choice was ignored in the background.
+- Saving a rule starter from Explore no longer overwrites an existing rule. Starters carried the id every new rule got by default, so saving one replaced whatever rule already held it.
+- Editing a rule you had switched off no longer switches it back on. Save used to force every rule it wrote to enabled.
 
 ## [1.4.0] (2026-08-31)
 

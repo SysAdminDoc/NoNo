@@ -49,7 +49,12 @@ const val UNSAVED_RULE_ID = 0L
 
 @Serializable
 data class SignalRule(
-    val id: Long = 1L,
+    /**
+     * [UNSAVED_RULE_ID] until the repository allocates one. A draft that arrives carrying a real
+     * id can replace whichever saved rule happens to share it, which is how an Explore suggestion
+     * used to overwrite rule 1.
+     */
+    val id: Long = UNSAVED_RULE_ID,
     val name: String = "Test rule",
     val app: String = "any app",
     /** Stable package identity used for matching; [app] remains the display label. */
