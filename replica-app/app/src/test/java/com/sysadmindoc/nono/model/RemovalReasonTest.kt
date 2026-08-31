@@ -15,7 +15,9 @@ import org.junit.Test
 class RemovalReasonTest {
 
     private val api26 = 26
+    private val api36 = 36
     private val api37 = 37
+    private val bundleDismissedCode = 24
 
     @Test
     fun `a platform below api 26 supplies no reason and none is recorded`() {
@@ -57,6 +59,17 @@ class RemovalReasonTest {
     }
 
     @Test
+    fun `bundle dismissal maps only on api 37 and does not claim a user action`() {
+        assertEquals(RemovalReason.UNKNOWN, RemovalReason.fromPlatform(bundleDismissedCode, api26))
+        assertEquals(RemovalReason.UNKNOWN, RemovalReason.fromPlatform(bundleDismissedCode, api36))
+
+        val reason = RemovalReason.fromPlatform(bundleDismissedCode, api37)
+        assertEquals(RemovalReason.BUNDLE_DISMISSED, reason)
+        assertEquals("Cleared with its bundle", reason.label)
+        assertFalse(reason.userDismissed)
+    }
+
+    @Test
     fun `every state of the app underneath reads as the app changing, not as the user acting`() {
         val appState = listOf(5, 6, 7, 14, 15, 17, 20, 21)
         for (code in appState) {
@@ -75,7 +88,7 @@ class RemovalReasonTest {
 
     @Test
     fun `a code this build has never seen stays unknown`() {
-        for (code in listOf(0, -1, 24, 99, Int.MAX_VALUE, Int.MIN_VALUE)) {
+        for (code in listOf(0, -1, 25, 99, Int.MAX_VALUE, Int.MIN_VALUE)) {
             assertEquals("code $code", RemovalReason.UNKNOWN, RemovalReason.fromPlatform(code, api37))
         }
     }

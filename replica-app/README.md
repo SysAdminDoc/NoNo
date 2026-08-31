@@ -22,6 +22,10 @@ without notification content or posting-app identifiers.
 Rule deletion is immediate and recoverable. Deleting one rule offers Undo, as does deleting the
 whole list. A second deletion restores the earlier pending rule before it takes over the snackbar.
 
+Android 17 adds a removal reason for a notification cleared with its organizer bundle. History
+labels that reason "Cleared with its bundle" but does not put it in the Dismissed filter because
+Android does not say who dismissed the bundle.
+
 ![NoNo rules screen with a wallpaper-matched accent](docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
 ![NoNo theme chooser with wallpaper matching available](docs/screenshots/nono-theme-dialog-v1.4.1.png)

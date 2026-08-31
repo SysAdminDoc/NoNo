@@ -50,6 +50,9 @@ and relative capture age. Its type does not accept notification content or ident
 - `SignalDatabase.get` returns one instance per process. Room's invalidation tracker only notifies
   observers registered on the instance that performed the write, so the listener, the view model,
   and the widget must share one or the history flow never updates.
+- `RemovalReason.fromPlatform` translates only codes documented for the running API. Android 17's
+  bundle-dismissal code is 24 and maps to `BUNDLE_DISMISSED` only on API 37 or newer. It does not
+  set `userDismissed` because the platform describes the dismissed bundle, not the actor.
 - **DataStore** holds onboarding state, the rule list (`RuleStore` version 5, encoded by
   `RuleCodec`), and every observed settings value. It also lives under `noBackupFilesDir`, and a
   corrupt store is replaced with defaults rather than crashing the process.

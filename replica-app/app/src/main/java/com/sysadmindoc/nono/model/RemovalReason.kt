@@ -44,6 +44,9 @@ enum class RemovalReason(val label: String, val userDismissed: Boolean = false) 
     /** The assistant cancelled it. */
     ASSISTANT("Cancelled by the assistant"),
 
+    /** Android cleared it with the notification organizer bundle that contained it. */
+    BUNDLE_DISMISSED("Cleared with its bundle"),
+
     /** The platform reported an error posting or keeping it. */
     PLATFORM_ERROR("Android reported an error"),
     ;
@@ -84,6 +87,9 @@ enum class RemovalReason(val label: String, val userDismissed: Boolean = false) 
          */
         private const val REASON_LOCKDOWN = 23
 
+        /** Confirmed in both installed API 37 SDK android.jar files on 2026-08-31. */
+        private const val REASON_BUNDLE_DISMISSED = 24
+
         /**
          * Maps a platform reason code, or [UNKNOWN] when there is nothing to map.
          *
@@ -113,6 +119,7 @@ enum class RemovalReason(val label: String, val userDismissed: Boolean = false) 
                 REASON_CLEAR_DATA,
                 -> APP_STATE_CHANGED
                 REASON_ASSISTANT_CANCEL -> ASSISTANT
+                REASON_BUNDLE_DISMISSED -> if (sdkInt >= 37) BUNDLE_DISMISSED else UNKNOWN
                 // Lockdown, and anything a later Android adds. An unrecognised code is not a
                 // reason to invent one.
                 REASON_LOCKDOWN -> UNKNOWN

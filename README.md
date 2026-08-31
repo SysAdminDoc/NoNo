@@ -41,6 +41,9 @@ contains the app version, listener state, counters, and last capture age, with n
 content or posting-app identifiers.
 Deleting one rule or clearing the list now offers Undo. A second deletion restores the first
 pending rule before replacing its snackbar, so a quick pair of taps cannot lose both changes.
+On Android 17, History also labels a notification that Android cleared with its organizer bundle.
+The platform does not identify who dismissed that bundle, so NoNo does not count it as a user
+dismissal.
 The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
 [`design-qa.md`](design-qa.md).
 

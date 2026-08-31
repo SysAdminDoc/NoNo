@@ -1,6 +1,6 @@
 # Testing strategy
 
-- Pure Kotlin unit tests cover action-catalog order, exact validation copy, sentence rendering, history filtering, the one-shot self-test key, the content-free diagnostics report, category allowlisting, and channel transfer across two install keys.
+- Pure Kotlin unit tests cover action-catalog order, exact validation copy, sentence rendering, history filtering, API-gated removal-reason tables, the one-shot self-test key, the content-free diagnostics report, category allowlisting, and channel transfer across two install keys.
 - An instrumented round-trip posts the self-test notification through Android, observes the real listener callback, and proves that History and ingestion counters do not change.
 - An instrumented Room test proves that the startup scrub keeps known categories and removes unknown app-authored strings from older rows.
 - Stateful view-model tests delete and restore a complete rule, replace a pending undo with a second deletion, restore a delete-all batch, verify persistence, and refuse an expired undo.
