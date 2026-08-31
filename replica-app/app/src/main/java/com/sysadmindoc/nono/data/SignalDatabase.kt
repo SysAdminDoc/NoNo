@@ -411,6 +411,10 @@ interface NotificationDao {
     @Query("DELETE FROM notification_history WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    /** Read before a delete, so the row can be put back if the user takes it back. */
+    @Query("SELECT * FROM notification_history WHERE id = :id LIMIT 1")
+    suspend fun readById(id: Long): NotificationEntity?
+
     /**
      * Replaces the raw identifiers left by an older build.
      *

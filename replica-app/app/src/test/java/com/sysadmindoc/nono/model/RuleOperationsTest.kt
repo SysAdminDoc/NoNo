@@ -72,10 +72,39 @@ class RuleOperationsTest {
     }
 
     @Test
-    fun `next id is unique against the highest existing id`() {
+    fun `the next id is the lowest one no rule is using`() {
         assertEquals(4L, nextRuleId(rules))
         assertEquals(1L, nextRuleId(emptyList()))
-        assertEquals(11L, nextRuleId(listOf(SignalRule(id = 10L))))
+        // The lowest free id, not one past the highest: gaps get reused.
+        assertEquals(1L, nextRuleId(listOf(SignalRule(id = 10L))))
+        assertEquals(2L, nextRuleId(listOf(SignalRule(id = 1L), SignalRule(id = 3L))))
+    }
+
+    @Test
+    fun `a rule holding the largest possible id does not wrap the next one`() {
+        // max + 1 wraps to Long.MIN_VALUE. Every later allocation then returned that same value,
+        // so saving two new rules kept only the second and duplicating one dropped the copy.
+        val extremes = listOf(
+            SignalRule(id = Long.MAX_VALUE, name = "MAX"),
+            SignalRule(id = Long.MIN_VALUE, name = "MIN"),
+        )
+
+        val allocated = nextRuleId(extremes)
+
+        assertEquals(1L, allocated)
+        assertTrue(extremes.none { it.id == allocated })
+    }
+
+    @Test
+    fun `two new rules saved in a row do not collide`() {
+        val existing = listOf(SignalRule(id = Long.MAX_VALUE, name = "MAX", action = RECORD_ONLY_ACTION))
+
+        val first = upsertRule(existing, resolveSavedRule(existing, SignalRule(name = "First", action = RECORD_ONLY_ACTION)))
+        val second = upsertRule(first, resolveSavedRule(first, SignalRule(name = "Second", action = RECORD_ONLY_ACTION)))
+
+        assertEquals(3, second.size)
+        assertEquals(listOf("MAX", "First", "Second"), second.map { it.name })
+        assertEquals(3, second.map { it.id }.distinct().size)
     }
 
     @Test
@@ -225,7 +254,7 @@ class RuleOperationsTest {
 
         val saved = resolveSavedRule(gapped, SignalRule(name = "New"))
 
-        assertEquals(10L, saved.id)
+        assertEquals(1L, saved.id)
         assertTrue(gapped.none { it.id == saved.id })
     }
 

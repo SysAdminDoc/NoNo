@@ -38,6 +38,33 @@ function Get-CatalogVersion([string]$catalog, [string]$key) {
     if ($match) { $match.Matches[0].Groups[1].Value } else { $null }
 }
 
+<#
+.SYNOPSIS
+    Runs a native command and returns its combined output as plain strings.
+
+.DESCRIPTION
+    Common.ps1 spells out why 2>&1 cannot be used here: under Windows PowerShell 5.1 a redirected
+    native stderr line becomes an ErrorRecord, and this script sets $ErrorActionPreference = Stop,
+    which turns that into a terminating error. java -version writes its banner to stderr, and
+    apksigner on JDK 21 writes restricted-method warnings there, so either would abort the run
+    after both builds had already been paid for. Redirecting through files avoids the pipeline.
+#>
+function Invoke-NativeCapture {
+    param([Parameter(Mandatory = $true)][string]$FilePath, [string[]]$Arguments = @())
+    $out = [System.IO.Path]::GetTempFileName()
+    $err = [System.IO.Path]::GetTempFileName()
+    try {
+        $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput $out -RedirectStandardError $err
+        $lines = @()
+        $lines += @(Get-Content -LiteralPath $out -ErrorAction SilentlyContinue)
+        $lines += @(Get-Content -LiteralPath $err -ErrorAction SilentlyContinue)
+        [pscustomobject]@{ ExitCode = $process.ExitCode; Lines = @($lines | Where-Object { $null -ne $_ }) }
+    } finally {
+        Remove-Item -LiteralPath $out, $err -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Get-LatestBuildTools {
     $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
     $dir = Get-ChildItem (Join-Path $sdk 'build-tools') -Directory -ErrorAction SilentlyContinue |
@@ -78,7 +105,9 @@ foreach ($index in 1, 2) {
 
     Push-Location $checkout
     try {
-        & (Join-Path $checkout 'gradlew.bat') --no-daemon --max-workers=1 assemble --console=plain -x verifyReleaseSigning
+        # The copies build without credentials on purpose: the unsigned artifact is what is
+        # compared, and signing must not vary between the two.
+        & (Join-Path $checkout 'gradlew.bat') --no-daemon --max-workers=1 assemble --console=plain -PallowUnsignedRelease=true
         if ($LASTEXITCODE -ne 0) { throw "Release build failed in checkout $index." }
     } finally {
         Pop-Location
@@ -113,17 +142,17 @@ if ($reproducible -and -not $SkipSigning) {
         --v1-signing-enabled false --v2-signing-enabled true --v3-signing-enabled true $signed
     if ($LASTEXITCODE -ne 0) { throw 'apksigner sign failed.' }
 
-    $verify = & $apksigner verify --print-certs --verbose $signed 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "apksigner verify failed:`n$($verify -join [Environment]::NewLine)" }
+    $verify = Invoke-NativeCapture $apksigner @('verify', '--print-certs', '--verbose', $signed)
+    if ($verify.ExitCode -ne 0) { throw "apksigner verify failed:`n$($verify.Lines -join [Environment]::NewLine)" }
     # apksigner labels this "Signer #1" for v1/v2 and "V3.0 Signer" for a v3-only signature.
-    $certLine = $verify | Select-String -Pattern 'Signer.*certificate SHA-256 digest: ([0-9a-f]+)' | Select-Object -First 1
-    if (-not $certLine) { throw "apksigner verify printed no signer certificate:`n$($verify -join [Environment]::NewLine)" }
+    $certLine = $verify.Lines | Select-String -Pattern 'Signer.*certificate SHA-256 digest: ([0-9a-f]+)' | Select-Object -First 1
+    if (-not $certLine) { throw "apksigner verify printed no signer certificate:`n$($verify.Lines -join [Environment]::NewLine)" }
     $signerSha256 = $certLine.Matches[0].Groups[1].Value
     $signedHash = (Get-FileHash -LiteralPath $signed -Algorithm SHA256).Hash.ToLowerInvariant()
 
     # An artifact that says it is debuggable is not a release, whatever it is signed with.
-    $manifestDump = & (Join-Path $buildTools.FullName 'aapt2.exe') dump badging $signed 2>&1
-    if ($manifestDump -match "application-debuggable") { throw 'The signed release APK is debuggable.' }
+    $manifestDump = Invoke-NativeCapture (Join-Path $buildTools.FullName 'aapt2.exe') @('dump', 'badging', $signed)
+    if ($manifestDump.Lines -match 'application-debuggable') { throw 'The signed release APK is debuggable.' }
 }
 
 $provenance = [ordered]@{
@@ -142,7 +171,8 @@ $provenance = [ordered]@{
     }
     toolchain = [ordered]@{
         java_home = $env:JAVA_HOME
-        java_version = ((& java -version 2>&1) | Select-Object -First 1).ToString()
+        java_version = (Invoke-NativeCapture (Join-Path $env:JAVA_HOME 'bin\java.exe') @('-version')).Lines |
+            Select-Object -First 1
         gradle = (Get-Content (Join-Path $root 'gradle\wrapper\gradle-wrapper.properties') |
             Select-String 'gradle-([0-9.]+)-bin' | ForEach-Object { $_.Matches[0].Groups[1].Value })
         agp = Get-CatalogVersion $catalog 'agp'
@@ -157,7 +187,7 @@ $provenance = [ordered]@{
         verified_components = @(Select-String -Path (Join-Path $root 'gradle\verification-metadata.xml') -Pattern '<component ' -ErrorAction SilentlyContinue).Count
     }
     invocation = [ordered]@{
-        command = 'gradlew.bat --no-daemon --max-workers=1 assemble -x verifyReleaseSigning'
+        command = 'gradlew.bat --no-daemon --max-workers=1 assemble -PallowUnsignedRelease=true'
         checkouts = $checkouts
     }
     artifact = [ordered]@{

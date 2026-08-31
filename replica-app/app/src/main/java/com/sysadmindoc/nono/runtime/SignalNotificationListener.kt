@@ -149,16 +149,8 @@ class SignalNotificationListener : NotificationListenerService() {
         val sanitized = sanitizeNotification(notification, pseudonyms, payload, ranking)
         // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
         // payload itself goes no further than this stack frame.
-        val rules = currentRules
-        val evaluation = when {
-            // One policy, shared with the counts: a summary stands for its group rather than
-            // being an arrival, so no rule is tested against it and it is not counted as one.
-            !groupingFor(sanitized).shouldEvaluate ->
-                CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
-            // The platform can deliver a notification before the store has been read.
-            rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
-            else -> evaluateCapture(rules, payload)
-        }
+        // One policy, shared with the stored counts, and testable without a service.
+        val evaluation = captureEvaluationFor(sanitized, currentRules, payload)
         // An app that reposts to move a progress bar delivers the same notification many times
         // over. Dropping the unchanged repeats here means one capture, one activity increment,
         // and one widget refresh, rather than one of each per post.

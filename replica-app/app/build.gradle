@@ -152,6 +152,30 @@ tasks.register('verifyReleaseSigning') {
     }
 }
 
-tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
-    dependsOn 'verifyReleaseSigning'
+/**
+ * Guards the tasks that write the artifact, not the lifecycle aliases above them.
+ *
+ * dependsOn from assembleRelease imposes no ordering against packageRelease, so the unsigned APK
+ * was fully written before the guard ran, and invoking packageRelease or bundleRelease directly
+ * skipped the guard altogether. A doFirst on the producing task cannot be got round either way.
+ */
+// Named exactly, not matched by prefix: packageReleaseResources and lintVitalRelease are
+// release-adjacent but write no distributable, and failing those would stop a machine with no
+// credentials from linting.
+def releaseArtifactTasks = ['packageRelease', 'packageReleaseBundle', 'signReleaseBundle']
+// The reproducibility check compares two deliberately unsigned builds, so it needs a way past
+// this. A named property makes that an explicit choice rather than something a stray -x achieves.
+def allowUnsignedRelease = project.hasProperty('allowUnsignedRelease') &&
+    project.property('allowUnsignedRelease').toString().toBoolean()
+tasks.matching { it.name in releaseArtifactTasks }.configureEach {
+    doFirst {
+        if (!hasReleaseSigning && !allowUnsignedRelease) {
+            throw new GradleException(
+                'Release signing is not configured. Create replica-app/keystore.properties with ' +
+                    'storeFile, storePassword, keyAlias and keyPassword. It is gitignored; see ' +
+                    'README.md. To build an unsigned release on purpose, pass ' +
+                    '-PallowUnsignedRelease=true.'
+            )
+        }
+    }
 }

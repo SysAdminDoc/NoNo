@@ -29,7 +29,8 @@ fun captureFingerprint(
     sanitized.isOngoing.toString(),
     matchState.name,
     matchedRuleIds.sorted().joinToString(","),
-).joinToString("")
+    // Separated, so two different field splits cannot concatenate to the same string.
+).joinToString(" ")
 
 /**
  * Collapses a burst of identical posts into one capture.

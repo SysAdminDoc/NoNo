@@ -1,8 +1,13 @@
 package com.sysadmindoc.nono
 
 import android.app.Application
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.net.Uri
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
@@ -49,6 +54,7 @@ import com.sysadmindoc.nono.model.removeRule
 import com.sysadmindoc.nono.model.resolveSavedRule
 import com.sysadmindoc.nono.model.upsertRule
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
+import com.sysadmindoc.nono.model.UndoableAction
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.defaultSettings
 import com.sysadmindoc.nono.runtime.ListenerHealth
@@ -61,6 +67,7 @@ import com.sysadmindoc.nono.runtime.listenerSettings
 import com.sysadmindoc.nono.runtime.retentionCutoffEpochMillis
 import com.sysadmindoc.nono.runtime.SignalNotificationListener
 import com.sysadmindoc.nono.model.validateRule
+import com.sysadmindoc.nono.ui.historyMetadataClipboardText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,6 +88,9 @@ import java.io.IOException
 /** Shown once when an unreadable preferences file was replaced with defaults. */
 const val SETTINGS_RESET_MESSAGE = "Saved settings could not be read and were reset."
 
+/** Launchers truncate long shortcut labels; keeping it short avoids an ellipsis on the icon. */
+private const val SHORTCUT_LABEL_LIMIT = 24
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(UiState())
@@ -94,6 +104,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var pendingExportRowCount = 0
     private var pendingImportEncoded: String? = null
     private var pendingImportRules: List<SignalRule>? = null
+
+    /** Held between a delete and the snackbar action that can put it back. */
+    private var deletedHistoryRecord: com.sysadmindoc.nono.data.NotificationEntity? = null
 
     // Shared with the notification listener, which evaluates rules as notifications arrive.
     private val dataStore: DataStore<Preferences> = SignalPreferences.get(application)
@@ -658,6 +671,128 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             overlay = Overlay.NONE,
             transientMessage = if (starred) "Kept until you unstar it." else "No longer kept.",
         )
+    }
+
+    /**
+     * Deletes one history record, keeping it in hand so the snackbar can put it back.
+     *
+     * There is no confirmation dialog, by design. The undo is what makes that safe, so the row is
+     * read before the delete rather than reconstructed from the screen's copy of it.
+     */
+    fun deleteHistoryRecord(historyId: Long) {
+        _state.value = _state.value.copy(overlay = Overlay.NONE)
+        viewModelScope.launch {
+            val dao = historyDatabase.notificationDao()
+            val removed = runCatching {
+                dao.readById(historyId)?.also { dao.deleteById(historyId) }
+            }.getOrNull()
+            _state.value = if (removed == null) {
+                _state.value.copy(transientMessage = "That record could not be deleted.")
+            } else {
+                deletedHistoryRecord = removed
+                _state.value.copy(
+                    transientMessage = "Record deleted.",
+                    transientUndo = UndoableAction.RESTORE_DELETED_HISTORY,
+                )
+            }
+        }
+    }
+
+    /** Puts back whatever the last undoable action removed. */
+    fun performUndo(action: UndoableAction) {
+        when (action) {
+            UndoableAction.RESTORE_DELETED_HISTORY -> {
+                val record = deletedHistoryRecord
+                deletedHistoryRecord = null
+                if (record == null) {
+                    _state.value = _state.value.copy(transientMessage = null, transientUndo = null)
+                    return
+                }
+                viewModelScope.launch {
+                    val restored = runCatching { historyDatabase.notificationDao().upsert(record) }.isSuccess
+                    _state.value = _state.value.copy(
+                        transientMessage = if (restored) null else "That record could not be restored.",
+                        transientUndo = null,
+                    )
+                }
+            }
+        }
+    }
+
+    /** Copies the metadata a record actually holds. Never notification content, because none is stored. */
+    fun copyHistoryMetadata(historyId: Long) {
+        val record = _state.value.history.firstOrNull { it.id == historyId }
+        if (record == null) {
+            _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "That record is no longer available.")
+            return
+        }
+        val clipboard = getApplication<Application>().getSystemService(ClipboardManager::class.java)
+        val copied = runCatching {
+            clipboard?.setPrimaryClip(ClipData.newPlainText("NoNo record", historyMetadataClipboardText(record)))
+        }.isSuccess && clipboard != null
+        _state.value = _state.value.copy(
+            overlay = Overlay.NONE,
+            transientMessage = if (copied) "Metadata copied." else "The clipboard is not available.",
+        )
+    }
+
+    /**
+     * Asks the launcher to pin a shortcut that opens this rule.
+     *
+     * The launcher decides, and some do not support pinning at all, so the outcome is reported
+     * rather than assumed. Nothing about the shortcut runs a notification action: it opens the
+     * rule for review, which is all this build does.
+     */
+    fun requestRuleShortcut(ruleId: Long) {
+        val app = getApplication<Application>()
+        val rule = _state.value.rules.firstOrNull { it.id == ruleId }
+        if (rule == null) {
+            _state.value = _state.value.copy(transientMessage = "That rule is no longer saved.")
+            return
+        }
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(app)) {
+            _state.value = _state.value.copy(transientMessage = "This launcher does not support pinned shortcuts.")
+            return
+        }
+        val shortcut = ShortcutInfoCompat.Builder(app, "rule-${rule.id}")
+            .setShortLabel(rule.name.take(SHORTCUT_LABEL_LIMIT).ifBlank { "NoNo rule" })
+            .setLongLabel(rule.name.take(SHORTCUT_LABEL_LIMIT).ifBlank { "NoNo rule" })
+            .setIcon(IconCompat.createWithResource(app, R.mipmap.ic_launcher))
+            .setIntent(
+                android.content.Intent(app, MainActivity::class.java)
+                    .setAction(android.content.Intent.ACTION_VIEW)
+                    .putExtra(MainActivity.EXTRA_RULE_ID, rule.id),
+            )
+            .build()
+        val requested = runCatching { ShortcutManagerCompat.requestPinShortcut(app, shortcut, null) }.getOrDefault(false)
+        _state.value = _state.value.copy(
+            route = Route.ROOT,
+            rootTab = RootTab.SETTINGS,
+            transientMessage = if (requested) {
+                "Shortcut sent to your launcher."
+            } else {
+                "The launcher refused the shortcut."
+            },
+        )
+    }
+
+    /** Chooses which saved rule the shortcut being built will point at. */
+    fun selectShortcutRule(ruleId: Long) {
+        _state.value = _state.value.copy(selectedRuleId = ruleId)
+    }
+
+    /** Opens a rule the launcher shortcut named, if it still exists. */
+    fun openRuleFromShortcut(ruleId: Long) {
+        val rule = _state.value.rules.firstOrNull { it.id == ruleId }
+        _state.value = if (rule == null) {
+            _state.value.copy(
+                route = Route.ROOT,
+                rootTab = RootTab.RULES,
+                transientMessage = "That shortcut points at a rule that no longer exists.",
+            )
+        } else {
+            _state.value.copy(route = Route.RULE_BUILDER, overlay = Overlay.NONE, draft = rule, selectedRuleId = rule.id)
+        }
     }
 
     /** Feedback for the copy action in the content-hidden explainer. */

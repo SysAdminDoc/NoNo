@@ -125,6 +125,27 @@ fun evaluateCapture(
     )
 }
 
+/**
+ * The single policy the listener applies to an arriving notification.
+ *
+ * Extracted from the service so it can be exercised without one. A group summary stands for its
+ * group rather than being an arrival of its own, so no rule is tested against it, which is the
+ * same rule the stored counts follow when they exclude summaries.
+ *
+ * @param rules null when the saved rules have not been read from disk yet, which the platform can
+ * cause by delivering a notification before the store is loaded.
+ */
+fun captureEvaluationFor(
+    sanitized: SanitizedNotification,
+    rules: List<SignalRule>?,
+    payload: NotificationPayload,
+    sdkInt: Int = Build.VERSION.SDK_INT,
+): CaptureEvaluation = when {
+    !groupingFor(sanitized).shouldEvaluate -> CaptureEvaluation(emptyList(), RuleMatchState.GROUP_SUMMARY)
+    rules == null -> CaptureEvaluation(emptyList(), RuleMatchState.RULES_NOT_LOADED)
+    else -> evaluateCapture(rules, payload, sdkInt)
+}
+
 private fun evaluateRule(
     rule: SignalRule,
     payload: NotificationPayload,

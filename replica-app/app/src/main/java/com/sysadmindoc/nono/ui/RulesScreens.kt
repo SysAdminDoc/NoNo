@@ -108,9 +108,6 @@ fun RulesHomeScreen(state: UiState, model: MainViewModel) {
         item {
             SignalPageHeader(
                 title = "Rules",
-                actionIcon = Icons.Rounded.Search,
-                actionDescription = "Search rules",
-                onAction = { model.showMessage("Rule search is not available yet.") },
             )
         }
         item {

@@ -22,6 +22,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class MainActivity : ComponentActivity() {
     private val requestedAuditState = MutableStateFlow("")
 
+    /** Rule a pinned launcher shortcut asked for, or [NO_RULE] when the app was opened normally. */
+    private val requestedRuleId = MutableStateFlow(NO_RULE)
+
+    companion object {
+        const val EXTRA_RULE_ID = "com.sysadmindoc.nono.RULE_ID"
+        private const val NO_RULE = -1L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -29,14 +37,24 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(10, 11, 13)),
         )
         requestedAuditState.value = readAuditState(intent)
+        requestedRuleId.value = intent.getLongExtra(EXTRA_RULE_ID, NO_RULE)
         setContent {
             val model: MainViewModel = viewModel()
             val state by model.state.collectAsState()
             SignalTheme(state.settings["Theme"] ?: "Dark") {
                 val requested by requestedAuditState.collectAsState()
                 val lifecycleOwner = LocalLifecycleOwner.current
+                val shortcutRuleId by requestedRuleId.collectAsState()
                 LaunchedEffect(requested) {
                     model.applyAuditState(requested)
+                }
+                LaunchedEffect(shortcutRuleId, state.rules) {
+                    // Waits for the rules to load: a shortcut tapped from cold start arrives
+                    // before the store has been read, and would otherwise report the rule missing.
+                    if (shortcutRuleId != NO_RULE && state.rules.isNotEmpty()) {
+                        model.openRuleFromShortcut(shortcutRuleId)
+                        requestedRuleId.value = NO_RULE
+                    }
                 }
                 DisposableEffect(lifecycleOwner, model) {
                     val observer = LifecycleEventObserver { _, event ->
@@ -55,5 +73,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         requestedAuditState.value = readAuditState(intent)
+        requestedRuleId.value = intent.getLongExtra(EXTRA_RULE_ID, NO_RULE)
     }
 }

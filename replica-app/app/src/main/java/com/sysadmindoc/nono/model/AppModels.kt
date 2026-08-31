@@ -45,6 +45,16 @@ enum class Overlay {
 /** Sentinel id for a rule that has never been saved. */
 const val UNSAVED_RULE_ID = 0L
 
+/**
+ * Something the user can take back from the snackbar that reported it.
+ *
+ * Deleting a history record is destructive and there is no confirmation dialog, by design. The
+ * undo is what makes that safe.
+ */
+enum class UndoableAction(val label: String) {
+    RESTORE_DELETED_HISTORY("Undo"),
+}
+
 @Serializable
 data class SignalRule(
     /**
@@ -257,19 +267,27 @@ enum class RuleMatchState {
 /**
  * Who created a group summary, as far as a supported public API can tell.
  *
- * Android has no API that names the author of a summary. What it does publish is whether the
- * app declared the group at all (`StatusBarNotification.isAppGroup`) and whether the platform
- * imposed one of its own (`getOverrideGroupKey`). Those two answer the question often enough to
- * be worth recording, and leave [UNKNOWN] whenever they disagree or say nothing.
+ * Android has no API that names the author of a summary. What it does publish is whether the app
+ * declared a group of its own (`Notification.getGroup`) and whether the platform supplied one
+ * (`StatusBarNotification.getOverrideGroupKey`). Together those settle exactly one case, [APP].
+ * Everything else is [UNKNOWN], which is the common answer.
  *
  * Sibling rows are deliberately not consulted. A summary usually has children, and an
  * auto-generated one does too, so their presence proves nothing about who wrote it.
  */
 enum class GroupSummaryOrigin {
-    /** The app declared the group this summary sits in. */
+    /** The app declared the group this summary sits in, and the platform did not override it. */
     APP,
 
-    /** The app declared no group and the platform supplied one. */
+    /**
+     * The platform authored the summary.
+     *
+     * Never inferred: AOSP posts its auto-group summary with a group of its own *and* the same
+     * value as the override key, so it is indistinguishable from an app summary the platform
+     * regrouped without reading a constant that is not public API. The value stays in the enum
+     * because stored rows may carry it and because a future platform release may publish a real
+     * signal, but nothing assigns it today.
+     */
     SYSTEM,
 
     /** Nothing supported says either way. The default, and the common case. */
@@ -340,6 +358,8 @@ data class UiState(
     val settings: Map<String, String> = defaultSettings,
     val validationError: String? = null,
     val transientMessage: String? = null,
+    /** Offered alongside [transientMessage] when the action it reports can be taken back. */
+    val transientUndo: UndoableAction? = null,
 ) {
     /** Whether the record whose menu is open is kept past the retention period. */
     val selectedHistoryStarred: Boolean

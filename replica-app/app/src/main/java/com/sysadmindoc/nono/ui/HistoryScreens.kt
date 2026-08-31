@@ -524,6 +524,31 @@ internal fun captureAttribution(record: HistoryRecord, rules: List<SignalRule>):
     )
 }
 
+/**
+ * The metadata a record actually holds, as plain text.
+ *
+ * The title and body History shows are UI copy derived from the content-state enum, not anything
+ * the notification said, so they are deliberately absent: putting them on the clipboard would
+ * invite the reader to treat them as captured content.
+ */
+internal fun historyMetadataClipboardText(record: HistoryRecord): String = buildString {
+    appendLine("Package: ${record.appPackageName ?: record.app}")
+    appendLine("Posted at (epoch millis): ${record.postedAtEpochMillis}")
+    appendLine("Notification key: ${record.notificationKey}")
+    appendLine("Channel: ${record.channelId ?: "not available"}")
+    appendLine("Group: ${record.groupKey ?: "not available"}")
+    appendLine("Group Android imposed: ${record.overrideGroupKey ?: "none"}")
+    appendLine("Group summary: ${if (record.isGroupSummary) record.groupSummaryOrigin.name else "no"}")
+    appendLine("Content: ${record.contentState.name}")
+    appendLine("Match state: ${record.matchState.name}")
+    appendLine("Matched rule ids: ${record.matchedRuleIds.joinToString(", ").ifBlank { "none" }}")
+    appendLine("Importance: ${record.importance?.toString() ?: "not available"}")
+    appendLine("Conversation: ${record.isConversation?.toString() ?: "not available"}")
+    appendLine("Category: ${record.category ?: "not available"}")
+    appendLine("Ongoing: ${record.isOngoing}")
+    append("Starred: ${record.starred}")
+}
+
 /** What the record says about its own content, rather than what a fresh look would say. */
 internal fun describeStoredContent(state: NotificationContentState): String = when (state) {
     NotificationContentState.AVAILABLE -> "Content reached the matcher and was not stored."

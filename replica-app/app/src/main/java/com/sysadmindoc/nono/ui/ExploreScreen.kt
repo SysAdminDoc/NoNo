@@ -39,11 +39,37 @@ import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 
-private data class GuideItem(val title: String, val description: String, val icon: ImageVector)
+/**
+ * @property url the page this card is about. Each card has its own: they all opened the same
+ * generic page before, which made the descriptions promise something the link did not deliver.
+ * Every URL here was checked to resolve on 2026-08-31.
+ */
+private data class GuideItem(
+    val title: String,
+    val description: String,
+    val icon: ImageVector,
+    val url: String,
+)
 
 private val guides = listOf(
-    GuideItem("Stay focused", "Reduce distracting notifications", Icons.AutoMirrored.Rounded.Article),
-    GuideItem("Protect quiet hours", "Keep work alerts out of personal time", Icons.Rounded.WorkOff),
+    GuideItem(
+        "How notification channels work",
+        "Why some notifications interrupt and others do not, and where you change that.",
+        Icons.AutoMirrored.Rounded.Article,
+        "https://developer.android.com/develop/ui/views/notifications/channels",
+    ),
+    GuideItem(
+        "What a notification listener can see",
+        "The Android service NoNo uses, and what it is allowed to read.",
+        Icons.Rounded.WorkOff,
+        "https://developer.android.com/reference/android/service/notification/NotificationListenerService",
+    ),
+    GuideItem(
+        "How apps build a notification",
+        "The parts of a notification a rule can match on.",
+        Icons.Rounded.Tune,
+        "https://developer.android.com/develop/ui/views/notifications/build-notification",
+    ),
 )
 
 private data class StarterItem(
@@ -89,9 +115,6 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
         item {
             SignalPageHeader(
                 title = "Explore",
-                actionIcon = Icons.Rounded.Search,
-                actionDescription = "Search ideas",
-                onAction = { model.showMessage("Explore search is not available yet.") },
             )
         }
         item { SignalSectionHeading("Ideas for quieter days", "Learn the patterns, then adapt a rule.") }
@@ -100,9 +123,15 @@ fun ExploreScreen(state: UiState, model: MainViewModel) {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
                 guides.forEachIndexed { index, guide ->
                     SignalListRow(guide.icon, guide.title, guide.description) {
-                        runCatching {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://developer.android.com/develop/ui/views/notifications")))
-                        }
+                        // A device with no browser, or one that blocks the intent, used to give
+                        // the user a row that did nothing when tapped and said nothing about why.
+                        val opened = runCatching {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(guide.url))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }.isSuccess
+                        if (!opened) model.showMessage("No app on this device can open that link.")
                     }
                     if (index != guides.lastIndex) SignalDivider()
                 }

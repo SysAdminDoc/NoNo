@@ -124,14 +124,24 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.HISTORY_ITEM -> MenuDialog(
             "Notification actions",
             buildList {
-                add(MenuItem("Restore", Icons.Rounded.MoreTime) { model.dismissOverlay() })
+                add(
+                    MenuItem(
+                        "Restore notification",
+                        Icons.Rounded.MoreTime,
+                        unavailable = "A notification belongs to the app that sent it. Nothing can post it again.",
+                    ) {},
+                )
                 add(
                     MenuItem("Open app", Icons.Rounded.ChevronRight) {
                         model.openRecordedApp(state.selectedHistoryPackageName)
                     },
                 )
                 add(MenuItem("View activity", Icons.Rounded.Tune) { model.navigate(Route.HISTORY_ACTIVITY) })
-                add(MenuItem("Copy", Icons.Rounded.Add) { model.dismissOverlay() })
+                add(
+                    MenuItem("Copy metadata", Icons.Rounded.Add) {
+                        state.selectedHistoryId?.let(model::copyHistoryMetadata)
+                    },
+                )
                 add(MenuItem("Create rule", Icons.Rounded.Add) { model.createRuleFromSelectedHistory() })
                 val starred = state.selectedHistoryStarred
                 add(
@@ -143,7 +153,11 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 if (state.selectedHistoryContentState in CONTENT_MISSING_STATES) {
                     add(MenuItem("Why was there no content?", Icons.Rounded.Tune) { model.showOverlay(Overlay.CONTENT_HIDDEN) })
                 }
-                add(MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() })
+                add(
+                    MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) {
+                        state.selectedHistoryId?.let(model::deleteHistoryRecord)
+                    },
+                )
             }, model::dismissOverlay,
         )
         Overlay.CONTENT_HIDDEN -> ContentHiddenDialog(model)

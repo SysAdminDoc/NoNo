@@ -9,7 +9,20 @@ package com.sysadmindoc.nono.model
  * destroyed the other rules.
  */
 
-fun nextRuleId(rules: List<SignalRule>): Long = (rules.maxOfOrNull { it.id } ?: 0L) + 1L
+/**
+ * The lowest id no saved rule is using.
+ *
+ * Not `max + 1`: a rule holding [Long.MAX_VALUE], which an imported file may legitimately carry,
+ * wraps that to [Long.MIN_VALUE]. Every later allocation then returns the same colliding value,
+ * so saving two new rules kept only the second and duplicating one dropped the copy, both without
+ * a word to the user.
+ */
+fun nextRuleId(rules: List<SignalRule>): Long {
+    val taken = rules.mapTo(mutableSetOf()) { it.id }
+    var candidate = 1L
+    while (candidate in taken) candidate++
+    return candidate
+}
 
 /**
  * Decides what a Save writes: a fresh entry with an allocated id, or a replacement for the rule

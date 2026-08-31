@@ -303,7 +303,9 @@ private fun PersistentSwitchRow(
 
 @Composable
 fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
-    val rule = state.rules.firstOrNull()
+    // Whichever rule the user picked, falling back to the first so the screen is never blank
+    // when rules exist.
+    val rule = state.rules.firstOrNull { it.id == state.selectedRuleId } ?: state.rules.firstOrNull()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
@@ -315,15 +317,19 @@ fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
         item { SettingsSectionLabel("SAVED RULES") }
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                if (rule == null) {
+                if (state.rules.isEmpty()) {
                     SignalListRow(Icons.Rounded.Tune, "No saved rules", "Create a rule before making a shortcut.")
                 } else {
-                    SignalListRow(
-                        Icons.Rounded.Tune,
-                        rule.name,
-                        "${rule.app} · ${rule.matchType} ${rule.phrase} · ${rule.action}",
-                        selected = true,
-                    )
+                    state.rules.forEachIndexed { index, candidate ->
+                        SignalListRow(
+                            Icons.Rounded.Tune,
+                            candidate.name,
+                            "${candidate.app} · ${candidate.matchType} ${candidate.phrase}",
+                            selected = candidate.id == rule?.id,
+                            onClick = { model.selectShortcutRule(candidate.id) },
+                        )
+                        if (index != state.rules.lastIndex) SignalDivider()
+                    }
                 }
             }
         }
@@ -362,10 +368,20 @@ fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
                 }
             }
         }
-        item { SignalPrimaryButton("Create shortcut", onClick = { }, enabled = false) }
+        item {
+            SignalPrimaryButton(
+                "Create shortcut",
+                onClick = { rule?.let { model.requestRuleShortcut(it.id) } },
+                enabled = rule != null,
+            )
+        }
         item {
             Text(
-                "Shortcut publication is not available in this build.",
+                if (rule == null) {
+                    "Save a rule first. A shortcut has to point at one."
+                } else {
+                    "Your launcher decides whether to add it, and may ask you to confirm."
+                },
                 color = SignalColors.Muted,
                 style = MaterialTheme.typography.bodyMedium,
             )
