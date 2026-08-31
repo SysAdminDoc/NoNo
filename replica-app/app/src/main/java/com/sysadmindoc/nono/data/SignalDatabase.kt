@@ -47,7 +47,17 @@ data class NotificationEntity(
     val isOngoing: Boolean = false,
     /** Starred records are kept until the user unstars them, whatever the retention period says. */
     val starred: Boolean = false,
+    /**
+     * Which identifier scheme [notificationKey], [channelId] and [groupKey] are written in.
+     *
+     * [IDENTIFIER_SCHEME_RAW] rows were stored by a build that kept the app's own strings.
+     * [IDENTIFIER_SCHEME_PSEUDONYM] rows hold per-install HMAC pseudonyms.
+     */
+    val identifierScheme: Int = IDENTIFIER_SCHEME_PSEUDONYM,
 )
+
+const val IDENTIFIER_SCHEME_RAW = 0
+const val IDENTIFIER_SCHEME_PSEUDONYM = 1
 
 @Entity(tableName = "ingestion_diagnostics")
 data class IngestionDiagnosticsEntity(
@@ -71,6 +81,10 @@ fun IngestionDiagnosticsEntity.toMetrics(): IngestionMetrics = IngestionMetrics(
     lastFailureAtEpochMillis = lastFailureAtEpochMillis,
 )
 
+/**
+ * A [SanitizedNotification] already carries pseudonymized identifiers: the listener applies the
+ * install's key while the notification is still in hand, so a raw tag never reaches this layer.
+ */
 fun SanitizedNotification.toEntity(
     matchedRuleIds: List<Long> = emptyList(),
     matchState: RuleMatchState = RuleMatchState.NOT_EVALUATED,
@@ -254,9 +268,54 @@ interface NotificationDao {
         insert(notification)
         deleteBefore(cutoffEpochMillis)
     }
+
+    @Query("SELECT * FROM notification_history WHERE identifierScheme = $IDENTIFIER_SCHEME_RAW")
+    suspend fun readRawIdentifierRows(): List<NotificationEntity>
+
+    @Query(
+        """
+        UPDATE notification_history
+        SET notificationKey = :notificationKey,
+            channelId = :channelId,
+            groupKey = :groupKey,
+            identifierScheme = $IDENTIFIER_SCHEME_PSEUDONYM
+        WHERE id = :id
+        """,
+    )
+    suspend fun rewriteIdentifiers(id: Long, notificationKey: String, channelId: String?, groupKey: String?)
+
+    @Query("DELETE FROM notification_history WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    /**
+     * Replaces the raw identifiers left by an older build.
+     *
+     * A row whose rewritten key would collide with one already present is deleted rather than
+     * left holding the app's own strings: two rows claiming one notification identity are the
+     * same capture, and keeping the readable copy is exactly what this is here to stop.
+     *
+     * @return how many rows were rewritten.
+     */
+    @Transaction
+    suspend fun pseudonymizeStoredIdentifiers(pseudonyms: IdentifierPseudonyms): Int {
+        var rewritten = 0
+        readRawIdentifierRows().forEach { row ->
+            val key = pseudonyms.pseudonym(row.notificationKey).orEmpty()
+            val result = runCatching {
+                rewriteIdentifiers(
+                    id = row.id,
+                    notificationKey = key,
+                    channelId = pseudonyms.pseudonym(row.channelId),
+                    groupKey = pseudonyms.pseudonym(row.groupKey),
+                )
+            }
+            if (result.isSuccess) rewritten += 1 else deleteById(row.id)
+        }
+        return rewritten
+    }
 }
 
-@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 7, exportSchema = true)
+@Database(entities = [NotificationEntity::class, IngestionDiagnosticsEntity::class], version = 8, exportSchema = true)
 abstract class SignalDatabase : RoomDatabase() {
     abstract fun notificationDao(): NotificationDao
 
@@ -324,6 +383,20 @@ abstract class SignalDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Marks every existing row as holding the app's own identifier strings. The values are
+         * rewritten in Kotlin by [NotificationDao.pseudonymizeStoredIdentifiers], because an
+         * HMAC is not something SQLite can compute.
+         */
+        val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE notification_history ADD COLUMN identifierScheme INTEGER NOT NULL " +
+                        "DEFAULT $IDENTIFIER_SCHEME_RAW",
+                )
+            }
+        }
+
         @Volatile
         private var instance: SignalDatabase? = null
 
@@ -348,6 +421,14 @@ abstract class SignalDatabase : RoomDatabase() {
             context.applicationContext,
             SignalDatabase::class.java,
             context.applicationContext.noBackupFilesDir.resolve(DATABASE_NAME).absolutePath,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
+        ).addMigrations(
+            MIGRATION_1_2,
+            MIGRATION_2_3,
+            MIGRATION_3_4,
+            MIGRATION_4_5,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+        ).build()
     }
 }

@@ -6,6 +6,8 @@ import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.service.notification.NotificationListenerService.RankingMap
 import android.service.notification.StatusBarNotification
+import com.sysadmindoc.nono.data.IdentifierPseudonyms
+import com.sysadmindoc.nono.data.PseudonymKeyStore
 import com.sysadmindoc.nono.data.SignalDatabase
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.decodeRules
@@ -41,6 +43,7 @@ class SignalNotificationListener : NotificationListenerService() {
     private val shutdownStarted = AtomicBoolean(false)
     private lateinit var database: SignalDatabase
     private lateinit var ingestor: NotificationIngestor<CapturedNotification>
+    private lateinit var pseudonyms: IdentifierPseudonyms
 
     /**
      * Completes once the persisted settings have been read at least once.
@@ -62,6 +65,12 @@ class SignalNotificationListener : NotificationListenerService() {
         acceptingCallbacks.set(true)
         CaptureGate.load(applicationContext)
         database = SignalDatabase.get(applicationContext)
+        pseudonyms = PseudonymKeyStore.get(applicationContext.noBackupFilesDir)
+        serviceScope.launch {
+            // One shot per install: rows written before the pseudonym scheme still hold the
+            // identifiers the posting apps chose.
+            runCatching { database.notificationDao().pseudonymizeStoredIdentifiers(pseudonyms) }
+        }
         ingestor = NotificationIngestor(serviceScope) { captured ->
             settingsLoaded.await()
             // Off is a storage policy, not a capture pause: nothing new is written, and what is
@@ -136,7 +145,7 @@ class SignalNotificationListener : NotificationListenerService() {
         val ranking = rankingMap?.let { map ->
             NotificationListenerService.Ranking().takeIf { map.getRanking(notification.key, it) }
         }
-        val sanitized = sanitizeNotification(notification, payload, ranking)
+        val sanitized = sanitizeNotification(notification, pseudonyms, payload, ranking)
         // Evaluated here, while the payload is still in scope, and only rule ids are kept. The
         // payload itself goes no further than this stack frame.
         val rules = currentRules

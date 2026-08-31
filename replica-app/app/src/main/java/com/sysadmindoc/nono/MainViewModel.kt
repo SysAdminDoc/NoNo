@@ -18,6 +18,7 @@ import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.data.RuleImportResult
 import com.sysadmindoc.nono.data.RuleTransfer
+import com.sysadmindoc.nono.data.PseudonymKeyStore
 import com.sysadmindoc.nono.data.SignalDatabase
 import com.sysadmindoc.nono.data.toMetrics
 import com.sysadmindoc.nono.data.toHistoryRecord
@@ -140,6 +141,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 transientMessage = if (SignalPreferences.consumeCorruptionRecovery()) SETTINGS_RESET_MESSAGE else null,
             )
             auditOverride?.let(::applyAuditState)
+        }
+        viewModelScope.launch {
+            // The listener does this too, but it may never have run on this install, and rows an
+            // older build wrote still hold the identifiers the posting apps chose.
+            runCatching {
+                historyDatabase.notificationDao().pseudonymizeStoredIdentifiers(
+                    PseudonymKeyStore.get(application.noBackupFilesDir),
+                )
+            }
         }
         viewModelScope.launch {
             CaptureGate.load(application)

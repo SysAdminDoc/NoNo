@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.sysadmindoc.nono.data.IdentifierPseudonyms
 import com.sysadmindoc.nono.model.NotificationContentState
 
 /**
@@ -34,6 +35,13 @@ data class CapturedNotification(
     val matchState: com.sysadmindoc.nono.model.RuleMatchState,
 )
 
+/**
+ * @property notificationKey a per-install pseudonym, not Android's key. The key embeds the tag
+ * the posting app chose, which is a string an app can put anything in.
+ * @property packageName kept verbatim: rules match on it and it is not app-authored free text.
+ * @property channelId a per-install pseudonym for the same reason as [notificationKey].
+ * @property groupKey likewise.
+ */
 data class SanitizedNotification(
     val notificationKey: String,
     val packageName: String,
@@ -117,17 +125,22 @@ fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
  */
 fun sanitizeNotification(
     sbn: StatusBarNotification,
+    pseudonyms: IdentifierPseudonyms,
     payload: NotificationPayload = notificationPayload(sbn),
     ranking: NotificationListenerService.Ranking? = null,
 ): SanitizedNotification {
     val notification = sbn.notification
     return SanitizedNotification(
-        notificationKey = sbn.key,
+        // Pseudonymized here, while the raw values are still on the stack, so nothing downstream
+        // has to remember to do it.
+        notificationKey = pseudonyms.pseudonym(sbn.key).orEmpty(),
         packageName = sbn.packageName,
         postedAtEpochMillis = sbn.postTime,
         contentState = classifyNotificationContent(payload),
-        channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) notification.channelId else null,
-        groupKey = notification.group,
+        channelId = pseudonyms.pseudonym(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) notification.channelId else null,
+        ),
+        groupKey = pseudonyms.pseudonym(notification.group),
         isGroupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
         importance = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ranking?.importance else null,
         isConversation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ranking?.isConversation else null,

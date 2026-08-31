@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.IOException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +39,7 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             "migration-v1-test.db",
-            7,
+            8,
             true,
             SignalDatabase.MIGRATION_1_2,
             SignalDatabase.MIGRATION_2_3,
@@ -46,6 +47,7 @@ class SignalDatabaseMigrationTest {
             SignalDatabase.MIGRATION_4_5,
             SignalDatabase.MIGRATION_5_6,
             SignalDatabase.MIGRATION_6_7,
+            SignalDatabase.MIGRATION_7_8,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey, isGroupSummary FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -73,12 +75,13 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             databaseName,
-            7,
+            8,
             true,
             SignalDatabase.MIGRATION_3_4,
             SignalDatabase.MIGRATION_4_5,
             SignalDatabase.MIGRATION_5_6,
             SignalDatabase.MIGRATION_6_7,
+            SignalDatabase.MIGRATION_7_8,
         )
         migrated.query("SELECT packageName, contentState, channelId, groupKey FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -107,11 +110,12 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             name,
-            7,
+            8,
             true,
             SignalDatabase.MIGRATION_4_5,
             SignalDatabase.MIGRATION_5_6,
             SignalDatabase.MIGRATION_6_7,
+            SignalDatabase.MIGRATION_7_8,
         )
         migrated.query("SELECT packageName, channelId, matchedRuleIds, matchState FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
@@ -129,7 +133,7 @@ class SignalDatabaseMigrationTest {
     @Throws(IOException::class)
     fun theSchemaStoresNoNotificationContent() {
         val name = "migration-content-test.db"
-        helper.createDatabase(name, 7).use { db ->
+        helper.createDatabase(name, 8).use { db ->
             db.query("SELECT name FROM pragma_table_info('notification_history')").use { cursor ->
                 val columns = buildList {
                     while (cursor.moveToNext()) add(cursor.getString(0))
@@ -147,6 +151,62 @@ class SignalDatabaseMigrationTest {
 
     @Test
     @Throws(IOException::class)
+    fun rowsWrittenBeforeThePseudonymSchemeStopHoldingTheAppsOwnIdentifiers() {
+        val name = "migration-pseudonym-test.db"
+        // Everything an app controls, and one thing it does not.
+        val rawKey = "0|com.example.messages|17|alice@example.com|10123"
+        val rawChannel = "thread-alice@example.com"
+        val rawGroup = "conversation-with-alice"
+        helper.createDatabase(name, 7).apply {
+            execSQL(
+                // A table created straight at v7 has no column defaults, unlike one an
+                // ALTER TABLE migration grew into, so every NOT NULL column is supplied here.
+                "INSERT INTO notification_history " +
+                    "(notificationKey, packageName, postedAtEpochMillis, contentState, channelId, groupKey, " +
+                    "isGroupSummary, isOngoing, starred) " +
+                    "VALUES ('$rawKey', 'com.example.messages', 128, 'NOT_STORED', '$rawChannel', '$rawGroup', 0, 0, 0)",
+            )
+            close()
+        }
+        helper.runMigrationsAndValidate(name, 8, true, SignalDatabase.MIGRATION_7_8).close()
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = androidx.room.Room.databaseBuilder(context, SignalDatabase::class.java, name)
+            .addMigrations(SignalDatabase.MIGRATION_7_8)
+            .build()
+        val pseudonyms = IdentifierPseudonyms(ByteArray(32) { it.toByte() })
+        try {
+            val rewritten = runBlocking {
+                database.notificationDao().pseudonymizeStoredIdentifiers(pseudonyms)
+            }
+            assertEquals(1, rewritten)
+
+            val row = runBlocking { database.notificationDao().observeRecent().first() }.single()
+            assertEquals("com.example.messages", row.packageName)
+            assertEquals(pseudonyms.pseudonym(rawKey), row.notificationKey)
+            assertEquals(pseudonyms.pseudonym(rawChannel), row.channelId)
+            assertEquals(pseudonyms.pseudonym(rawGroup), row.groupKey)
+            assertEquals(IDENTIFIER_SCHEME_PSEUDONYM, row.identifierScheme)
+
+            // A second pass has nothing left to do, and nothing anywhere still holds the canary.
+            assertEquals(0, runBlocking { database.notificationDao().pseudonymizeStoredIdentifiers(pseudonyms) })
+            database.query("SELECT * FROM notification_history", emptyArray()).use { cursor ->
+                check(cursor.moveToFirst())
+                val everyCell = (0 until cursor.columnCount).joinToString("|") { index ->
+                    if (cursor.isNull(index)) "" else cursor.getString(index)
+                }
+                listOf("alice@example.com", rawChannel, rawGroup).forEach { canary ->
+                    check(!everyCell.contains(canary)) { "the database still holds $canary" }
+                }
+            }
+        } finally {
+            database.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test
+    @Throws(IOException::class)
     fun v5RowsGainRankingColumnsWithoutInventingAnAssessment() {
         val name = "migration-v5-test.db"
         helper.createDatabase(name, 5).apply {
@@ -160,10 +220,11 @@ class SignalDatabaseMigrationTest {
 
         val migrated = helper.runMigrationsAndValidate(
             name,
-            7,
+            8,
             true,
             SignalDatabase.MIGRATION_5_6,
             SignalDatabase.MIGRATION_6_7,
+            SignalDatabase.MIGRATION_7_8,
         )
         migrated.query("SELECT packageName, importance, isConversation, category, isOngoing FROM notification_history").use { cursor ->
             check(cursor.moveToFirst())
