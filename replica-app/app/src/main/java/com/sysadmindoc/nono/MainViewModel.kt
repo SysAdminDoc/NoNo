@@ -39,6 +39,7 @@ import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.encodeRules
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.HistoryLoadState
+import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
 import com.sysadmindoc.nono.model.HistoryQuery
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.deriveRuleDraft
@@ -207,6 +208,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         viewModelScope.launch {
+            historyDatabase.notificationDao().observeTotalCount()
+                .catch { emit(0) }
+                .collect { total -> _state.value = _state.value.copy(historyTotalCount = total) }
+        }
+        viewModelScope.launch {
+            // Counted separately from the page, so a row past the limit is still counted. The
+            // limit is deliberately not part of this query's identity.
+            _state
+                .map { state ->
+                    HistoryQuery(
+                        search = state.historySearch,
+                        filter = state.historyFilter,
+                        packageName = state.historyPackageFilter,
+                        channelId = state.historyChannelFilter,
+                        contentState = state.historyContentStateFilter,
+                        groupKey = state.historyGroupFilter,
+                        groupSummary = state.historyGroupSummaryOnly.takeIf { only -> only },
+                        importance = state.historyImportanceFilter,
+                        conversation = state.historyConversationFilter,
+                    )
+                }
+                .distinctUntilChanged()
+                .flatMapLatest { query ->
+                    historyDatabase.notificationDao().observeFilteredCount(
+                        query = query.search,
+                        filter = query.filter,
+                        packageName = query.packageName,
+                        channelId = query.channelId,
+                        contentState = query.contentState?.name,
+                        groupKey = query.groupKey,
+                        groupSummary = query.groupSummary,
+                        importance = query.importance,
+                        conversation = query.conversation,
+                        fromEpochMillis = query.fromEpochMillis,
+                    ).catch { emit(0) }
+                }
+                .collect { count -> _state.value = _state.value.copy(historyFilteredCount = count) }
+        }
+        viewModelScope.launch {
             combine(
                 _state
                     .map {
@@ -220,6 +260,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             groupSummary = it.historyGroupSummaryOnly.takeIf { only -> only },
                             importance = it.historyImportanceFilter,
                             conversation = it.historyConversationFilter,
+                            limit = it.historyLimit,
                         )
                     }
                     .distinctUntilChanged(),
@@ -336,12 +377,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(route = Route.RULE_BUILDER, draft = _state.value.draft.copy(phrase = phrase), overlay = Overlay.NONE, phraseInputVisible = false)
     }
     fun setAppSearch(text: String) { _state.value = _state.value.copy(appSearch = text) }
-    fun setHistorySearch(text: String) { _state.value = _state.value.copy(historySearch = text) }
-    fun openHistorySearch() { _state.value = _state.value.copy(historySearchActive = true) }
-    fun closeHistorySearch() { _state.value = _state.value.copy(historySearchActive = false, historySearch = "") }
+    fun setHistorySearch(text: String) { _state.value = _state.value.resetHistoryWindow().copy(historySearch = text) }
+    fun openHistorySearch() { _state.value = _state.value.resetHistoryWindow().copy(historySearchActive = true) }
+    fun closeHistorySearch() { _state.value = _state.value.resetHistoryWindow().copy(historySearchActive = false, historySearch = "") }
     fun showPhraseInput() { _state.value = _state.value.copy(phraseInputVisible = true) }
     fun hidePhraseInput() { _state.value = _state.value.copy(phraseInputVisible = false) }
-    fun setHistoryFilter(filter: String) { _state.value = _state.value.copy(historyFilter = filter) }
+    fun setHistoryFilter(filter: String) { _state.value = _state.value.resetHistoryWindow().copy(historyFilter = filter) }
     fun clearHistoryMetadataFilters() {
         _state.value = _state.value.copy(
             historyPackageFilter = null,
@@ -355,26 +396,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
     fun setHistoryPackageFilter(value: String?) {
-        _state.value = _state.value.copy(historyPackageFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyPackageFilter = value, overlay = Overlay.NONE)
     }
     fun setHistoryChannelFilter(value: String?) {
-        _state.value = _state.value.copy(historyChannelFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyChannelFilter = value, overlay = Overlay.NONE)
     }
     fun setHistoryGroupFilter(value: String?) {
-        _state.value = _state.value.copy(historyGroupFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyGroupFilter = value, overlay = Overlay.NONE)
     }
     fun setHistoryContentStateFilter(value: NotificationContentState?) {
-        _state.value = _state.value.copy(historyContentStateFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyContentStateFilter = value, overlay = Overlay.NONE)
     }
     fun setHistoryGroupSummaryOnly(enabled: Boolean) {
-        _state.value = _state.value.copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyGroupSummaryOnly = enabled, overlay = Overlay.NONE)
     }
     fun setHistoryImportanceFilter(value: Int?) {
-        _state.value = _state.value.copy(historyImportanceFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyImportanceFilter = value, overlay = Overlay.NONE)
     }
     fun setHistoryConversationFilter(value: Boolean?) {
-        _state.value = _state.value.copy(historyConversationFilter = value, overlay = Overlay.NONE)
+        _state.value = _state.value.resetHistoryWindow().copy(historyConversationFilter = value, overlay = Overlay.NONE)
     }
+    /** Loads another page of the current query. One query, so no two pages can disagree. */
+    fun loadMoreHistory() {
+        if (!_state.value.hasMoreHistory) return
+        _state.value = _state.value.copy(historyLimit = _state.value.historyLimit + HISTORY_PAGE_SIZE)
+    }
+
     fun setCapturePaused(paused: Boolean) {
         CaptureGate.setPaused(getApplication(), paused)
     }

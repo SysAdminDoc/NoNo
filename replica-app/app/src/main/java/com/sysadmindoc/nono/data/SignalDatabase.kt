@@ -15,6 +15,9 @@ import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
@@ -118,6 +121,18 @@ fun encodeMatchedRuleIds(ids: List<Long>): String? =
 fun decodeMatchedRuleIds(encoded: String?): List<Long> =
     encoded?.split(',').orEmpty().mapNotNull { it.trim().toLongOrNull() }
 
+/**
+ * The stored timestamp, in the device's own locale and zone.
+ *
+ * The row used to show the raw epoch value, which is what the store holds but not something
+ * anyone can read. A record whose age matters is one the user is deciding whether to keep.
+ *
+ * java.time needs API 26 and this app supports 24, so the older formatter is the portable one.
+ * Not a shared instance: SimpleDateFormat is not thread safe.
+ */
+internal fun formatStoredTime(epochMillis: Long): String =
+    SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(epochMillis))
+
 fun NotificationEntity.toHistoryRecord(): HistoryRecord {
     val state = runCatching { NotificationContentState.valueOf(contentState) }
         .getOrDefault(NotificationContentState.NOT_AVAILABLE)
@@ -134,7 +149,7 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
             NotificationContentState.NOT_AVAILABLE -> "This notification arrived with no title and no text."
             else -> "Metadata stored locally; notification content is not persisted."
         },
-        time = postedAtEpochMillis.toString(),
+        time = formatStoredTime(postedAtEpochMillis),
         contentState = state,
         postedAtEpochMillis = postedAtEpochMillis,
         notificationKey = notificationKey,
@@ -181,6 +196,7 @@ interface NotificationDao {
           AND (
             :filter = 'All'
             OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
+            OR (:filter = 'Starred' AND starred = 1)
           )
           AND (:packageName IS NULL OR packageName = :packageName)
           AND (:channelId IS NULL OR channelId = :channelId)
@@ -207,6 +223,53 @@ interface NotificationDao {
         fromEpochMillis: Long? = null,
         limit: Int = 100,
     ): Flow<List<NotificationEntity>>
+
+    /**
+     * How many rows the same filters select, whatever the page limit is.
+     *
+     * Separate from the page query on purpose. The screen used to show the size of the loaded
+     * page as though it were a count of notifications, so anything past the limit was invisible
+     * and uncounted.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM notification_history
+        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' OR
+            notificationKey LIKE '%' || :query || '%' OR
+            contentState LIKE '%' || :query || '%' OR
+            COALESCE(channelId, '') LIKE '%' || :query || '%' OR
+            COALESCE(groupKey, '') LIKE '%' || :query || '%')
+          AND (
+            :filter = 'All'
+            OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
+            OR (:filter = 'Starred' AND starred = 1)
+          )
+          AND (:packageName IS NULL OR packageName = :packageName)
+          AND (:channelId IS NULL OR channelId = :channelId)
+          AND (:contentState IS NULL OR contentState = :contentState)
+          AND (:groupKey IS NULL OR groupKey = :groupKey)
+          AND (:importance IS NULL OR importance = :importance)
+          AND (:conversation IS NULL OR isConversation = :conversation)
+          AND (:groupSummary IS NULL OR isGroupSummary = :groupSummary)
+          AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
+        """,
+    )
+    fun observeFilteredCount(
+        query: String,
+        filter: String,
+        packageName: String? = null,
+        channelId: String? = null,
+        contentState: String? = null,
+        groupKey: String? = null,
+        groupSummary: Boolean? = null,
+        importance: Int? = null,
+        conversation: Boolean? = null,
+        fromEpochMillis: Long? = null,
+    ): Flow<Int>
+
+    /** Everything retained, whatever the user has filtered to. */
+    @Query("SELECT COUNT(*) FROM notification_history")
+    fun observeTotalCount(): Flow<Int>
 
     /**
      * Every stored match, for counting how often each rule would have fired.

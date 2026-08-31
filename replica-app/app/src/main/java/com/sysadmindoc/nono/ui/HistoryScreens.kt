@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
 import com.sysadmindoc.nono.model.NotificationContentState
@@ -87,11 +88,17 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                 SignalIconButton(Icons.Rounded.FilterAlt, "Filter history metadata", { model.showOverlay(Overlay.HISTORY_FILTERS) })
             }
         }
-        item { HistoryOverview(state.history.size) }
+        item { HistoryOverview(state.historyTotalCount, state.historyFilteredCount, state.historyFilter) }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HistoryFilterButton("All", state.historyFilter == "All", Modifier.weight(1f)) { model.setHistoryFilter("All") }
-                HistoryFilterButton("Matched rules", state.historyFilter == "Rule-triggered", Modifier.weight(1f)) { model.setHistoryFilter("Rule-triggered") }
+                historyFilterCatalog.forEach { filter ->
+                    HistoryFilterButton(
+                        // "Rule-triggered" is the stored value; this is what it is called on screen.
+                        if (filter == "Rule-triggered") "Matched rules" else filter,
+                        state.historyFilter == filter,
+                        Modifier.weight(1f),
+                    ) { model.setHistoryFilter(filter) }
+                }
             }
         }
         val metadataFilterSummary = historyMetadataSummary(state)
@@ -116,6 +123,15 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                             HistoryRecordRow(item, state.rules) { model.showHistoryOverlay(item.id) }
                             if (index != state.history.lastIndex) SignalDivider()
                         }
+                    }
+                }
+                if (state.hasMoreHistory) {
+                    item {
+                        SignalOutlineButton(
+                            "Load more (${state.history.size} of ${state.historyFilteredCount})",
+                            model::loadMoreHistory,
+                            Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }
@@ -166,19 +182,41 @@ private fun SearchHistory(state: UiState, model: MainViewModel) {
     }
 }
 
+/**
+ * The two counts the screen can honestly report.
+ *
+ * The big number used to be the size of the loaded page, labelled "notifications today". It was
+ * neither a total nor today's: capped at the page limit, and covering however far back retention
+ * reaches.
+ */
 @Composable
-private fun HistoryOverview(count: Int) {
+private fun HistoryOverview(total: Int, filtered: Int, filter: String) {
     SignalGroupedSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
-            Text(count.toString(), style = MaterialTheme.typography.displayLarge)
-            Text(if (count == 1) "notification today" else "notifications today", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyLarge)
-            HistoryActivityChart(count, Modifier.fillMaxWidth().height(106.dp).padding(top = 12.dp))
+            Text(filtered.toString(), style = MaterialTheme.typography.displayLarge)
+            Text(
+                historyCountCaption(total, filtered, filter),
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            HistoryActivityChart(filtered, Modifier.fillMaxWidth().height(106.dp).padding(top = 12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 listOf("12AM", "6AM", "12PM", "6PM", "12AM").forEach {
                     Text(it, color = SignalColors.Muted, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
+    }
+}
+
+/** Says what the number counts, and names the total when a filter is narrowing it. */
+internal fun historyCountCaption(total: Int, filtered: Int, filter: String): String {
+    val noun = if (filtered == 1) "record" else "records"
+    return when {
+        filter == "All" && filtered == total -> "$noun retained"
+        filter == "Starred" -> "starred, of $total retained"
+        filter == "Rule-triggered" -> "matched a rule, of $total retained"
+        else -> "$noun shown, of $total retained"
     }
 }
 

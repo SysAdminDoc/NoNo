@@ -213,8 +213,20 @@ data class HistoryQuery(
     val importance: Int? = null,
     val conversation: Boolean? = null,
     val fromEpochMillis: Long? = null,
-    val limit: Int = 100,
+    val limit: Int = HISTORY_PAGE_SIZE,
 )
+
+/**
+ * Rows loaded per page.
+ *
+ * History grows the limit rather than stitching pages together, so there is only ever one query
+ * behind the list. That is what makes a filter change unable to mix rows selected by two
+ * different sets of conditions.
+ */
+const val HISTORY_PAGE_SIZE = 100
+
+/** Filters the History segmented control offers. Each one is implemented in SQL. */
+val historyFilterCatalog = listOf("All", "Rule-triggered", "Starred")
 
 /**
  * Android's channel importance levels, as the platform numbers them.
@@ -338,6 +350,12 @@ data class UiState(
     val ruleMatchCounts: Map<Long, Int> = emptyMap(),
     val historyImportanceFilter: Int? = null,
     val historyConversationFilter: Boolean? = null,
+    /** How many rows the current query is loading. Grows a page at a time, resets on a change. */
+    val historyLimit: Int = HISTORY_PAGE_SIZE,
+    /** Rows the current filters select, whatever [historyLimit] has loaded so far. */
+    val historyFilteredCount: Int = 0,
+    /** Everything retained, ignoring the filters. */
+    val historyTotalCount: Int = 0,
     val transferExportRequest: Int = 0,
     /** True when the pending export is history CSV rather than the encrypted rule file. */
     val transferExportIsHistory: Boolean = false,
@@ -372,6 +390,18 @@ data class UiState(
     /** Content provenance of the record whose menu is open, if one is. */
     val selectedHistoryContentState: NotificationContentState?
         get() = history.firstOrNull { it.id == selectedHistoryId }?.contentState
+
+    /** True when the filters select more rows than have been loaded. */
+    val hasMoreHistory: Boolean
+        get() = historyFilteredCount > history.size
+
+    /**
+     * Starts the window over.
+     *
+     * Any change to what the list selects has to reset it, or a filter applied while three pages
+     * deep would load three pages of the new query and read as though that were all of it.
+     */
+    fun resetHistoryWindow(): UiState = copy(historyLimit = HISTORY_PAGE_SIZE)
 }
 
 val defaultSettings = mapOf(

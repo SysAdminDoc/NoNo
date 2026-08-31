@@ -175,6 +175,82 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun everyRetainedRowIsReachableByGrowingTheWindow() = runBlocking {
+        val dao = database.notificationDao()
+        (1..250).forEach { index ->
+            dao.upsert(
+                NotificationEntity(
+                    notificationKey = "n-$index",
+                    packageName = "com.example.chat",
+                    postedAtEpochMillis = index.toLong(),
+                    contentState = NotificationContentState.AVAILABLE.name,
+                ),
+            )
+        }
+
+        // The count is separate from the page, so it reports everything retained even while the
+        // first page holds a hundred.
+        assertEquals(250, dao.observeTotalCount().first())
+        assertEquals(250, dao.observeFilteredCount(query = "", filter = "All").first())
+        assertEquals(100, dao.observeHistory(query = "", filter = "All", limit = 100).first().size)
+
+        // Growing the window reaches the rest, in one query, so no two pages can disagree.
+        val everything = dao.observeHistory(query = "", filter = "All", limit = 300).first()
+        assertEquals(250, everything.size)
+        assertEquals((1..250).map { "n-$it" }.reversed(), everything.map { it.notificationKey })
+    }
+
+    @Test
+    fun aStarredRowStaysReachableHoweverOldItIs() = runBlocking {
+        val dao = database.notificationDao()
+        (1..150).forEach { index ->
+            dao.upsert(
+                NotificationEntity(
+                    notificationKey = "n-$index",
+                    packageName = "com.example.chat",
+                    postedAtEpochMillis = index.toLong(),
+                    contentState = NotificationContentState.AVAILABLE.name,
+                ),
+            )
+        }
+        // The oldest row, well past the first page.
+        val oldest = dao.observeHistory(query = "", filter = "All", limit = 300).first().last()
+        dao.setStarred(oldest.id, true)
+
+        val starred = dao.observeHistory(query = "", filter = "Starred", limit = 100).first()
+
+        assertEquals(listOf("n-1"), starred.map { it.notificationKey })
+        assertEquals(1, dao.observeFilteredCount(query = "", filter = "Starred").first())
+        // The unfiltered total is unchanged by the filter, which is what makes it a total.
+        assertEquals(150, dao.observeTotalCount().first())
+    }
+
+    @Test
+    fun theFilteredCountTracksTheFilterAndNotThePage() = runBlocking {
+        val dao = database.notificationDao()
+        (1..120).forEach { index ->
+            dao.upsert(
+                NotificationEntity(
+                    notificationKey = "n-$index",
+                    packageName = if (index % 3 == 0) "com.example.mail" else "com.example.chat",
+                    postedAtEpochMillis = index.toLong(),
+                    contentState = NotificationContentState.AVAILABLE.name,
+                    matchedRuleIds = if (index % 4 == 0) "7" else null,
+                ),
+            )
+        }
+
+        assertEquals(120, dao.observeFilteredCount(query = "", filter = "All").first())
+        assertEquals(30, dao.observeFilteredCount(query = "", filter = "Rule-triggered").first())
+        assertEquals(
+            40,
+            dao.observeFilteredCount(query = "", filter = "All", packageName = "com.example.mail").first(),
+        )
+        // The page limit does not enter into it.
+        assertEquals(120, dao.observeFilteredCount(query = "", filter = "All").first())
+    }
+
+    @Test
     fun arepostKeepsTheStarAndTheRowRatherThanReplacingBoth() = runBlocking {
         val dao = database.notificationDao()
         val first = NotificationEntity(
