@@ -1,5 +1,6 @@
 package com.sysadmindoc.nono.data
 
+import com.sysadmindoc.nono.data.BoundedReadResult
 import com.sysadmindoc.nono.model.SignalRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -186,14 +187,45 @@ class RuleTransferTest {
 
     @Test
     fun `a hostile salt or iv is refused before any key is derived`() {
+        // The reason is what proves the check ran. Both files fail GCM authentication too, so
+        // asserting only that the import failed would pass with the length checks removed.
         val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
-        val saltStart = encoded.indexOf("\"salt\":\"") + 8
-        val saltEnd = encoded.indexOf('"', saltStart)
-        val longSalt = encoded.replaceRange(saltStart, saltEnd, "A".repeat(4096))
 
-        val result = RuleTransfer.importRules(longSalt, "correct horse".toCharArray())
+        listOf("salt", "iv").forEach { field ->
+            val start = encoded.indexOf("\"$field\":\"") + field.length + 4
+            val end = encoded.indexOf('"', start)
+            val hostile = encoded.replaceRange(start, end, "A".repeat(4096))
 
-        assertEquals(RuleImportResult.InvalidFile(ImportRejection.WRONG_PASSPHRASE), result)
+            assertEquals(
+                "an oversized $field must be refused as a parameter, not as a bad passphrase",
+                RuleImportResult.InvalidFile(ImportRejection.BAD_PARAMETERS),
+                RuleTransfer.importRules(hostile, "correct horse".toCharArray()),
+            )
+        }
+    }
+
+    @Test
+    fun `an unencrypted file with an unreadable payload is not blamed on encryption`() {
+        val file = """{"formatVersion":2,"encrypted":false,"payload":"!!!not base64!!!","privacyWarning":"x"}"""
+
+        assertEquals(
+            RuleImportResult.InvalidFile(ImportRejection.UNREADABLE),
+            RuleTransfer.importRules(file),
+        )
+    }
+
+    @Test
+    fun `only a key or ciphertext failure is reported as a passphrase problem`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+
+        assertEquals(
+            RuleImportResult.InvalidFile(ImportRejection.WRONG_PASSPHRASE),
+            RuleTransfer.importRules(encoded, "wrong horse".toCharArray()),
+        )
+        assertEquals(
+            RuleImportResult.InvalidFile(ImportRejection.BAD_PARAMETERS),
+            RuleTransfer.importRules(encoded.replace("\"kdf\":\"$PBKDF2_KDF_NAME\"", "\"kdf\":\"scrypt\""), "correct horse".toCharArray()),
+        )
     }
 
     @Test
@@ -217,6 +249,26 @@ class RuleTransferTest {
 
         assertEquals("a".repeat(1024), readBoundedUtf8(withinCap, maxBytes = 2048))
         assertNull(readBoundedUtf8(overCap, maxBytes = 2048))
+    }
+
+    @Test
+    fun `a stream that cannot be opened is not reported as too large`() {
+        // Choosing the message from whether the provider volunteered a size told the user their
+        // file was too big when the real problem was a stream that would not open.
+        assertEquals(BoundedReadResult.Unreadable, readBoundedUtf8(2048L) { null })
+        assertEquals(
+            BoundedReadResult.Unreadable,
+            readBoundedUtf8(2048L) { throw java.io.IOException("permission revoked") },
+        )
+    }
+
+    @Test
+    fun `a stream over the cap is reported as too large however it was opened`() {
+        assertEquals(BoundedReadResult.TooLarge, readBoundedUtf8(2048L) { ByteArray(2049).inputStream() })
+        assertEquals(
+            BoundedReadResult.Text("ok"),
+            readBoundedUtf8(2048L) { "ok".byteInputStream() },
+        )
     }
 
     @Test

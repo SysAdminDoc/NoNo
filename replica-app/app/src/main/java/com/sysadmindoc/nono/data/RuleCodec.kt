@@ -61,9 +61,16 @@ private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule
  */
 private fun allocateMissingIds(rules: List<SignalRule>): List<SignalRule> {
     if (rules.none { it.id == UNSAVED_RULE_ID }) return rules
-    var next = (rules.maxOfOrNull { it.id } ?: 0L) + 1L
+    // Taken ids are skipped rather than assumed to end at the maximum: a file naming
+    // Long.MAX_VALUE would otherwise wrap the counter round to a value already in use, and the
+    // duplicate would be dropped without a word.
+    val taken = rules.mapTo(mutableSetOf()) { it.id }
+    var next = 1L
     return rules.map { rule ->
-        if (rule.id != UNSAVED_RULE_ID) rule else rule.copy(id = next++)
+        if (rule.id != UNSAVED_RULE_ID) return@map rule
+        while (next in taken || next == UNSAVED_RULE_ID) next++
+        taken += next
+        rule.copy(id = next)
     }
 }
 

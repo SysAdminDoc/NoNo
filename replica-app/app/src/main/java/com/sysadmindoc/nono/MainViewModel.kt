@@ -15,6 +15,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sysadmindoc.nono.audit.auditStateFor
 import com.sysadmindoc.nono.data.SignalPreferences
+import com.sysadmindoc.nono.data.BoundedReadResult
 import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.data.ImportRejection
 import com.sysadmindoc.nono.data.RuleImportResult
@@ -474,20 +475,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 return@launch
             }
-            val encoded = runCatching {
-                app.contentResolver.openInputStream(uri)?.use { readBoundedUtf8(it) }
-            }.getOrNull()
-            if (encoded == null) {
-                withContext(Dispatchers.Main.immediate) {
-                    _state.value = _state.value.copy(
-                        transientMessage = if (declared == null) {
-                            "Import failed; that file could not be read."
-                        } else {
-                            ImportRejection.TOO_LARGE.message
-                        },
-                    )
+            val encoded = when (val read = readBoundedUtf8 { app.contentResolver.openInputStream(uri) }) {
+                is BoundedReadResult.Text -> read.value
+                // The reason comes from what actually happened, not from whether the provider
+                // volunteered a size.
+                BoundedReadResult.TooLarge -> {
+                    withContext(Dispatchers.Main.immediate) {
+                        _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message)
+                    }
+                    return@launch
                 }
-                return@launch
+                BoundedReadResult.Unreadable -> {
+                    withContext(Dispatchers.Main.immediate) {
+                        _state.value = _state.value.copy(transientMessage = "Import failed; that file could not be read.")
+                    }
+                    return@launch
+                }
             }
             // Parsing, base64 and any key derivation stay on this dispatcher.
             val result = RuleTransfer.importRules(encoded)
@@ -545,15 +548,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    /**
+     * Merging is quadratic in the two rule lists, and the import cap allows ten thousand of them,
+     * so both the preview and the commit run off the main thread. Only the resulting state is
+     * applied on it.
+     */
     private fun showImportPreview(incoming: List<SignalRule>) {
-        val preview = RuleTransfer.preview(_state.value.rules, incoming)
+        val current = _state.value.rules
         pendingImportRules = incoming
-        _state.value = _state.value.copy(
-            overlay = Overlay.TRANSFER_PREVIEW,
-            transferAdditions = preview.additions.size,
-            transferConflicts = preview.conflicts.size,
-            transientMessage = null,
-        )
+        viewModelScope.launch(Dispatchers.Default) {
+            val preview = RuleTransfer.preview(current, incoming)
+            withContext(Dispatchers.Main.immediate) {
+                _state.value = _state.value.copy(
+                    overlay = Overlay.TRANSFER_PREVIEW,
+                    transferAdditions = preview.additions.size,
+                    transferConflicts = preview.conflicts.size,
+                    transientMessage = null,
+                )
+            }
+        }
     }
     fun commitImportedRules(resolution: ConflictResolution) {
         val incoming = pendingImportRules ?: run {
@@ -561,22 +574,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val current = _state.value.rules
-        val preview = RuleTransfer.preview(current, incoming)
-        val conflictIds = preview.conflicts.map { it.existing.id }
-        val resolutions = conflictIds.associateWith { resolution }
-        val updated = RuleTransfer.commit(current, incoming, resolutions) ?: run {
-            cancelTransfer()
-            return
-        }
         pendingImportRules = null
-        _state.value = _state.value.copy(
-            rules = updated,
-            overlay = Overlay.NONE,
-            transferAdditions = 0,
-            transferConflicts = 0,
-            transientMessage = "Imported ${preview.additions.size} new rule(s); notification history was not imported.",
-        )
-        persistRules()
+        viewModelScope.launch(Dispatchers.Default) {
+            val preview = RuleTransfer.preview(current, incoming)
+            val resolutions = preview.conflicts.associate { it.existing.id to resolution }
+            val updated = RuleTransfer.commit(current, incoming, resolutions)
+            val encoded = updated?.let(::encodeRules)
+            withContext(Dispatchers.Main.immediate) {
+                if (updated == null || encoded == null) {
+                    cancelTransfer()
+                    return@withContext
+                }
+                _state.value = _state.value.copy(
+                    rules = updated,
+                    overlay = Overlay.NONE,
+                    transferAdditions = 0,
+                    transferConflicts = 0,
+                    transientMessage = "Imported ${preview.additions.size} new rule(s); notification history was not imported.",
+                )
+                writeEncodedRules(encoded)
+            }
+        }
     }
     fun cancelTransfer() {
         pendingExportPayload = null
@@ -860,8 +878,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun clearTransient() { _state.value = _state.value.copy(transientMessage = null) }
     fun showMessage(message: String) { _state.value = _state.value.copy(transientMessage = message) }
 
-    private fun persistRules() {
-        val encoded = encodeRules(_state.value.rules)
+    private fun persistRules() = writeEncodedRules(encodeRules(_state.value.rules))
+
+    /** Split out so a caller that already encoded off the main thread does not encode twice. */
+    private fun writeEncodedRules(encoded: String) {
         editPreferences {
             it[Keys.Rules] = encoded
             // The legacy single-rule keys are no longer read; clear them so an older

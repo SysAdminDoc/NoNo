@@ -77,6 +77,24 @@ class RuleCodecTest {
     }
 
     @Test
+    fun `an allocated id survives a file naming the largest possible one`() {
+        // max + 1 wraps to Long.MIN_VALUE. A file holding both ends would then allocate an id
+        // already in use, and distinctBy would drop a rule with no error and no reason given.
+        val encoded = """
+            {"version":3,"rules":[
+              {"id":9223372036854775807,"name":"MAX","app":"any app","phrase":"a","action":"Mute"},
+              {"id":-9223372036854775808,"name":"MIN","app":"any app","phrase":"b","action":"Mute"},
+              {"name":"NEW","app":"any app","phrase":"c","action":"Mute"}
+            ]}
+        """.trimIndent()
+
+        val decoded = decodeRules(encoded).orEmpty()
+
+        assertEquals(listOf("MAX", "MIN", "NEW"), decoded.map { it.name })
+        assertEquals(3, decoded.map { it.id }.distinct().size)
+    }
+
+    @Test
     fun `an allocated id never lands on one the file already used`() {
         val encoded = """
             {"version":3,"rules":[
@@ -88,7 +106,10 @@ class RuleCodecTest {
         val decoded = decodeRules(encoded).orEmpty()
 
         assertEquals(2, decoded.size)
-        assertEquals(listOf(4L, 5L), decoded.map { it.id })
+        // The lowest free id, not one past the maximum. Counting up from the maximum is what
+        // wrapped a file naming Long.MAX_VALUE onto an id already in use.
+        assertEquals(listOf(4L, 1L), decoded.map { it.id })
+        assertEquals(listOf("Existing", "New"), decoded.map { it.name })
     }
 
     @Test

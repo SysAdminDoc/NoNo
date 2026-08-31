@@ -163,6 +163,33 @@ class RuleOperationsTest {
     }
 
     @Test
+    fun `duplicating an imported rule does not create a new executable one`() {
+        // Duplicate writes a saved rule without passing through validateRule, so it has to strip
+        // the capabilities this build refuses to save rather than copying them forward.
+        val imported = listOf(SignalRule(id = 1L, name = "From a file", action = "Mute", enabledFor = "1 hour"))
+
+        val copy = duplicateRule(imported, 1L).last()
+
+        assertEquals(RECORD_ONLY_ACTION, copy.action)
+        assertNull(copy.enabledFor)
+        assertNull(validateRule(copy))
+        // The original is untouched: it stays readable as what it was.
+        assertEquals("Mute", imported.single().action)
+    }
+
+    @Test
+    fun `duplicating an ordinary rule copies it unchanged apart from its identity`() {
+        val ordinary = listOf(SignalRule(id = 1L, name = "Mine", phrase = "invoice", action = RECORD_ONLY_ACTION))
+
+        val copy = duplicateRule(ordinary, 1L).last()
+
+        assertEquals("Mine copy", copy.name)
+        assertEquals("invoice", copy.phrase)
+        assertEquals(RECORD_ONLY_ACTION, copy.action)
+        assertEquals(2L, copy.id)
+    }
+
+    @Test
     fun `an imported action stays readable and is labelled as never executed`() {
         assertEquals("Mute (not executed)", renderActionSummary("Mute"))
         assertEquals("Record the match · no device action", renderActionSummary(RECORD_ONLY_ACTION))

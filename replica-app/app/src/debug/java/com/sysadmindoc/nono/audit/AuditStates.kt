@@ -97,11 +97,15 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         // so the rule builder no longer offers them. All five ids land on the one screen that
         // still shows those properties, distinguished by whether the draft carries any. A rule
         // that arrived by import can, which is the only way they exist now.
-        id.startsWith("036_") || id.startsWith("039_") -> base.copy(route = Route.FILTER_GROUP)
-        id.startsWith("037_") || id.startsWith("038_") || id.startsWith("040_") -> base.copy(
+        id.startsWith("039_") -> base.copy(route = Route.FILTER_GROUP)
+        id.startsWith("036_") || id.startsWith("037_") || id.startsWith("038_") || id.startsWith("040_") -> base.copy(
             route = Route.FILTER_GROUP,
             draft = base.draft.copy(
-                extras = if (id.startsWith("038_")) listOf("Image", "Category", "Text length") else listOf("Image"),
+                extras = when {
+                    id.startsWith("038_") -> listOf("Image", "Category", "Text length")
+                    id.startsWith("037_") -> listOf("Image", "Phone number")
+                    else -> listOf("Image")
+                },
                 filterOperator = if (id.startsWith("040_")) "Doesn't contain any" else base.draft.filterOperator,
             ),
         )

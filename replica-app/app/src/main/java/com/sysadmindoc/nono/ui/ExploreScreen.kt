@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.Route
+import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 
@@ -55,25 +56,25 @@ private data class StarterItem(
 
 private val starters = listOf(
     StarterItem(
-        "Mute noisy group chats",
+        "Track noisy group chats",
         "COMMUNICATION",
-        "Preview silencing active message threads.",
+        "Record when an active message thread posts.",
         Icons.AutoMirrored.Rounded.VolumeOff,
-        SignalRule(name = "Quiet group chats", app = "Messages", phrase = "group", action = "Mute"),
+        SignalRule(name = "Group chats", app = "Messages", phrase = "group", action = RECORD_ONLY_ACTION),
     ),
     StarterItem(
-        "Quiet package updates",
+        "Follow delivery updates",
         "DELIVERIES",
-        "Preview collecting repetitive delivery updates.",
+        "Record repetitive delivery updates as they arrive.",
         Icons.Rounded.Inventory2,
-        SignalRule(name = "Quiet package updates", app = "any app", phrase = "delivery", action = "Batch"),
+        SignalRule(name = "Delivery updates", app = "any app", phrase = "delivery", action = RECORD_ONLY_ACTION),
     ),
     StarterItem(
-        "Protect bedtime",
+        "Watch one app closely",
         "WELLBEING",
-        "Preview muting non-urgent alerts at night.",
+        "Record everything from a chosen app, then read it back.",
         Icons.Rounded.Bedtime,
-        SignalRule(name = "Protect bedtime", app = "any app", phrase = "anything", action = "Mute"),
+        SignalRule(name = "Everything from one app", app = "any app", phrase = "anything", action = RECORD_ONLY_ACTION),
     ),
 )
 

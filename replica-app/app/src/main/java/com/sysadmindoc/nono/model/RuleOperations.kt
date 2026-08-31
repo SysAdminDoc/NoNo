@@ -40,8 +40,19 @@ fun upsertRule(rules: List<SignalRule>, rule: SignalRule): List<SignalRule> =
 fun removeRule(rules: List<SignalRule>, ruleId: Long?): List<SignalRule> =
     if (ruleId == null) rules else rules.filterNot { it.id == ruleId }
 
-/** Inserts a copy of [ruleId] with a fresh id; returns the list unchanged when absent. */
+/**
+ * Inserts a copy of [ruleId] with a fresh id; returns the list unchanged when absent.
+ *
+ * The copy is a rule the user is creating now, so it cannot carry capabilities this build refuses
+ * to save. Duplicating an imported rule used to write a brand-new saved rule naming a device
+ * action and an expiry, without ever passing through validation.
+ */
 fun duplicateRule(rules: List<SignalRule>, ruleId: Long?): List<SignalRule> {
     val source = rules.firstOrNull { it.id == ruleId } ?: return rules
-    return rules + source.copy(id = nextRuleId(rules), name = "${source.name} copy")
+    return rules + source.copy(
+        id = nextRuleId(rules),
+        name = "${source.name} copy",
+        action = if (isExecutableAction(source.action)) RECORD_ONLY_ACTION else source.action,
+        enabledFor = null,
+    )
 }

@@ -677,17 +677,3 @@ private fun actionIcon(action: String): ImageVector = when {
     action.equals("Open notification", true) -> Icons.AutoMirrored.Rounded.OpenInNew
     else -> Icons.Rounded.Tune
 }
-
-private fun actionDescription(action: String): String = when (action) {
-    "Mute" -> "Preview silencing this alert"
-    "Do nothing" -> "Only record the match"
-    "Snooze" -> "Preview delaying this alert"
-    "Cooldown" -> "Preview reducing repeated interruptions"
-    "Alarm" -> "Preview a full-screen alert"
-    "Remind me" -> "Preview a later reminder"
-    "Open notification" -> "Preview opening the source notification"
-    "Dismiss" -> "Preview dismissing this alert"
-    "Batch" -> "Preview collecting repeated updates"
-    "Flashlight" -> "Preview flashing for this alert"
-    else -> "Preview this action"
-}

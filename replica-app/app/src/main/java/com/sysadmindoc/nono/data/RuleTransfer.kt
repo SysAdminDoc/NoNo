@@ -168,10 +168,20 @@ object RuleTransfer {
         }
         if (file.encrypted && passphrase == null) return RuleImportResult.NeedsPassphrase
 
+        // Set by whichever check refuses the file, so the message names what actually failed
+        // rather than being guessed from whether the file claimed to be encrypted.
+        var failure: ImportRejection? = null
         val bytes = runCatching {
-            val payload = decodeBase64(file.payload)
-            if (payload.size.toLong() > RuleTransferLimits.MAX_DECODED_BYTES) return@runCatching null
+            val payload = runCatching { decodeBase64(file.payload) }.getOrElse {
+                failure = ImportRejection.UNREADABLE
+                return@runCatching null
+            }
+            if (payload.size.toLong() > RuleTransferLimits.MAX_DECODED_BYTES) {
+                failure = ImportRejection.TOO_LARGE
+                return@runCatching null
+            }
             if (!file.encrypted) return@runCatching payload
+            failure = ImportRejection.BAD_PARAMETERS
             // Salt and IV are fixed-width by construction. Checking them here refuses a file that
             // would otherwise reach the key derivation with parameters no export ever writes.
             val salt = decodeBase64(file.salt ?: return@runCatching null)
@@ -191,6 +201,9 @@ object RuleTransfer {
                 file.iterations ?: return@runCatching null
             }
             if (iterations !in 1..MAX_PBKDF2_ITERATIONS) return@runCatching null
+            // Everything about the file itself checked out. Anything that fails from here is the
+            // key or the ciphertext, which is what a wrong passphrase looks like.
+            failure = ImportRejection.WRONG_PASSPHRASE
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(
                 Cipher.DECRYPT_MODE,
@@ -203,11 +216,7 @@ object RuleTransfer {
         }.getOrNull()
         passphrase?.fill('\u0000')
         if (cancelled()) return RuleImportResult.Cancelled
-        if (bytes == null) {
-            return RuleImportResult.InvalidFile(
-                if (file.encrypted) ImportRejection.WRONG_PASSPHRASE else ImportRejection.BAD_PARAMETERS,
-            )
-        }
+        if (bytes == null) return RuleImportResult.InvalidFile(failure ?: ImportRejection.UNREADABLE)
         if (bytes.size.toLong() > RuleTransferLimits.MAX_DECODED_BYTES) {
             return RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE)
         }
@@ -282,6 +291,32 @@ object RuleTransfer {
             spec.clearPassword()
         }
     }
+}
+
+/** What a bounded read produced, so a caller can tell "too big" from "could not read". */
+sealed interface BoundedReadResult {
+    data class Text(val value: String) : BoundedReadResult
+    data object TooLarge : BoundedReadResult
+    data object Unreadable : BoundedReadResult
+}
+
+/**
+ * Opens [uriOpener]'s stream and reads it under the cap, as a typed result.
+ *
+ * The two reasons a read produces nothing have to stay apart. Choosing the message from whether
+ * the document provider happened to report a size told users their file was too large when the
+ * real problem was a stream that could not be opened at all.
+ */
+fun readBoundedUtf8(
+    maxBytes: Long = RuleTransferLimits.MAX_ENCODED_BYTES,
+    uriOpener: () -> InputStream?,
+): BoundedReadResult {
+    val read = runCatching {
+        val stream = uriOpener() ?: return BoundedReadResult.Unreadable
+        stream.use { readBoundedUtf8(it, maxBytes) }
+    }.getOrElse { return BoundedReadResult.Unreadable }
+    // A null here is the cap; anything that threw was caught above.
+    return read?.let(BoundedReadResult::Text) ?: BoundedReadResult.TooLarge
 }
 
 /**

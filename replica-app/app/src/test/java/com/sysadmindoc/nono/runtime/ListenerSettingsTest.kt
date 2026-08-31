@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.edit
 import com.sysadmindoc.nono.data.SignalPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -161,6 +162,20 @@ class ListenerSettingsTest {
 
         assertEquals(ListenerSettings(), settings)
         assertEquals(false, gate.isLoaded)
+        assertEquals(true, gate.hasGivenUp)
+    }
+
+    @Test
+    fun `the timeout is paid once, not once per queued capture`() = runTest {
+        // Re-entering the wait for every item throttled ingestion to one capture per timeout,
+        // filled the bounded queue, and made the service's shutdown wait the timeout per item.
+        val gate = ListenerSettingsGate(timeoutMillis = 5_000L)
+        applyListenerSettings(ListenerSettings())
+
+        val start = currentTime
+        repeat(10) { gate.awaitSettings() }
+
+        assertEquals(5_000L, currentTime - start)
     }
 
     @Test

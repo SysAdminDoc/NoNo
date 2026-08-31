@@ -56,7 +56,7 @@
 "063_rules_populated_test_record","rules_home","debug_intent_extra","test-data/fixtures/rules.json"
 "064_rules_test_record_disabled","rules_home","debug_intent_extra","test-data/fixtures/rules.json"
 "065_rule_overflow_menu","rule_overflow_menu","debug_intent_extra","in-code deterministic fixture"
-"066_rule_enable_for_dialog","enable_for_menu","debug_intent_extra","in-code deterministic fixture"
+"066_rule_enable_for_dialog","rule_overflow_menu","debug_intent_extra","in-code deterministic fixture"
 "067_rule_priority_dialog","rules_home","debug_intent_extra","test-data/fixtures/rules.json"
 "068_rule_folder_dialog","folder_dialog","debug_intent_extra","in-code deterministic fixture"
 "069_rule_rename_dialog","rename_dialog","debug_intent_extra","in-code deterministic fixture"

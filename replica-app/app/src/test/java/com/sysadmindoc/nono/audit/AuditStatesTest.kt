@@ -107,7 +107,10 @@ class AuditStatesTest {
         ).map { resolve(it) }
 
         states.forEach { assertEquals(Route.FILTER_GROUP, it.route) }
-        // 036 and 039 both show the screen with nothing selected, which is the same capture.
-        assertEquals(4, states.map { it.draft.extras to it.draft.filterOperator }.distinct().size)
+        assertEquals(
+            "every id must produce its own capture",
+            states.size,
+            states.map { it.draft.extras to it.draft.filterOperator }.distinct().size,
+        )
     }
 }

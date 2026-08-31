@@ -49,6 +49,9 @@ class ListenerSettingsGate(private val timeoutMillis: Long = DEFAULT_TIMEOUT_MIL
 
     private val loaded = CompletableDeferred<Unit>()
 
+    @Volatile
+    private var gaveUp = false
+
     /** Publishes a fresh read and releases anything waiting on the first one. */
     fun publish(settings: ListenerSettings) {
         applyListenerSettings(settings)
@@ -58,11 +61,20 @@ class ListenerSettingsGate(private val timeoutMillis: Long = DEFAULT_TIMEOUT_MIL
     /** True once a read has been published. Waiting callers are released. */
     val isLoaded: Boolean get() = loaded.isCompleted
 
+    /** True once the wait has timed out at least once and stopped being paid. */
+    val hasGivenUp: Boolean get() = gaveUp
+
     /**
      * @return the published settings, or the defaults if none arrived within the timeout.
+     *
+     * The timeout is paid at most once. Re-entering the wait for every queued capture would
+     * throttle ingestion to one item per timeout, fill the bounded queue, and make the service's
+     * own shutdown wait the timeout for each item still in it.
      */
     suspend fun awaitSettings(): ListenerSettings {
-        withTimeoutOrNull(timeoutMillis) { loaded.await() }
+        if (!loaded.isCompleted && !gaveUp) {
+            if (withTimeoutOrNull(timeoutMillis) { loaded.await() } == null) gaveUp = true
+        }
         return currentListenerSettings()
     }
 
