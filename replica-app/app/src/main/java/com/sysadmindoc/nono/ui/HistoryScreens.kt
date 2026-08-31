@@ -618,6 +618,6 @@ private fun historyTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = SignalColors.Surface,
     unfocusedContainerColor = SignalColors.Surface,
     focusedBorderColor = SignalColors.Yellow,
-    unfocusedBorderColor = SignalColors.Border,
+    unfocusedBorderColor = SignalColors.ControlOutline,
     cursorColor = SignalColors.Yellow,
 )

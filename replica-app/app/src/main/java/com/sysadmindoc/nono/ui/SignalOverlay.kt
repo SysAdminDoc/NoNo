@@ -423,7 +423,7 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
                     focusedContainerColor = SignalColors.Background,
                     unfocusedContainerColor = SignalColors.Background,
                     focusedBorderColor = SignalColors.Yellow,
-                    unfocusedBorderColor = SignalColors.Border,
+                    unfocusedBorderColor = SignalColors.ControlOutline,
                 ),
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp).focusRequester(focusRequester),
             )
@@ -459,7 +459,7 @@ private fun TransferPassphraseDialog(
                     focusedContainerColor = SignalColors.Background,
                     unfocusedContainerColor = SignalColors.Background,
                     focusedBorderColor = SignalColors.Yellow,
-                    unfocusedBorderColor = SignalColors.Border,
+                    unfocusedBorderColor = SignalColors.ControlOutline,
                 ),
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
             )

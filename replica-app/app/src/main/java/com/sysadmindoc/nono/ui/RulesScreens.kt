@@ -186,6 +186,10 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
             Switch(
                 checked = rule.enabled,
                 onCheckedChange = { model.toggleRule(rule.id) },
+                // Material3 draws the switch 52x32, and its own minimum-touch-target padding does
+                // not reach the semantics node, so it measures under 48dp. This is the control
+                // that turns a rule off, which is the one people hit in a hurry.
+                modifier = Modifier.heightIn(min = 48.dp),
                 colors = SwitchDefaults.colors(
                     checkedTrackColor = SignalColors.Yellow,
                     checkedThumbColor = SignalColors.Background,
@@ -750,7 +754,7 @@ private fun signalTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = SignalColors.Surface,
     unfocusedContainerColor = SignalColors.Surface,
     focusedBorderColor = SignalColors.Yellow,
-    unfocusedBorderColor = SignalColors.Border,
+    unfocusedBorderColor = SignalColors.ControlOutline,
     focusedLabelColor = SignalColors.Yellow,
     unfocusedLabelColor = SignalColors.Secondary,
     cursorColor = SignalColors.Yellow,

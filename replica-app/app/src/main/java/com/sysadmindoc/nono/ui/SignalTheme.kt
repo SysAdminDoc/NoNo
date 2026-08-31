@@ -26,7 +26,14 @@ data class SignalPalette(
     val white: Color,
     val secondary: Color,
     val muted: Color,
+    /** Decorative hairline: card edges and dividers, always beside a fill that already separates them. */
     val border: Color,
+    /**
+     * The outline of a control whose boundary is the only thing identifying it, such as a text
+     * field. WCAG 2.2 1.4.11 asks for 3:1 there, which [border] does not meet and is not required
+     * to: a card edge carries no information a sighted user needs to operate anything.
+     */
+    val controlOutline: Color,
     val error: Color,
     val ruleBlue: Color,
     val ruleDisabled: Color,
@@ -34,18 +41,21 @@ data class SignalPalette(
     val suggestionPurple: Color,
 )
 
-private val DarkPalette = SignalPalette(
+/** Exposed for the contrast test, which has to read the real values the app ships. */
+internal val DarkPalette = SignalPalette(
     background = Color(0xFF050607), surface = Color(0xFF121417), surfaceSelected = Color(0xFF1B1D18),
     yellow = Color(0xFFF4F45D), white = Color(0xFFF7F7F3), secondary = Color(0xFFB5B7C1),
-    muted = Color(0xFF858892), border = Color(0xFF383B42), error = Color(0xFFFF6B76),
+    muted = Color(0xFF858892), border = Color(0xFF383B42), controlOutline = Color(0xFF6C6F78),
+    error = Color(0xFFFF6B76),
     ruleBlue = Color(0xFF9ADAF5), ruleDisabled = Color(0xFF4B4E56),
     suggestionGreen = Color(0xFF85D69B), suggestionPurple = Color(0xFFB9A5FF),
 )
 
-private val LightPalette = SignalPalette(
+internal val LightPalette = SignalPalette(
     background = Color(0xFFF6F6F1), surface = Color(0xFFFFFFFF), surfaceSelected = Color(0xFFF0F0CF),
     yellow = Color(0xFF5B5C00), white = Color(0xFF171817), secondary = Color(0xFF52545A),
-    muted = Color(0xFF676A72), border = Color(0xFFC6C8CC), error = Color(0xFFB42330),
+    muted = Color(0xFF676A72), border = Color(0xFFC6C8CC), controlOutline = Color(0xFF83868D),
+    error = Color(0xFFB42330),
     ruleBlue = Color(0xFF006685), ruleDisabled = Color(0xFF858891),
     suggestionGreen = Color(0xFF1E6F3A), suggestionPurple = Color(0xFF6049A9),
 )
@@ -59,6 +69,7 @@ object SignalColors {
     var Secondary by mutableStateOf(DarkPalette.secondary)
     var Muted by mutableStateOf(DarkPalette.muted)
     var Border by mutableStateOf(DarkPalette.border)
+    var ControlOutline by mutableStateOf(DarkPalette.controlOutline)
     var Error by mutableStateOf(DarkPalette.error)
     var RuleBlue by mutableStateOf(DarkPalette.ruleBlue)
     var RuleDisabled by mutableStateOf(DarkPalette.ruleDisabled)
@@ -68,7 +79,7 @@ object SignalColors {
     fun apply(palette: SignalPalette) {
         Background = palette.background; Surface = palette.surface; SurfaceSelected = palette.surfaceSelected
         Yellow = palette.yellow; White = palette.white; Secondary = palette.secondary; Muted = palette.muted
-        Border = palette.border; Error = palette.error; RuleBlue = palette.ruleBlue; RuleDisabled = palette.ruleDisabled
+        Border = palette.border; ControlOutline = palette.controlOutline; Error = palette.error; RuleBlue = palette.ruleBlue; RuleDisabled = palette.ruleDisabled
         SuggestionGreen = palette.suggestionGreen; SuggestionPurple = palette.suggestionPurple
     }
 }
@@ -100,14 +111,17 @@ fun SignalTheme(theme: String = "Dark", content: @Composable () -> Unit) {
             primary = palette.yellow, onPrimary = palette.background, background = palette.background,
             onBackground = palette.white, surface = palette.surface, onSurface = palette.white,
             surfaceVariant = palette.surfaceSelected, onSurfaceVariant = palette.secondary,
-            secondary = palette.ruleBlue, outline = palette.border, error = palette.error,
+            secondary = palette.ruleBlue, outline = palette.controlOutline, error = palette.error,
         )
     } else {
         lightColorScheme(
-            primary = palette.yellow, onPrimary = palette.white, background = palette.background,
+            // onPrimary sits on the accent, which is dark in this theme, so it takes the light
+            // value. It used to take `white`, which in the light palette is near-black text, and
+            // put dark text on a dark button.
+            primary = palette.yellow, onPrimary = palette.background, background = palette.background,
             onBackground = palette.white, surface = palette.surface, onSurface = palette.white,
             surfaceVariant = palette.surfaceSelected, onSurfaceVariant = palette.secondary,
-            secondary = palette.ruleBlue, outline = palette.border, error = palette.error,
+            secondary = palette.ruleBlue, outline = palette.controlOutline, error = palette.error,
         )
     }
     SideEffect {

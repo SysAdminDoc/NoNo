@@ -345,7 +345,7 @@ fun ShortcutEditorScreen(state: UiState, model: MainViewModel) {
                     focusedContainerColor = SignalColors.Surface,
                     unfocusedContainerColor = SignalColors.Surface,
                     focusedBorderColor = SignalColors.Border,
-                    unfocusedBorderColor = SignalColors.Border,
+                    unfocusedBorderColor = SignalColors.ControlOutline,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )
