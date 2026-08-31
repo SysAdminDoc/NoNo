@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.5.0] (2026-08-31)
+
 ### Added
 
 - The README says what NoNo's accessibility testing actually checks: contrast against the shipped colours on every surface in both themes, and the screens composed at twice the system font size in a 320dp viewport with checks for content you can't reach, text that gets cut off, and touch targets under 48dp. It also says what isn't checked, including a full screen-reader traversal, and gives the two commands that reproduce the evidence.
