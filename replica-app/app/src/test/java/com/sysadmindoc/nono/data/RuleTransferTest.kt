@@ -110,7 +110,10 @@ class RuleTransferTest {
         val encoded = RuleTransfer.exportRules(incoming, "secret".toCharArray())
 
         assertEquals(RuleImportResult.NeedsPassphrase, RuleTransfer.importRules(encoded))
-        assertEquals(RuleImportResult.InvalidFile, RuleTransfer.importRules(encoded, "wrong".toCharArray()))
+        assertEquals(
+            RuleImportResult.InvalidFile(ImportRejection.WRONG_PASSPHRASE),
+            RuleTransfer.importRules(encoded, "wrong".toCharArray()),
+        )
     }
 
     @Test
@@ -138,5 +141,88 @@ class RuleTransferTest {
         assertEquals(RuleImportResult.Cancelled, RuleTransfer.importRules(encoded, cancelled = { true }))
         assertNull(RuleTransfer.commit(existing, incoming, cancelled = { true }))
         assertNotEquals(existing, incoming)
+    }
+
+    @Test
+    fun `a file larger than the cap is refused before it is parsed`() {
+        val oversized = "x".repeat((RuleTransferLimits.MAX_ENCODED_BYTES + 1).toInt())
+
+        assertEquals(
+            RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE),
+            RuleTransfer.importRules(oversized),
+        )
+    }
+
+    @Test
+    fun `a payload that would decode past the cap is refused before the decode`() {
+        // The base64 length is what decides how much the decode allocates, so it is what is
+        // checked. The payload here is never valid base64; refusing it before finding that out
+        // is the point.
+        val huge = "A".repeat((RuleTransferLimits.MAX_BASE64_CHARS + 4).toInt())
+        val file = """{"formatVersion":2,"encrypted":false,"payload":"$huge","privacyWarning":"x"}"""
+
+        val result = RuleTransfer.importRules(file)
+
+        assertEquals(RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE), result)
+    }
+
+    @Test
+    fun `a file declaring more rules than the cap is refused`() {
+        val many = (1..RuleTransferLimits.MAX_RULES + 1).map { SignalRule(id = it.toLong(), name = "R$it", action = "Mute") }
+
+        assertEquals(ImportRejection.TOO_MANY_RULES, RuleTransfer.rejectionFor(many))
+        assertNull(RuleTransfer.rejectionFor(many.take(RuleTransferLimits.MAX_RULES)))
+    }
+
+    @Test
+    fun `a rule carrying an overlong field is refused`() {
+        val long = "a".repeat(RuleTransferLimits.MAX_FIELD_CHARS + 1)
+
+        assertEquals(ImportRejection.FIELD_TOO_LONG, RuleTransfer.rejectionFor(listOf(SignalRule(id = 1L, phrase = long))))
+        assertEquals(ImportRejection.FIELD_TOO_LONG, RuleTransfer.rejectionFor(listOf(SignalRule(id = 1L, name = long))))
+        assertEquals(ImportRejection.FIELD_TOO_LONG, RuleTransfer.rejectionFor(listOf(SignalRule(id = 1L, extras = listOf("ok", long)))))
+        assertNull(RuleTransfer.rejectionFor(listOf(SignalRule(id = 1L, phrase = "a".repeat(RuleTransferLimits.MAX_FIELD_CHARS)))))
+    }
+
+    @Test
+    fun `a hostile salt or iv is refused before any key is derived`() {
+        val encoded = RuleTransfer.exportRules(incoming, "correct horse".toCharArray())
+        val saltStart = encoded.indexOf("\"salt\":\"") + 8
+        val saltEnd = encoded.indexOf('"', saltStart)
+        val longSalt = encoded.replaceRange(saltStart, saltEnd, "A".repeat(4096))
+
+        val result = RuleTransfer.importRules(longSalt, "correct horse".toCharArray())
+
+        assertEquals(RuleImportResult.InvalidFile(ImportRejection.WRONG_PASSPHRASE), result)
+    }
+
+    @Test
+    fun `no rejection message repeats anything from the file`() {
+        // An error that quotes the file is how a hostile file gets its own text on screen.
+        val canary = "CANARY-abcdef"
+        val file = """{"formatVersion":9,"encrypted":false,"payload":"$canary","privacyWarning":"$canary"}"""
+
+        val result = RuleTransfer.importRules(file) as RuleImportResult.InvalidFile
+
+        assertEquals(ImportRejection.UNSUPPORTED_VERSION, result.rejection)
+        ImportRejection.entries.forEach { rejection ->
+            assertTrue("${rejection.name} echoes input", !rejection.message.contains(canary))
+        }
+    }
+
+    @Test
+    fun `a bounded read refuses a stream longer than the cap`() {
+        val withinCap = "a".repeat(1024).byteInputStream()
+        val overCap = ByteArray(2049).inputStream()
+
+        assertEquals("a".repeat(1024), readBoundedUtf8(withinCap, maxBytes = 2048))
+        assertNull(readBoundedUtf8(overCap, maxBytes = 2048))
+    }
+
+    @Test
+    fun `a bounded read returns a file that sits exactly on the cap`() {
+        val exact = ByteArray(2048) { 'b'.code.toByte() }.inputStream()
+
+        assertEquals("b".repeat(2048), readBoundedUtf8(exact, maxBytes = 2048))
     }
 }

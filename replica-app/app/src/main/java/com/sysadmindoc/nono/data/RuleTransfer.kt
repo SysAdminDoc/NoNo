@@ -1,6 +1,8 @@
 package com.sysadmindoc.nono.data
 
 import com.sysadmindoc.nono.model.SignalRule
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import kotlin.io.encoding.Base64
@@ -45,11 +47,50 @@ data class PortableRuleFile(
     val privacyWarning: String = PORTABLE_TRANSFER_PRIVACY_WARNING,
 )
 
+/**
+ * Bounds on what an import will accept.
+ *
+ * A rule file arrives through the document picker, so it is whatever the user chose and can be
+ * hostile. Without caps, `readBytes` and an unbounded decode let one file allocate as much memory
+ * as the process can get before a single value has been validated.
+ */
+object RuleTransferLimits {
+    /** The encoded file on disk. Real exports are a few kilobytes. */
+    const val MAX_ENCODED_BYTES = 5L * 1024 * 1024
+
+    /** The decoded payload, before and after decryption. */
+    const val MAX_DECODED_BYTES = 4L * 1024 * 1024
+
+    /** Base64 costs four characters per three bytes, so this bounds the decode itself. */
+    const val MAX_BASE64_CHARS = (MAX_DECODED_BYTES + 2) / 3 * 4
+
+    const val MAX_RULES = 10_000
+
+    /** Every string a rule carries, including each entry in its extras list. */
+    const val MAX_FIELD_CHARS = 4 * 1024
+}
+
+/**
+ * Why an import was refused.
+ *
+ * The messages say what happened without quoting any of the file: an error that echoes input is
+ * how a hostile file gets its own text onto someone's screen.
+ */
+enum class ImportRejection(val message: String) {
+    UNREADABLE("That file could not be read as a NoNo rule file."),
+    TOO_LARGE("That file is larger than NoNo will import."),
+    UNSUPPORTED_VERSION("That file was written by a version NoNo does not understand."),
+    BAD_PARAMETERS("That file's encryption settings are not valid."),
+    WRONG_PASSPHRASE("The passphrase or the file is not valid."),
+    TOO_MANY_RULES("That file declares more rules than NoNo will import."),
+    FIELD_TOO_LONG("A value in that file is longer than NoNo will import."),
+}
+
 sealed interface RuleImportResult {
     data class Success(val rules: List<SignalRule>) : RuleImportResult
     data object NeedsPassphrase : RuleImportResult
     data object Cancelled : RuleImportResult
-    data object InvalidFile : RuleImportResult
+    data class InvalidFile(val rejection: ImportRejection) : RuleImportResult
 }
 
 enum class ConflictResolution { KEEP_EXISTING, REPLACE_EXISTING }
@@ -110,19 +151,33 @@ object RuleTransfer {
         cancelled: () -> Boolean = { false },
     ): RuleImportResult {
         if (cancelled()) return RuleImportResult.Cancelled
+        // Checked before parsing: a caller that read the file itself may not have bounded it.
+        if (encodedFile.length.toLong() > RuleTransferLimits.MAX_ENCODED_BYTES) {
+            return RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE)
+        }
         val file = runCatching {
             transferJson.decodeFromString(PortableRuleFile.serializer(), encodedFile)
-        }.getOrNull() ?: return RuleImportResult.InvalidFile
+        }.getOrNull() ?: return RuleImportResult.InvalidFile(ImportRejection.UNREADABLE)
         if (file.formatVersion != TRANSFER_FORMAT_VERSION && file.formatVersion != LEGACY_FORMAT_VERSION) {
-            return RuleImportResult.InvalidFile
+            return RuleImportResult.InvalidFile(ImportRejection.UNSUPPORTED_VERSION)
+        }
+        // Before the base64 decode allocates anything, because the encoded length is what
+        // decides how much it will allocate.
+        if (file.payload.length.toLong() > RuleTransferLimits.MAX_BASE64_CHARS) {
+            return RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE)
         }
         if (file.encrypted && passphrase == null) return RuleImportResult.NeedsPassphrase
 
         val bytes = runCatching {
             val payload = decodeBase64(file.payload)
+            if (payload.size.toLong() > RuleTransferLimits.MAX_DECODED_BYTES) return@runCatching null
             if (!file.encrypted) return@runCatching payload
+            // Salt and IV are fixed-width by construction. Checking them here refuses a file that
+            // would otherwise reach the key derivation with parameters no export ever writes.
             val salt = decodeBase64(file.salt ?: return@runCatching null)
+            if (salt.size != SALT_BYTES) return@runCatching null
             val iv = decodeBase64(file.iv ?: return@runCatching null)
+            if (iv.size != IV_BYTES) return@runCatching null
             val legacy = file.formatVersion == LEGACY_FORMAT_VERSION
             val kdf = file.kdf ?: if (legacy) PBKDF2_KDF_NAME else return@runCatching null
             if (kdf != PBKDF2_KDF_NAME) return@runCatching null
@@ -147,10 +202,40 @@ object RuleTransfer {
             cipher.doFinal(payload)
         }.getOrNull()
         passphrase?.fill('\u0000')
-        if (bytes == null || cancelled()) return if (cancelled()) RuleImportResult.Cancelled else RuleImportResult.InvalidFile
-        return decodeRules(bytes.toString(StandardCharsets.UTF_8))
-            ?.let(RuleImportResult::Success)
-            ?: RuleImportResult.InvalidFile
+        if (cancelled()) return RuleImportResult.Cancelled
+        if (bytes == null) {
+            return RuleImportResult.InvalidFile(
+                if (file.encrypted) ImportRejection.WRONG_PASSPHRASE else ImportRejection.BAD_PARAMETERS,
+            )
+        }
+        if (bytes.size.toLong() > RuleTransferLimits.MAX_DECODED_BYTES) {
+            return RuleImportResult.InvalidFile(ImportRejection.TOO_LARGE)
+        }
+        val rules = decodeRules(bytes.toString(StandardCharsets.UTF_8))
+            ?: return RuleImportResult.InvalidFile(ImportRejection.UNREADABLE)
+        rejectionFor(rules)?.let { return RuleImportResult.InvalidFile(it) }
+        return RuleImportResult.Success(rules)
+    }
+
+    /** @return why [rules] cannot be imported, or null when they are within every bound. */
+    internal fun rejectionFor(rules: List<SignalRule>): ImportRejection? {
+        if (rules.size > RuleTransferLimits.MAX_RULES) return ImportRejection.TOO_MANY_RULES
+        val overlong = rules.any { rule ->
+            val fields = listOf(
+                rule.name,
+                rule.app,
+                rule.appPackageName.orEmpty(),
+                rule.phrase,
+                rule.action,
+                rule.priority,
+                rule.folder,
+                rule.matchType,
+                rule.filterOperator,
+                rule.enabledFor.orEmpty(),
+            ) + rule.extras
+            fields.any { it.length > RuleTransferLimits.MAX_FIELD_CHARS }
+        }
+        return if (overlong) ImportRejection.FIELD_TOO_LONG else null
     }
 
     fun preview(existing: List<SignalRule>, incoming: List<SignalRule>): RuleImportPreview {
@@ -197,6 +282,29 @@ object RuleTransfer {
             spec.clearPassword()
         }
     }
+}
+
+/**
+ * Reads at most [maxBytes] from [input], refusing anything longer.
+ *
+ * `readBytes` sizes its buffer from the stream, so a hostile document allocates whatever it
+ * declares. This reads in fixed chunks and stops one byte past the limit, which is enough to
+ * know the file is too big without having held it.
+ *
+ * @return the decoded text, or null when the stream is longer than [maxBytes].
+ */
+fun readBoundedUtf8(input: InputStream, maxBytes: Long = RuleTransferLimits.MAX_ENCODED_BYTES): String? {
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    val collected = ByteArrayOutputStream()
+    var total = 0L
+    while (true) {
+        val read = input.read(buffer)
+        if (read < 0) break
+        total += read
+        if (total > maxBytes) return null
+        collected.write(buffer, 0, read)
+    }
+    return collected.toString(StandardCharsets.UTF_8.name())
 }
 
 @OptIn(ExperimentalEncodingApi::class)

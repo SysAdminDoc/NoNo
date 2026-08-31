@@ -16,8 +16,11 @@ import androidx.lifecycle.viewModelScope
 import com.sysadmindoc.nono.audit.auditStateFor
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.data.ConflictResolution
+import com.sysadmindoc.nono.data.ImportRejection
 import com.sysadmindoc.nono.data.RuleImportResult
 import com.sysadmindoc.nono.data.RuleTransfer
+import com.sysadmindoc.nono.data.RuleTransferLimits
+import com.sysadmindoc.nono.data.readBoundedUtf8
 import com.sysadmindoc.nono.data.PseudonymKeyStore
 import com.sysadmindoc.nono.data.SignalDatabase
 import com.sysadmindoc.nono.data.toMetrics
@@ -453,30 +456,64 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportRowCount = 0
         _state.value = _state.value.copy(transientMessage = "Export cancelled.")
     }
+    /**
+     * Reads and parses a chosen rule file entirely off the main thread.
+     *
+     * Both the size the picker declares and the bytes actually delivered are checked: a document
+     * provider can report one length and stream another, and only the second one is what has to
+     * fit in memory.
+     */
     fun beginImport(uri: Uri) {
         _state.value = _state.value.copy(transientMessage = "Reading rule file…")
         viewModelScope.launch(Dispatchers.IO) {
-            val result = runCatching {
-                getApplication<Application>().contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
-                    ?: error("The selected file could not be opened.")
+            val app = getApplication<Application>()
+            val declared = declaredSize(uri)
+            if (declared != null && declared > RuleTransferLimits.MAX_ENCODED_BYTES) {
+                withContext(Dispatchers.Main.immediate) {
+                    _state.value = _state.value.copy(transientMessage = ImportRejection.TOO_LARGE.message)
+                }
+                return@launch
             }
-            withContext(Dispatchers.Main.immediate) {
-                result.fold(
-                    onSuccess = { encoded -> processImportedEncoding(encoded) },
-                    onFailure = { _state.value = _state.value.copy(transientMessage = "Import failed; the selected URI could not be read.") },
-                )
+            val encoded = runCatching {
+                app.contentResolver.openInputStream(uri)?.use { readBoundedUtf8(it) }
+            }.getOrNull()
+            if (encoded == null) {
+                withContext(Dispatchers.Main.immediate) {
+                    _state.value = _state.value.copy(
+                        transientMessage = if (declared == null) {
+                            "Import failed; that file could not be read."
+                        } else {
+                            ImportRejection.TOO_LARGE.message
+                        },
+                    )
+                }
+                return@launch
             }
+            // Parsing, base64 and any key derivation stay on this dispatcher.
+            val result = RuleTransfer.importRules(encoded)
+            withContext(Dispatchers.Main.immediate) { applyImportResult(encoded, result) }
         }
     }
-    private fun processImportedEncoding(encoded: String) {
-        when (val result = RuleTransfer.importRules(encoded)) {
+
+    /** The size the document provider declares, or null when it will not say. */
+    private fun declaredSize(uri: Uri): Long? = runCatching {
+        getApplication<Application>().contentResolver
+            .query(uri, arrayOf(android.provider.OpenableColumns.SIZE), null, null, null)
+            ?.use { cursor ->
+                if (!cursor.moveToFirst() || cursor.isNull(0)) null else cursor.getLong(0)
+            }
+    }.getOrNull()
+
+    private fun applyImportResult(encoded: String, result: RuleImportResult) {
+        when (result) {
             is RuleImportResult.NeedsPassphrase -> {
                 pendingImportEncoded = encoded
                 _state.value = _state.value.copy(overlay = Overlay.TRANSFER_IMPORT_PASSPHRASE, transientMessage = null)
             }
             is RuleImportResult.Success -> showImportPreview(result.rules)
             RuleImportResult.Cancelled -> cancelTransfer()
-            RuleImportResult.InvalidFile -> _state.value = _state.value.copy(transientMessage = "Import failed; the file is invalid or unsupported.")
+            is RuleImportResult.InvalidFile ->
+                _state.value = _state.value.copy(transientMessage = result.rejection.message)
         }
     }
     fun submitImportPassphrase(passphrase: String) {
@@ -496,7 +533,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 when (result) {
                     is RuleImportResult.Success -> showImportPreview(result.rules)
                     RuleImportResult.Cancelled -> cancelTransfer()
-                    RuleImportResult.NeedsPassphrase, RuleImportResult.InvalidFile -> _state.value = _state.value.copy(overlay = Overlay.NONE, transientMessage = "Import failed; the passphrase or file is invalid.")
+                    RuleImportResult.NeedsPassphrase -> _state.value = _state.value.copy(
+                        overlay = Overlay.NONE,
+                        transientMessage = ImportRejection.WRONG_PASSPHRASE.message,
+                    )
+                    is RuleImportResult.InvalidFile -> _state.value = _state.value.copy(
+                        overlay = Overlay.NONE,
+                        transientMessage = result.rejection.message,
+                    )
                 }
             }
         }
