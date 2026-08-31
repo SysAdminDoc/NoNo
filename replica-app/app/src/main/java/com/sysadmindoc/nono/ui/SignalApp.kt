@@ -43,9 +43,16 @@ import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 
 @Composable
-fun SignalApp(model: MainViewModel) {
+fun SignalApp(model: MainViewModel, onUnlockRequested: () -> Unit = {}) {
     val state by model.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
+    if (state.appLocked) {
+        // Returned before anything else composes. A lock that hid content by drawing over it
+        // would still have built the screen underneath, and a screenshot or an accessibility
+        // traversal would read straight through it.
+        AppLockScreen(onUnlock = onUnlockRequested)
+        return
+    }
     // Keyed on the id, not the text: two deletes in a row produce the same string, and keying on
     // that left the second snackbar unshown while its record had already replaced the first.
     LaunchedEffect(state.transientMessageId) {

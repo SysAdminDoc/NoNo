@@ -39,6 +39,7 @@ import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.ImportExport
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.PauseCircle
@@ -83,6 +84,8 @@ import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.data.SignalPreferences
+import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
+import com.sysadmindoc.nono.runtime.NO_DEVICE_CREDENTIAL
 import com.sysadmindoc.nono.runtime.BackupOutcome
 import com.sysadmindoc.nono.runtime.BackupStatus
 import java.text.SimpleDateFormat
@@ -185,6 +188,14 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                     onClick = { model.setCapturePaused(!state.capturePaused) },
                 )
                 SignalDivider()
+                PersistentSwitchRow(
+                    state,
+                    model,
+                    Icons.Rounded.Lock,
+                    APP_LOCK_SETTING,
+                    describeAppLock(state),
+                )
+                SignalDivider()
                 PreferenceRow(
                     Icons.Rounded.Widgets,
                     "Widget count",
@@ -282,6 +293,21 @@ private const val NO_SUPPORT_CHANNEL = "This reconstruction has no support chann
 private const val BACKUP_FOLDER_EXPLANATION =
     "Backups are encrypted with a key held by this device and restore only here. " +
         "Use the encrypted export to move rules to another phone."
+
+/**
+ * What the lock row says underneath its title.
+ *
+ * A device with no screen lock gets told why the setting will not take, rather than a toggle that
+ * silently refuses. The tile and the widget are named because they keep working while locked, and
+ * a user who relies on either needs to know that before turning this on.
+ */
+internal fun describeAppLock(state: UiState): String = when {
+    !state.deviceCredentialAvailable -> NO_DEVICE_CREDENTIAL
+    state.settings[APP_LOCK_SETTING] == "On" ->
+        "Rules and history need your screen lock after a minute away. The Quick Settings tile and " +
+            "the widget keep working; neither shows any content."
+    else -> "Ask for your screen lock before showing any rule or record."
+}
 
 /** What Settings says the schedule last did. */
 internal fun describeBackupStatus(status: BackupStatus): String = when (status.outcome) {

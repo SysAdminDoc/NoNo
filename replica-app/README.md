@@ -25,6 +25,14 @@ for every saved rule. The counts exclude group summaries, as every other count i
 the screen states the relationship between its total and the History total instead of leaving the
 two to disagree.
 
+An optional app lock puts the device's own screen lock in front of every rule and every record. It
+is off by default and uses `KeyguardManager.createConfirmDeviceCredentialIntent`, so it adds no
+dependency and no permission. The lock screen names nothing behind it, the content behind it is not
+composed rather than merely covered, and the Quick Settings tile and the widget keep working while
+it is on because neither exposes any content. A device with no screen lock cannot turn the setting
+on, and one that loses its screen lock while the setting is on opens normally rather than trapping
+the user.
+
 Rule deletion is immediate and recoverable. Deleting one rule offers Undo, as does deleting the
 whole list. A second deletion restores the earlier pending rule before it takes over the snackbar.
 

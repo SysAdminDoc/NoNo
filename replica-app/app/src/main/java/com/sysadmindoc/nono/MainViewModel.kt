@@ -2,6 +2,8 @@ package com.sysadmindoc.nono
 
 import android.Manifest
 import android.app.Application
+import android.app.KeyguardManager
+import android.os.SystemClock
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.pm.PackageManager
@@ -91,6 +93,9 @@ import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.UndoableAction
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.defaultSettings
+import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
+import com.sysadmindoc.nono.runtime.NO_DEVICE_CREDENTIAL
+import com.sysadmindoc.nono.runtime.shouldLock
 import com.sysadmindoc.nono.runtime.BackupCadence
 import com.sysadmindoc.nono.runtime.BackupScheduler
 import com.sysadmindoc.nono.runtime.BackupStatus
@@ -165,6 +170,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private data class InsightsAnchor(val nowEpochMillis: Long, val zone: TimeZone)
 
     private val insightsNow = MutableStateFlow(InsightsAnchor(System.currentTimeMillis(), TimeZone.getDefault()))
+
+    /**
+     * The app lock's memory, which is deliberately only memory.
+     *
+     * Nothing writes "unlocked" to disk, so a process that has been killed comes back locked. Both
+     * are uptime rather than wall clock, because the wall clock can be moved and this decides
+     * whether someone has to prove who they are.
+     */
+    private var lastUnlockedElapsed: Long? = null
+    private var leftForegroundElapsed: Long? = null
     private var pendingExportPayload: String? = null
     private var pendingExportIsHistory = false
 
@@ -619,6 +634,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setOnboardingStep(step: Int) { _state.value = _state.value.copy(onboardingStep = step.coerceIn(0, 3)) }
     fun selectRoot(tab: RootTab) { _state.value = _state.value.copy(route = Route.ROOT, rootTab = tab, overlay = Overlay.NONE, transientMessage = null) }
     fun navigate(route: Route) { _state.value = _state.value.copy(route = route, overlay = Overlay.NONE, transientMessage = null, phraseInputVisible = false, selectedMetadataField = null) }
+    /**
+     * Recomputes the lock, and reports whether Android has a credential to check against.
+     *
+     * Called on every resume and every pause. A lock the device cannot satisfy is not applied:
+     * a user who removed their screen lock while this setting was on would otherwise be shut out
+     * of their own rules with no way back in.
+     */
+    fun refreshAppLock(leftForeground: Boolean = false) {
+        val app = getApplication<Application>()
+        val secure = runCatching {
+            ContextCompat.getSystemService(app, KeyguardManager::class.java)?.isDeviceSecure == true
+        }.getOrDefault(false)
+        if (leftForeground) leftForegroundElapsed = SystemClock.elapsedRealtime()
+        val enabled = _state.value.settings[APP_LOCK_SETTING] == "On"
+        val locked = shouldLock(
+            enabled = enabled,
+            deviceSecure = secure,
+            lastUnlockedElapsed = lastUnlockedElapsed,
+            leftForegroundElapsed = leftForegroundElapsed,
+            nowElapsed = SystemClock.elapsedRealtime(),
+        )
+        if (locked) lastUnlockedElapsed = null
+        _state.value = _state.value.copy(appLocked = locked, deviceCredentialAvailable = secure)
+    }
+
+    /** Records a successful unlock, and starts the grace period from now. */
+    fun onAppUnlocked() {
+        lastUnlockedElapsed = SystemClock.elapsedRealtime()
+        leftForegroundElapsed = null
+        _state.value = _state.value.copy(appLocked = false)
+    }
+
+    /** The app stays locked and says so, rather than looking like the tap did nothing. */
+    fun onAppUnlockFailed() {
+        _state.value = _state.value.withMessage("NoNo stays locked.")
+    }
+
     /** Re-anchors the fourteen-day trend on the day, and the zone, the user is actually in. */
     fun openInsights() {
         insightsNow.value = InsightsAnchor(System.currentTimeMillis(), TimeZone.getDefault())
@@ -1641,6 +1693,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (cadence.enabled && hasFolder) BackupScheduler.runOnce(app)
             }
             return
+        }
+        if (label == APP_LOCK_SETTING) {
+            // Turning it on with no screen lock set would leave the app asking for a credential
+            // that does not exist. The row says so instead of taking a setting it cannot honour.
+            if (value == "On" && !_state.value.deviceCredentialAvailable) {
+                _state.value = _state.value.copy(overlay = Overlay.NONE).withMessage(NO_DEVICE_CREDENTIAL)
+                return
+            }
+            // Turning it on locks nothing right now: the user is standing here having just proved
+            // they are the user. The lock takes effect when they leave.
+            if (value == "On") lastUnlockedElapsed = SystemClock.elapsedRealtime()
         }
         if (label == SignalPreferences.WIDGET_COUNT_SETTING) {
             val app = getApplication<Application>()

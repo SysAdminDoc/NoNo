@@ -1,11 +1,15 @@
 package com.sysadmindoc.nono
 
+import android.app.KeyguardManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +25,34 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
     private val requestedAuditState = MutableStateFlow("")
+
+    /**
+     * The unlock, handed to Android's own confirm screen.
+     *
+     * Deliberately the platform's device-credential prompt rather than a biometric library. It
+     * needs no dependency and no permission, which matters for an app whose permission list is
+     * one of its stated properties, and it already offers whatever the user has enrolled.
+     */
+    private val unlockRequest = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val model: MainViewModel by viewModels()
+        if (result.resultCode == RESULT_OK) model.onAppUnlocked() else model.onAppUnlockFailed()
+    }
+
+    private fun confirmDeviceCredential() {
+        val keyguard = ContextCompat.getSystemService(this, KeyguardManager::class.java)
+        val intent = keyguard?.createConfirmDeviceCredentialIntent(
+            "NoNo",
+            "Unlock to see your rules and history",
+        )
+        if (intent == null) {
+            // No screen lock to confirm against. Staying locked would shut the user out of their
+            // own rules with nothing they could do about it.
+            val model: MainViewModel by viewModels()
+            model.refreshAppLock()
+            return
+        }
+        unlockRequest.launch(intent)
+    }
 
     /** Rule a pinned launcher shortcut asked for, or [NO_RULE] when the app was opened normally. */
     private val requestedRuleId = MutableStateFlow(NO_RULE)
@@ -62,13 +94,24 @@ class MainActivity : ComponentActivity() {
                 }
                 DisposableEffect(lifecycleOwner, model) {
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) model.refreshCapabilities()
+                        when (event) {
+                            Lifecycle.Event.ON_RESUME -> {
+                                model.refreshCapabilities()
+                                model.refreshAppLock()
+                            }
+                            // The moment the app leaves the foreground is when the grace period
+                            // starts. Recomputed on the way out as well as on the way back, so a
+                            // process killed while backgrounded still returns locked.
+                            Lifecycle.Event.ON_STOP -> model.refreshAppLock(leftForeground = true)
+                            else -> Unit
+                        }
                     }
                     lifecycleOwner.lifecycle.addObserver(observer)
                     model.refreshCapabilities()
+                    model.refreshAppLock()
                     onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                 }
-                SignalApp(model)
+                SignalApp(model, onUnlockRequested = ::confirmDeviceCredential)
             }
         }
     }

@@ -480,6 +480,10 @@ data class UiState(
     val historyTotalCount: Int = 0,
     /** Aggregates over everything retained, for the Insights screen. */
     val insights: LocalInsights = LocalInsights(),
+    /** True while the lock is hiding every rule and every record behind the unlock screen. */
+    val appLocked: Boolean = false,
+    /** Whether Android has a screen lock for the app lock to check against. */
+    val deviceCredentialAvailable: Boolean = false,
     /** The chosen backup folder's short name, or null when none has been picked. */
     val backupFolderLabel: String? = null,
     /** What the scheduled backup last did. Written by the worker, read here. */
@@ -575,6 +579,7 @@ val defaultSettings = mapOf(
     "Language" to "System default",
     "Automatic backups" to "Off",
     "Widget count" to "All captured",
+    "Lock the app" to "Off",
     "Allow dismissing fixed notifications" to "On",
     "Adjust silent ringer mode for calls" to "Off",
     "Privacy mode" to "Off",
