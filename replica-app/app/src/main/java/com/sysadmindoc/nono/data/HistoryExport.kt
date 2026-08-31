@@ -80,9 +80,9 @@ object HistoryExport {
      * RFC 4180 quoting plus formula neutralization.
      *
      * Quoting alone is not enough. Excel, LibreOffice and Google Sheets all evaluate a cell whose
-     * text begins with `=`, `+`, `-` or `@` even when the CSV had it quoted, so a notification
-     * category, which the posting app writes freely, can become a formula in someone else's
-     * spreadsheet. A leading tab, carriage return or newline is stripped first because the
+     * text begins with `=`, `+`, `-` or `@` even when the CSV had it quoted. Historical rows and
+     * defensive callers can still contain app-authored values, so every exported cell remains
+     * neutralized. A leading tab, carriage return or newline is stripped first because the
      * spreadsheet ignores it and then reads the trigger behind it, and the full-width forms are
      * covered because the same applications normalize them.
      *

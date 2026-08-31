@@ -10,7 +10,9 @@ accessibility checks, and side-by-side comparisons are listed in
 
 Rules can also test the metadata Android supplies with a notification. Channel pseudonym,
 importance, category, conversation status, ongoing status, and group-summary status are available
-in the filter editor. Every selected condition must match.
+in the filter editor. Every selected condition must match. Category values outside Android's
+documented list are discarded. A transferred channel filter is marked for reselection and cannot
+match until the user picks a channel on the receiving install.
 
 Settings includes a capture self-test. It posts one temporary NoNo notification, waits up to eight
 seconds for the real listener callback, then reports Pass or Fail. The check is never written to
@@ -210,13 +212,17 @@ control rather than leaving the reader to infer it:
   `PendingIntent`.
 - **No notification content is stored.** The listener records package identity, notification key,
   posted time, channel/group/summary metadata, content provenance, bounded ingestion counters, and
-  failure timestamps. Titles and bodies are never persisted.
+  failure timestamps. Titles and bodies are never persisted. A posting app can put any string in
+  the category field, so only Android's documented category values cross the sanitizer. Unknown
+  values in older rows are cleared when the app or listener starts.
 - **Rule transfer and launcher shortcuts work; scheduled backups do not.** Encrypted rule
   import/export runs through Android's Storage Access Framework with a passphrase, a preview, a
   conflict choice, cancellation and error handling, and no notification history in the file. A
   rule from a file is given an id from this device rather than the one the file names. Pinning a
   rule to the launcher works on any launcher that supports pinned shortcuts, and says so when the
-  launcher refuses. There is no backup scheduler: nothing runs on a timer.
+  launcher refuses. Channel pseudonyms are tied to one install, so imported channel filters are
+  blocked and labelled until the user selects a local channel. There is no backup scheduler:
+  nothing runs on a timer.
 - **Dark, light, system, and wallpaper-matched themes are available** and the choice is persisted.
   Wallpaper matching appears on Android 12 and newer, and keeps the static light or dark palette
   when no derived accent passes the contrast checks. The app ships no translated resources, so the

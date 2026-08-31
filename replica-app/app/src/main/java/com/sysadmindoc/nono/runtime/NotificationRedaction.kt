@@ -9,6 +9,7 @@ import com.sysadmindoc.nono.data.IdentifierPseudonyms
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.MatchableFields
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.normalizedNotificationCategory
 
 /**
  * The system can replace OTP and similar sensitive notification fields before delivering a
@@ -71,7 +72,7 @@ data class SanitizedNotification(
     val importance: Int? = null,
     /** Whether the platform treats this as a conversation. Null below API 31. */
     val isConversation: Boolean? = null,
-    /** Platform category constant such as msg or email. A fixed vocabulary, never user text. */
+    /** A category accepted from Android's documented vocabulary; unknown app strings are dropped. */
     val category: String? = null,
     val isOngoing: Boolean = false,
 )
@@ -158,10 +159,10 @@ fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
 /**
  * Reads the platform's own assessment of a notification.
  *
- * Importance, conversation status, category and the ongoing flag all come from Android rather
- * than from anything the notification says, so they can be stored without holding content. They
- * are what tells a silent promotion apart from a priority conversation, which the app previously
- * could not distinguish at all.
+ * Importance and conversation status come from Android's ranking. Category and the ongoing flag
+ * come from the notification, so category is accepted only when it matches Android's documented
+ * vocabulary. These fields tell a silent promotion apart from a priority conversation without
+ * retaining notification content.
  */
 fun sanitizeNotification(
     sbn: StatusBarNotification,
@@ -197,7 +198,7 @@ fun sanitizeNotification(
         ),
         importance = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ranking?.importance else null,
         isConversation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ranking?.isConversation else null,
-        category = notification.category,
+        category = normalizedNotificationCategory(notification.category),
         isOngoing = notification.flags and Notification.FLAG_ONGOING_EVENT != 0,
     )
 }

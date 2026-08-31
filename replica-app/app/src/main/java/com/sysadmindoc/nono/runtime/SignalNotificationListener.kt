@@ -16,6 +16,7 @@ import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.toEntity
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -71,7 +72,11 @@ class SignalNotificationListener : NotificationListenerService() {
         serviceScope.launch {
             // One shot per install: rows written before the pseudonym scheme still hold the
             // identifiers the posting apps chose.
-            runCatching { database.notificationDao().pseudonymizeStoredIdentifiers(pseudonyms) }
+            runCatching {
+                val dao = database.notificationDao()
+                dao.pseudonymizeStoredIdentifiers(pseudonyms)
+                dao.discardUnknownCategories(notificationCategoryCatalog.map { it.first })
+            }
         }
         ingestor = NotificationIngestor(serviceScope) { captured ->
             // Off is a storage policy, not a capture pause: nothing new is written, and what is

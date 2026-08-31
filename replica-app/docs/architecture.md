@@ -23,9 +23,11 @@ counters. Every other notification from NoNo remains ignored.
 
 `onNotificationPosted` checks `CaptureGate`, reads the payload for the lifetime of that callback,
 and passes it to `NotificationRedaction.sanitizeNotification`. The sanitizer keeps title and body
-out of everything it returns, pseudonymizes identifiers, and retains the platform metadata needed
-for rule evaluation. A callback with no text is classified as unavailable because Android exposes
-no supported redaction flag. The sanitized result goes to `NotificationIngestor`, a bounded
+out of everything it returns, pseudonymizes identifiers, and retains the metadata needed for rule
+evaluation. Notification categories are app-authored strings despite their platform-defined names,
+so only values in Android's documented category list survive. Older unknown values are cleared when
+the app or listener starts. A callback with no text is classified as unavailable because Android
+exposes no supported redaction flag. The sanitized result goes to `NotificationIngestor`, a bounded
 `Channel(64)` drained by a single worker: a full queue drops the newest event and increments a
 counter rather than blocking the platform callback. The worker writes through
 `insertAndPrune`, which inserts and applies the retention cutoff in one transaction, then asks the
@@ -72,6 +74,9 @@ settings nor history are included.
 Encryption is AES-GCM with a 256-bit key derived by PBKDF2-HMAC-SHA256, a random salt, and a random
 IV; the passphrase is held as a char array and zeroed. Import previews additions and same-id
 conflicts before anything is committed, and cancellation leaves the caller's state alone.
+Channel pseudonyms cannot be transferred because each install has a different HMAC key. Import
+therefore clears each transferred channel value, marks the condition as needing reselection, warns
+the user, and keeps that condition from matching until a local channel is chosen.
 
 ## Clean-room boundaries
 

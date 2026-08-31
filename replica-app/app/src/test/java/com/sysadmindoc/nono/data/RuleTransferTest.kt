@@ -1,7 +1,9 @@
 package com.sysadmindoc.nono.data
 
 import com.sysadmindoc.nono.data.BoundedReadResult
+import com.sysadmindoc.nono.model.ChannelCondition
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.displayValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -123,6 +125,29 @@ class RuleTransferTest {
 
         assertTrue(encoded.contains("\"encrypted\":false"))
         assertEquals(incoming, (RuleTransfer.importRules(encoded) as RuleImportResult.Success).rules)
+    }
+
+    @Test
+    fun `channel filters are marked for reselection across install keys`() {
+        val source = IdentifierPseudonyms(ByteArray(32) { 1 })
+        val destination = IdentifierPseudonyms(ByteArray(32) { 2 })
+        val rawChannel = "private-account-channel"
+        val sourcePseudonym = checkNotNull(source.pseudonym(rawChannel))
+        val destinationPseudonym = checkNotNull(destination.pseudonym(rawChannel))
+        val rule = SignalRule(
+            id = 7L,
+            metadataConditions = listOf(ChannelCondition(sourcePseudonym)),
+        )
+
+        assertNotEquals(sourcePseudonym, destinationPseudonym)
+        val result = RuleTransfer.importRules(RuleTransfer.exportRules(listOf(rule))) as RuleImportResult.Success
+        val imported = result.rules.single().metadataConditions.single() as ChannelCondition
+
+        assertEquals(1, result.channelConditionsNeedingReselection)
+        assertEquals("", imported.channelPseudonym)
+        assertTrue(imported.needsReselection)
+        assertEquals("Select again after import", imported.displayValue())
+        assertNotEquals(destinationPseudonym, imported.channelPseudonym)
     }
 
     @Test

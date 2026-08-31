@@ -1,12 +1,20 @@
 package com.sysadmindoc.nono.runtime
 
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.normalizedNotificationCategory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NotificationRedactionTest {
+    @Test
+    fun `only documented notification categories cross the sanitizer boundary`() {
+        assertEquals("msg", normalizedNotificationCategory("msg"))
+        assertNull(normalizedNotificationCategory("account=matt@example.com"))
+        assertNull(normalizedNotificationCategory(null))
+    }
+
 
     @Test
     fun `english placeholder text is not treated as proof the system redacted anything`() {

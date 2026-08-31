@@ -47,9 +47,11 @@ import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.CaptureSelfTestState
 import com.sysadmindoc.nono.model.CaptureSelfTestStatus
+import com.sysadmindoc.nono.model.ChannelCondition
 import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
 import com.sysadmindoc.nono.model.HistoryQuery
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import com.sysadmindoc.nono.model.deriveRuleDraft
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
@@ -212,9 +214,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // The listener does this too, but it may never have run on this install, and rows an
             // older build wrote still hold the identifiers the posting apps chose.
             runCatching {
-                historyDatabase.notificationDao().pseudonymizeStoredIdentifiers(
+                val dao = historyDatabase.notificationDao()
+                dao.pseudonymizeStoredIdentifiers(
                     PseudonymKeyStore.get(application.noBackupFilesDir),
                 )
+                dao.discardUnknownCategories(notificationCategoryCatalog.map { it.first })
             }
         }
         viewModelScope.launch {
@@ -887,7 +891,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 pendingImportEncoded = encoded
                 _state.value = _state.value.copy(overlay = Overlay.TRANSFER_IMPORT_PASSPHRASE, transientMessage = null, transientUndo = null)
             }
-            is RuleImportResult.Success -> showImportPreview(result.rules)
+            is RuleImportResult.Success -> showImportPreview(
+                result.rules,
+                result.channelConditionsNeedingReselection,
+            )
             RuleImportResult.Cancelled -> cancelTransfer()
             is RuleImportResult.InvalidFile ->
                 _state.value = _state.value.withMessage(result.rejection.message)
@@ -908,7 +915,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             withContext(Dispatchers.Main.immediate) {
                 when (result) {
-                    is RuleImportResult.Success -> showImportPreview(result.rules)
+                    is RuleImportResult.Success -> showImportPreview(
+                        result.rules,
+                        result.channelConditionsNeedingReselection,
+                    )
                     RuleImportResult.Cancelled -> cancelTransfer()
                     RuleImportResult.NeedsPassphrase -> _state.value = _state.value.copy(overlay = Overlay.NONE).withMessage(ImportRejection.WRONG_PASSPHRASE.message)
                     is RuleImportResult.InvalidFile -> _state.value = _state.value.copy(overlay = Overlay.NONE).withMessage(result.rejection.message)
@@ -921,7 +931,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * so both the preview and the commit run off the main thread. Only the resulting state is
      * applied on it.
      */
-    private fun showImportPreview(incoming: List<SignalRule>) {
+    private fun showImportPreview(incoming: List<SignalRule>, channelReselections: Int) {
         val current = _state.value.rules
         pendingImportRules = incoming
         viewModelScope.launch(Dispatchers.Default) {
@@ -931,7 +941,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     overlay = Overlay.TRANSFER_PREVIEW,
                     transferAdditions = preview.additions.size,
                     transferConflicts = preview.conflicts.size,
-                    transientMessage = null,
+                    transientMessage = if (channelReselections > 0) {
+                        "Channel filters are device-bound. Select them again after import."
+                    } else {
+                        null
+                    },
                     transientUndo = null,
                 )
             }
@@ -947,6 +961,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.Default) {
             val preview = RuleTransfer.preview(current, incoming)
             val resolutions = preview.conflicts.associate { it.existing.id to resolution }
+            val appliedImports = preview.additions + if (resolution == ConflictResolution.REPLACE_EXISTING) {
+                preview.conflicts.map { it.incoming }
+            } else {
+                emptyList()
+            }
+            val channelReselections = appliedImports.sumOf { rule ->
+                rule.metadataConditions.count { condition ->
+                    condition is ChannelCondition && condition.needsReselection
+                }
+            }
             // Additions are renumbered from this device's counter, so a file cannot claim an id
             // that history already attributes to a rule the user deleted.
             val committed = RuleTransfer.commit(current, incoming, resolutions, nextRuleIdCounter)
@@ -961,7 +985,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     overlay = Overlay.NONE,
                     transferAdditions = 0,
                     transferConflicts = 0,
-                ).withMessage("Imported ${preview.additions.size} new rule(s); notification history was not imported.")
+                ).withMessage(
+                    buildString {
+                        append("Imported ${preview.additions.size} new rule(s). Notification history was not imported.")
+                        if (channelReselections > 0) {
+                            append(" Select $channelReselections channel filter(s) again before those rules can match.")
+                        }
+                    },
+                )
                 // Keep the in-memory counter in step with what was just written.
                 nextRuleIdCounter = decodeRuleStore(encoded)?.nextRuleId ?: nextRuleIdCounter
                 writeEncodedRules(encoded)

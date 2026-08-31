@@ -30,7 +30,9 @@ derived colour against every surface where it appears and keeps the built-in acc
 wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
 Rules can also require a channel pseudonym, importance, category, conversation status, ongoing
 status, or group-summary status. These conditions are checked during live capture and explained
-against stored records without saving notification content.
+against stored records without saving notification content. Unknown category strings are dropped
+at capture. Channel filters in a transferred rule stay blocked until a channel is selected again on
+the receiving install, because channel pseudonyms are deliberately different on every install.
 Settings can also post one temporary notification to prove that Android delivers it to NoNo's
 listener. The check never enters History or the ingestion counters. A shareable plain-text report
 contains the app version, listener state, counters, and last capture age, with no notification

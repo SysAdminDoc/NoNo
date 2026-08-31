@@ -24,7 +24,11 @@ sealed interface MetadataCondition
 
 @Serializable
 @SerialName("channel")
-data class ChannelCondition(val channelPseudonym: String) : MetadataCondition
+data class ChannelCondition(
+    val channelPseudonym: String,
+    /** True when a transfer carried a pseudonym that cannot identify a channel on this install. */
+    val needsReselection: Boolean = false,
+) : MetadataCondition
 
 @Serializable
 @SerialName("importance")
@@ -58,7 +62,7 @@ val MetadataCondition.field: MetadataField
 
 /** A short value suitable for a rule row or picker. */
 fun MetadataCondition.displayValue(): String = when (this) {
-    is ChannelCondition -> channelPseudonym
+    is ChannelCondition -> if (needsReselection) "Select again after import" else channelPseudonym
     is ImportanceCondition -> importanceLabel(level) ?: "Unknown ($level)"
     is CategoryCondition -> categoryLabel(category)
     is ConversationCondition -> required.yesNo()
@@ -105,6 +109,13 @@ val notificationCategoryCatalog: List<Pair<String, String>> = listOf(
     "voicemail" to "Voicemail",
     "workout" to "Workout",
 )
+
+private val notificationCategoryValues: Set<String> =
+    notificationCategoryCatalog.mapTo(mutableSetOf()) { it.first }
+
+/** Keeps only documented Android notification categories; apps can write arbitrary strings. */
+fun normalizedNotificationCategory(category: String?): String? =
+    category?.takeIf(notificationCategoryValues::contains)
 
 fun categoryLabel(category: String): String =
     notificationCategoryCatalog.firstOrNull { it.first == category }?.second ?: category

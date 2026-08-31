@@ -409,7 +409,9 @@ private fun MetadataConditionDialog(state: UiState, model: MainViewModel) {
 
 private fun metadataChoices(field: MetadataField, state: UiState): List<MetadataChoice> = when (field) {
     MetadataField.CHANNEL -> {
-        val current = (state.draft.metadataCondition(field) as? ChannelCondition)?.channelPseudonym
+        val current = (state.draft.metadataCondition(field) as? ChannelCondition)
+            ?.takeUnless { it.needsReselection }
+            ?.channelPseudonym
         val channels = (state.history.mapNotNull { it.channelId } + listOfNotNull(current)).distinct().sorted()
         listOf(MetadataChoice("Any channel", null)) +
             channels.map { MetadataChoice(it, ChannelCondition(it)) }

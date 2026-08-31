@@ -54,7 +54,7 @@ data class NotificationEntity(
     val importance: Int? = null,
     /** Whether the platform treats this as a conversation. Null below API 31. */
     val isConversation: Boolean? = null,
-    /** Platform category constant. A fixed vocabulary, never anything the notification said. */
+    /** Category accepted from Android's documented vocabulary. Unknown app values are discarded. */
     val category: String? = null,
     val isOngoing: Boolean = false,
     /** Starred records are kept until the user unstars them, whatever the retention period says. */
@@ -472,6 +472,13 @@ interface NotificationDao {
 
     @Query("SELECT COUNT(*) FROM notification_history")
     suspend fun count(): Int
+
+    /** Removes category strings written before the listener enforced Android's documented list. */
+    @Query(
+        "UPDATE notification_history SET category = NULL " +
+            "WHERE category IS NOT NULL AND category NOT IN (:allowedCategories)",
+    )
+    suspend fun discardUnknownCategories(allowedCategories: List<String>): Int
 
     /**
      * Every retained row, for export.

@@ -56,12 +56,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - "Enable for" is gone from the rule menu. There is no scheduler, so a rule was never going to switch itself off, and the confirmation used to say it would. An imported rule carrying an expiry can have it removed.
 - Importing a rule file is bounded and happens entirely off the main thread. The file is capped at 5 MB and its contents at 4 MB, 10,000 rules and 4 KB per value, checked against both the size the picker declares and the bytes actually delivered. Encryption settings are validated before any key is derived. A refusal now says which limit it hit, and never quotes the file back at you.
 - Exporting history writes every retained record, not the page History happened to be showing. The old export was capped at 100 rows and honoured whatever filters were on screen, with nothing saying so. The confirmation now names the count.
-- Cells that a spreadsheet would run as a formula are written as text. A notification category is whatever the posting app wrote, so one starting with `=`, `+`, `-` or `@` could execute in Excel or Sheets. Tabs and line breaks hiding in front of one are covered too, as are the full-width characters.
+- Cells that a spreadsheet would run as a formula are written as text. Every exported field is neutralized, including category values in historical rows, so one starting with `=`, `+`, `-` or `@` cannot execute in Excel or Sheets. Tabs and line breaks hiding in front of one are covered too, as are the full-width characters.
 - Notification keys, channel ids and group keys are stored as per-install pseudonyms. Apps choose those strings themselves and routinely put an address, a phone number or a conversation name in them, which is not metadata. The package name is untouched, so rules still match on it, and repeated posts of one notification still collapse into a single record. Records written by an earlier build are rewritten the first time you open the app or the listener starts.
 - A notification that arrives with no title and no text is now recorded as exactly that. The app used to file some of them as redacted by Android, based on an undocumented extra and a list of English phrases. Android publishes nothing that confirms it, so the app no longer claims it. The explainer covers both possibilities and still offers the ADB command.
 
 ### Fixed
 
+- Notification categories now cross the storage boundary only when they match Android's documented values. Apps can write arbitrary strings into that field, so unknown values are dropped during capture and cleared from older rows when NoNo starts.
+- Channel filters no longer appear to survive a rule transfer when their per-install pseudonym cannot. Import clears the unusable value, marks the filter for reselection, warns the user, and keeps the condition from matching until a local channel is chosen.
 - A notification listener started by the system, with the app never opened, now reads your saved retention period before it prunes anything. It previously used the 30 day default until you opened the app, so a saved 7 day or Forever choice was ignored in the background.
 - Saving a rule starter from Explore no longer overwrites an existing rule. Starters carried the id every new rule got by default, so saving one replaced whatever rule already held it.
 - Editing a rule you had switched off no longer switches it back on. Save used to force every rule it wrote to enabled.
@@ -136,11 +138,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   notification's action, which this build neither stores nor fires. Package visibility is declared
   narrowly, for launchable activities only, rather than by asking to see every installed package.
 
-- History now records what Android itself thought of each notification: channel importance, whether
-  it is a conversation, the platform category, and whether it is ongoing. All four come from the
-  system rather than from anything the notification said, and they are what tells a silent promotion
-  apart from a priority conversation. History can filter on importance and on conversations, and
-  each row shows the values it has.
+- History now records channel importance, conversation state, an allowlisted notification category,
+  and whether the notification is ongoing. Apps author the category string, so only Android's
+  documented values are kept. Together these fields distinguish a silent promotion from a priority
+  conversation. History can filter on importance and conversations, and each row shows the values
+  it has.
 
 - A warning when the listener has gone quiet. Access granted, the service reporting itself
   connected, and nothing captured for twelve hours is the shape an OEM battery manager leaves

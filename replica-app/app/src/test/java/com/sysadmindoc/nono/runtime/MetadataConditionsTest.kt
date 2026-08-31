@@ -100,9 +100,9 @@ class MetadataConditionsTest {
         val rule = SignalRule(
             id = 11L,
             metadataConditions = listOf(
-                ChannelCondition(""),
+                ChannelCondition("", needsReselection = true),
                 ImportanceCondition(99),
-                CategoryCondition(""),
+                CategoryCondition("account=matt@example.com"),
             ),
         )
 
@@ -110,6 +110,7 @@ class MetadataConditionsTest {
 
         assertTrue(EvaluationReason.INVALID_METADATA_CONDITION in trace.reasons)
         assertTrue(trace.metadataConditions.all { it.failure == MetadataConditionFailure.INVALID_CONDITION })
+        assertEquals("Select again after import", trace.metadataConditions.first().expectedValue)
         assertNull(evaluateRules(listOf(rule), matchingPayload, sdkInt = 36).matchedRuleId)
     }
 

@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
 import org.junit.After
@@ -95,6 +96,34 @@ class SignalDatabaseTest {
         val ongoing = dao.observeHistory(query = "", filter = "All").first().single { it.notificationKey == "promo" }
         assertEquals(true, ongoing.isOngoing)
         assertEquals("promo", ongoing.category)
+    }
+
+    @Test
+    fun unknownHistoricalCategoriesAreDiscarded() = runBlocking {
+        val dao = database.notificationDao()
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "known",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.NOT_STORED.name,
+                category = "msg",
+            ),
+        )
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "unknown",
+                packageName = "com.example.hostile",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.NOT_STORED.name,
+                category = "account=matt@example.com",
+            ),
+        )
+
+        assertEquals(1, dao.discardUnknownCategories(notificationCategoryCatalog.map { it.first }))
+        val rows = dao.observeRecent().first().associateBy { it.notificationKey }
+        assertEquals("msg", rows.getValue("known").category)
+        assertEquals(null, rows.getValue("unknown").category)
     }
 
     @Test

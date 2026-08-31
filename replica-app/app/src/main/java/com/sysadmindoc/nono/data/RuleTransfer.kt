@@ -92,7 +92,10 @@ enum class ImportRejection(val message: String) {
 }
 
 sealed interface RuleImportResult {
-    data class Success(val rules: List<SignalRule>) : RuleImportResult
+    data class Success(
+        val rules: List<SignalRule>,
+        val channelConditionsNeedingReselection: Int = 0,
+    ) : RuleImportResult
     data object NeedsPassphrase : RuleImportResult
     data object Cancelled : RuleImportResult
     data class InvalidFile(val rejection: ImportRejection) : RuleImportResult
@@ -236,7 +239,21 @@ object RuleTransfer {
         val rules = decodeRules(bytes.toString(StandardCharsets.UTF_8))
             ?: return RuleImportResult.InvalidFile(ImportRejection.UNREADABLE)
         rejectionFor(rules)?.let { return RuleImportResult.InvalidFile(it) }
-        return RuleImportResult.Success(rules)
+        val channelConditionsNeedingReselection = rules.sumOf { rule ->
+            rule.metadataConditions.count { it is ChannelCondition }
+        }
+        val portableRules = rules.map { rule ->
+            rule.copy(
+                metadataConditions = rule.metadataConditions.map { condition ->
+                    if (condition is ChannelCondition) {
+                        condition.copy(channelPseudonym = "", needsReselection = true)
+                    } else {
+                        condition
+                    }
+                },
+            )
+        }
+        return RuleImportResult.Success(portableRules, channelConditionsNeedingReselection)
     }
 
     /** @return why [rules] cannot be imported, or null when they are within every bound. */

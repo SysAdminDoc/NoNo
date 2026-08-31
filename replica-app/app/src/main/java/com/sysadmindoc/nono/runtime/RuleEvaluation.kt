@@ -17,6 +17,7 @@ import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.evaluatePhrase
 import com.sysadmindoc.nono.model.importanceLabel
+import com.sysadmindoc.nono.model.normalizedNotificationCategory
 import com.sysadmindoc.nono.model.phraseConditionFor
 import com.sysadmindoc.nono.model.matchesSchedule
 import java.util.TimeZone
@@ -294,7 +295,7 @@ fun evaluateMetadataConditions(
             actual = payload.channelId,
             expected = condition.channelPseudonym,
             actualLabel = payload.channelId,
-            valid = condition.channelPseudonym.isNotBlank(),
+            valid = !condition.needsReselection && condition.channelPseudonym.isNotBlank(),
         )
         is ImportanceCondition -> metadataTrace(
             condition = condition,
@@ -308,7 +309,7 @@ fun evaluateMetadataConditions(
             actual = payload.category,
             expected = condition.category,
             actualLabel = payload.category?.let(::categoryLabel),
-            valid = condition.category.isNotBlank(),
+            valid = normalizedNotificationCategory(condition.category) != null,
         )
         is ConversationCondition -> metadataTrace(
             condition = condition,
