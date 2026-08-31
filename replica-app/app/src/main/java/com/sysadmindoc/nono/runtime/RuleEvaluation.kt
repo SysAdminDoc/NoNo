@@ -163,6 +163,10 @@ private fun evaluateRule(
         when {
             contentState == NotificationContentState.HIDDEN_BY_SYSTEM -> add(EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM)
             !ruleRequiresContent(rule) -> Unit
+            // The text itself decides, not the provenance. A metadata-only history row is stored
+            // as AVAILABLE and replays with no text at all, and a negated rule would otherwise
+            // read that absence as proof the phrase was not there.
+            matchableText == null -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             contentState != NotificationContentState.AVAILABLE -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             !matchesPhrase(rule, matchableText) -> add(EvaluationReason.PHRASE_MISMATCH)
         }
@@ -196,7 +200,8 @@ private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean 
  */
 private fun matchesPhrase(rule: SignalRule, text: String?): Boolean {
     if (rule.phrase.isBlank() || rule.phrase.equals("anything", ignoreCase = true)) return true
-    val present = text?.contains(rule.phrase.trim().lowercase()) == true
+    if (text == null) return false
+    val present = text.contains(rule.phrase.trim().lowercase())
     return if (isNegatedMatchType(rule.matchType)) !present else present
 }
 

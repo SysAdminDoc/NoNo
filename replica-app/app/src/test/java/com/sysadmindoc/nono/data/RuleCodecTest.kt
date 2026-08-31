@@ -55,6 +55,43 @@ class RuleCodecTest {
     }
 
     @Test
+    fun `rules that arrive without an id are given one instead of collapsing`() {
+        // A hand-written or third-party rule file can omit the id. The model default is the
+        // unsaved sentinel, so all three used to share id 0: distinctBy kept one, and the
+        // survivor could never be edited because every save saw the sentinel and appended a copy.
+        val encoded = """
+            {"version":3,"rules":[
+              {"name":"A","app":"any app","phrase":"alpha","action":"Mute"},
+              {"name":"B","app":"any app","phrase":"beta","action":"Mute"},
+              {"name":"C","app":"any app","phrase":"gamma","action":"Mute"}
+            ]}
+        """.trimIndent()
+
+        val decoded = decodeRules(encoded).orEmpty()
+
+        assertEquals(listOf("A", "B", "C"), decoded.map { it.name })
+        assertEquals(listOf(1L, 2L, 3L), decoded.map { it.id })
+        // Deterministic, and stable once allocated.
+        assertEquals(decoded, decodeRules(encoded))
+        assertEquals(decoded, decodeRules(encodeRules(decoded)))
+    }
+
+    @Test
+    fun `an allocated id never lands on one the file already used`() {
+        val encoded = """
+            {"version":3,"rules":[
+              {"id":4,"name":"Existing","app":"any app","phrase":"alpha","action":"Mute"},
+              {"name":"New","app":"any app","phrase":"beta","action":"Mute"}
+            ]}
+        """.trimIndent()
+
+        val decoded = decodeRules(encoded).orEmpty()
+
+        assertEquals(2, decoded.size)
+        assertEquals(listOf(4L, 5L), decoded.map { it.id })
+    }
+
+    @Test
     fun `round trips an empty store`() {
         assertEquals(emptyList<SignalRule>(), decodeRules(encodeRules(emptyList())))
     }

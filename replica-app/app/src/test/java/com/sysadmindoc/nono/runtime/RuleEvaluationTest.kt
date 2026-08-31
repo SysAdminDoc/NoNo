@@ -81,6 +81,42 @@ class RuleEvaluationTest {
     }
 
     @Test
+    fun `a negated rule does not match a metadata-only history row`() {
+        // A stored row replays with its provenance but no text. Reading that absence as proof the
+        // phrase was not there made every negated rule claim it would have matched everything in
+        // History, with no reason given.
+        val negated = SignalRule(id = 7, app = "any app", phrase = "invoice", matchType = "doesn't contain", action = "Mute")
+
+        val trace = evaluateHistoryRecord(
+            rules = listOf(negated),
+            record = HistoryRecord(id = 3L, app = "com.example.chat", contentState = NotificationContentState.AVAILABLE),
+            sdkInt = 36,
+        )
+
+        assertEquals(null, trace.matchedRuleId)
+        assertTrue(EvaluationReason.CONTENT_NOT_AVAILABLE in trace.conditions.single().reasons)
+    }
+
+    @Test
+    fun `an app-only rule still matches a metadata-only history row`() {
+        // The counterpart: absent text is only a refusal for a rule that tests text.
+        val appOnly = SignalRule(id = 8, app = "com.example.chat", appPackageName = "com.example.chat", phrase = "anything", action = "Mute")
+
+        val trace = evaluateHistoryRecord(
+            rules = listOf(appOnly),
+            record = HistoryRecord(
+                id = 4L,
+                app = "com.example.chat",
+                appPackageName = "com.example.chat",
+                contentState = NotificationContentState.NOT_STORED,
+            ),
+            sdkInt = 36,
+        )
+
+        assertEquals(8L, trace.matchedRuleId)
+    }
+
+    @Test
     fun `disabled and unsupported rules remain in the activity trace`() {
         val trace = evaluateRules(
             rules = listOf(

@@ -82,8 +82,8 @@ class SignalWidgetProvider : AppWidgetProvider() {
             DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(epochMillis))
 
         private fun provenanceLabel(contentState: String?): String = when (contentState?.let { runCatching { NotificationContentState.valueOf(it) }.getOrNull() }) {
-            NotificationContentState.HIDDEN_BY_SYSTEM -> "Latest: content hidden by system"
-            NotificationContentState.NOT_AVAILABLE -> "Latest: content unavailable"
+            NotificationContentState.HIDDEN_BY_SYSTEM -> "Latest: recorded as hidden by an earlier build"
+            NotificationContentState.NOT_AVAILABLE -> "Latest: no content arrived"
             NotificationContentState.NOT_STORED -> "Latest: metadata only"
             NotificationContentState.AVAILABLE -> "Latest: content provenance available"
             null -> "Metadata capture active"

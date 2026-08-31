@@ -20,11 +20,14 @@ data class IngestionMetrics(
  * Bounded hand-off from the main-thread listener callback to storage. The callback performs no
  * disk I/O and has a fixed upper bound on retained work. A full queue drops the newest event and
  * increments a diagnostic counter rather than blocking the system callback.
+ *
+ * @param persist returns true when the item reached storage. A policy that declines to store an
+ * item is not a failure, but counting it as persisted would report rows that are not there.
  */
 class NotificationIngestor<T>(
     private val scope: CoroutineScope,
     capacity: Int = 64,
-    private val persist: suspend (T) -> Unit,
+    private val persist: suspend (T) -> Boolean,
 ) {
     init {
         require(capacity > 0) { "capacity must be positive" }
@@ -38,7 +41,7 @@ class NotificationIngestor<T>(
         for (item in queue) {
             updateMetrics { it.copy(queued = (it.queued - 1).coerceAtLeast(0)) }
             runCatching { persist(item) }
-                .onSuccess { updateMetrics { it.copy(persisted = it.persisted + 1) } }
+                .onSuccess { stored -> if (stored) updateMetrics { it.copy(persisted = it.persisted + 1) } }
                 .onFailure { updateMetrics { it.copy(failed = it.failed + 1) } }
         }
     }

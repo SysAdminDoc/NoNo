@@ -326,24 +326,6 @@ private fun ChoiceDialog(title: String, choices: List<String>, selected: String?
     }
 }
 
-@Composable
-private fun CatalogDialog(title: String, choices: List<String>, initialIndex: Int, onDismiss: () -> Unit, onChoice: (String) -> Unit) {
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex.coerceAtMost(choices.lastIndex))
-    Dialog(onDismissRequest = onDismiss) {
-        LazyColumn(
-            Modifier.width(244.dp).heightIn(max = 560.dp)
-                .background(SignalColors.Surface, RoundedCornerShape(SignalMetrics.controlRadius))
-                .border(1.dp, SignalColors.Border, RoundedCornerShape(SignalMetrics.controlRadius))
-                .padding(vertical = 4.dp),
-            state = listState,
-        ) {
-            items(choices) { choice ->
-                Text(choice, fontSize = 17.sp, modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { onChoice(choice) }.padding(horizontal = 16.dp, vertical = 14.dp))
-            }
-        }
-    }
-}
-
 /** @param unavailable when set, the entry is shown with the reason and cannot be chosen. */
 private data class MenuItem(
     val label: String,

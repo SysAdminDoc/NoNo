@@ -14,7 +14,6 @@ import com.sysadmindoc.nono.data.decodeRules
 import com.sysadmindoc.nono.data.toEntity
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,12 +45,10 @@ class SignalNotificationListener : NotificationListenerService() {
     private lateinit var pseudonyms: IdentifierPseudonyms
 
     /**
-     * Completes once the persisted settings have been read at least once.
-     *
-     * The worker awaits this before its first write, so a cold-started service cannot prune with
-     * the process default retention or store a record the user switched off.
+     * The worker waits on this before its first write, so a cold-started service cannot prune
+     * with the process default retention or store a record the user switched off.
      */
-    private val settingsLoaded = CompletableDeferred<Unit>()
+    private val settings = ListenerSettingsGate()
 
     /**
      * Latest saved rules, kept here so evaluation stays on the callback thread with the payload.
@@ -72,16 +69,16 @@ class SignalNotificationListener : NotificationListenerService() {
             runCatching { database.notificationDao().pseudonymizeStoredIdentifiers(pseudonyms) }
         }
         ingestor = NotificationIngestor(serviceScope) { captured ->
-            settingsLoaded.await()
             // Off is a storage policy, not a capture pause: nothing new is written, and what is
             // already stored stays until the user deletes it.
-            val written = persistCapture(currentListenerSettings(), System.currentTimeMillis()) { cutoff ->
+            val written = persistCapture(settings.awaitSettings(), System.currentTimeMillis()) { cutoff ->
                 database.notificationDao().insertAndPrune(
                     captured.sanitized.toEntity(captured.matchedRuleIds, captured.matchState),
                     cutoff,
                 )
             }
             if (written) SignalWidgetProvider.requestUpdate(applicationContext)
+            written
         }
         serviceScope.launch {
             // The platform can start this service with no Activity ever having run, so the rules
@@ -89,9 +86,10 @@ class SignalNotificationListener : NotificationListenerService() {
             SignalPreferences.get(applicationContext).data
                 .catch { emit(emptyPreferences()) }
                 .collect { preferences ->
+                    // Published first: a decode that throws must not leave the worker waiting on
+                    // settings that will never arrive.
+                    settings.publish(listenerSettings(preferences))
                     currentRules = decodeRules(preferences[SignalPreferences.RULES_KEY]).orEmpty()
-                    applyListenerSettings(listenerSettings(preferences))
-                    settingsLoaded.complete(Unit)
                 }
         }
         serviceScope.launch {

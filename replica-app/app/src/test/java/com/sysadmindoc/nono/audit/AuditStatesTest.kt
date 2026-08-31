@@ -73,4 +73,41 @@ class AuditStatesTest {
         )
         ids.forEach { assertNotNull("state $it must resolve", auditStateFor(base, it)) }
     }
+
+    @Test
+    fun `no captured state names an overlay the app no longer renders`() {
+        // Resolving non-null is not enough: an id pointing at a removed overlay resolves to a
+        // state that draws nothing, so the capture silently becomes a screenshot of the page
+        // behind it. Overlay.NONE is the only value that legitimately draws no dialog.
+        val overlayStates = listOf(
+            "021_mute_mode_dialog" to Overlay.MUTE_MODE,
+            "023_history_storage_dialog" to Overlay.HISTORY_STORAGE,
+            "024_history_retention_dialog" to Overlay.HISTORY_RETENTION,
+            "027_theme_dialog" to Overlay.THEME,
+            "032_condition_match_type_dialog" to Overlay.CONDITION_TYPE,
+            "044_add_filter_menu" to Overlay.ADD_FILTER,
+            "065_rule_overflow_menu" to Overlay.RULE_MORE,
+        )
+
+        overlayStates.forEach { (id, expected) ->
+            assertEquals("state $id", expected, resolve(id).overlay)
+        }
+    }
+
+    @Test
+    fun `the filter group captures differ from one another`() {
+        // Five ids used to resolve to one identical state once the extras and operator dialogs
+        // were removed, so five captures were the same screenshot.
+        val states = listOf(
+            "036_extras_filter_selector",
+            "037_extras_filter_selector_scrolled",
+            "038_extras_filter_selector_bottom",
+            "039_filter_group_default",
+            "040_filter_operator_dialog",
+        ).map { resolve(it) }
+
+        states.forEach { assertEquals(Route.FILTER_GROUP, it.route) }
+        // 036 and 039 both show the screen with nothing selected, which is the same capture.
+        assertEquals(4, states.map { it.draft.extras to it.draft.filterOperator }.distinct().size)
+    }
 }

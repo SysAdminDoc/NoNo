@@ -111,26 +111,37 @@ val matchTypeCatalog = listOf(DEFAULT_MATCH_TYPE, NEGATED_MATCH_TYPE)
  * vocabulary ("contains any of", "doesn't contain all of") maps through here on decode.
  */
 fun normalizeMatchType(matchType: String): String {
+    // Curly apostrophes reach this from any editor with smart quotes, and the failure direction
+    // matters: an unrecognized negation would silently become an affirmative match, so a rule
+    // written to exclude something would start selecting it instead.
     val normalized = matchType.trim().lowercase()
-    val negated = normalized.startsWith("doesn't") ||
-        normalized.startsWith("does not") ||
-        normalized.startsWith("not ")
+        .replace('’', '\'')
+        .replace('ʼ', '\'')
+    val negated = NEGATION_MARKERS.any { normalized.startsWith(it) }
     return if (negated) NEGATED_MATCH_TYPE else DEFAULT_MATCH_TYPE
 }
+
+private val NEGATION_MARKERS = listOf(
+    "doesn't",
+    "does not",
+    "do not",
+    "don't",
+    "not ",
+    "no ",
+    "isn't",
+    "is not",
+    "won't",
+    "will not",
+    "excludes",
+    "exclude",
+    "without",
+    "lacks",
+    "missing",
+)
 
 fun isNegatedMatchType(matchType: String): Boolean =
     normalizeMatchType(matchType) == NEGATED_MATCH_TYPE
 
-/**
- * Operators for nested filter groups. Nothing evaluates these, so the rule builder shows the
- * stored value and refuses to change it rather than offering a choice that does nothing.
- */
-val filterOperatorCatalog = listOf(
-    "Contains any",
-    "Contains all",
-    "Doesn't contain any",
-    "Doesn't contain all",
-)
 
 /** Why the filter-group and extra-property controls cannot be used. */
 const val NO_FILTER_ENGINE = "This build evaluates app and phrase conditions only."
@@ -337,11 +348,6 @@ val actionCatalog = listOf(
     "Sticky", "Summarize", "Add share button", "Dismiss", "Keep if", "Undo dismiss",
     "Open notification", "Press button", "Reply", "Copy verification code", "Remove from history",
     "Restore after reboot", "Set ringer", "Trigger MacroDroid", "Trigger Tasker", "Multi-tool"
-)
-
-val extraFilterCatalog = listOf(
-    "Image", "Phone number", "Emoji", "Group conversation", "Language", "Custom layout",
-    "Fixed notification", "Media notification", "Category", "Image of", "Text length"
 )
 
 fun renderRuleSentence(rule: SignalRule): String =

@@ -3,6 +3,7 @@ package com.sysadmindoc.nono.data
 import com.sysadmindoc.nono.model.CURRENT_RULE_STORE_VERSION
 import com.sysadmindoc.nono.model.RuleStore
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.ANY_APP_LABEL
 import com.sysadmindoc.nono.model.appOptionForLabel
 import com.sysadmindoc.nono.model.normalizeMatchType
@@ -46,15 +47,28 @@ fun decodeRules(encoded: String?): List<SignalRule>? {
  */
 private fun migrateRules(version: Int, rules: List<SignalRule>): List<SignalRule> =
     when (version) {
-        1 -> rules
-            .map(::normalizeRule)
-            .distinctBy { it.id }
-        2, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
+        1, 2, CURRENT_RULE_STORE_VERSION -> normalizeRules(rules)
         else -> emptyList()
     }
 
+/**
+ * Gives every rule a real id before duplicates are dropped.
+ *
+ * A rule file can omit the id, and the model default is the unsaved sentinel, so an import of
+ * three id-less rules used to collapse into one and the survivor could never be edited: every
+ * save saw the sentinel, decided the rule was new, and appended a copy. Ids are allocated in
+ * file order from above whatever the file already used, so the result is deterministic.
+ */
+private fun allocateMissingIds(rules: List<SignalRule>): List<SignalRule> {
+    if (rules.none { it.id == UNSAVED_RULE_ID }) return rules
+    var next = (rules.maxOfOrNull { it.id } ?: 0L) + 1L
+    return rules.map { rule ->
+        if (rule.id != UNSAVED_RULE_ID) rule else rule.copy(id = next++)
+    }
+}
+
 private fun normalizeRules(rules: List<SignalRule>): List<SignalRule> =
-    rules.map(::normalizeRule).distinctBy { it.id }
+    allocateMissingIds(rules.map(::normalizeRule)).distinctBy { it.id }
 
 /** Adds package identity for labels emitted by the app selector without guessing unknown apps. */
 private fun normalizeRule(rule: SignalRule): SignalRule {

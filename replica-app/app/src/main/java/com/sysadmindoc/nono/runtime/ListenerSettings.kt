@@ -2,6 +2,8 @@ package com.sysadmindoc.nono.runtime
 
 import androidx.datastore.preferences.core.Preferences
 import com.sysadmindoc.nono.data.SignalPreferences
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The persisted settings the listener needs before it writes anything.
@@ -32,6 +34,43 @@ fun currentListenerSettings(): ListenerSettings = ListenerSettings(
     retention = HistoryRetentionSettings.get(),
     storage = HistoryStorageSettings.get(),
 )
+
+/**
+ * Holds the ingestion worker until the persisted settings have been read once.
+ *
+ * Without it a cold-started listener prunes with the process default while the user's saved
+ * period sits unread on disk. With an unbounded wait it would be worse: a preference read that
+ * never completes parks the worker forever, the bounded queue fills, every later capture is
+ * counted as dropped, and the service cannot even shut down, because closing the ingestor joins
+ * a worker that never returns. So the wait is bounded and falls back to the defaults, which is
+ * what an unreadable store means anyway.
+ */
+class ListenerSettingsGate(private val timeoutMillis: Long = DEFAULT_TIMEOUT_MILLIS) {
+
+    private val loaded = CompletableDeferred<Unit>()
+
+    /** Publishes a fresh read and releases anything waiting on the first one. */
+    fun publish(settings: ListenerSettings) {
+        applyListenerSettings(settings)
+        loaded.complete(Unit)
+    }
+
+    /** True once a read has been published. Waiting callers are released. */
+    val isLoaded: Boolean get() = loaded.isCompleted
+
+    /**
+     * @return the published settings, or the defaults if none arrived within the timeout.
+     */
+    suspend fun awaitSettings(): ListenerSettings {
+        withTimeoutOrNull(timeoutMillis) { loaded.await() }
+        return currentListenerSettings()
+    }
+
+    companion object {
+        /** Long enough for a DataStore read, short enough that ingestion is not held hostage. */
+        const val DEFAULT_TIMEOUT_MILLIS = 5_000L
+    }
+}
 
 /**
  * Applies the storage policy to one capture.

@@ -21,7 +21,7 @@ class NotificationIngestorTest {
         val ingestor = NotificationIngestor<Int>(
             scope = workerScope,
             capacity = 4,
-            persist = { persisted += it },
+            persist = { persisted += it; true },
         )
 
         assertTrue(ingestor.offer(1))
@@ -40,7 +40,7 @@ class NotificationIngestorTest {
         val ingestor = NotificationIngestor<Int>(
             scope = workerScope,
             capacity = 1,
-            persist = { },
+            persist = { true },
         )
 
         assertTrue(ingestor.offer(1))

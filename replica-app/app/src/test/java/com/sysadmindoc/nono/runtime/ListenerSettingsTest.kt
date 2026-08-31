@@ -3,6 +3,8 @@ package com.sysadmindoc.nono.runtime
 import androidx.datastore.preferences.core.edit
 import com.sysadmindoc.nono.data.SignalPreferences
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -122,6 +124,68 @@ class ListenerSettingsTest {
         persistCapture(listenerSettings(writer.data.first()), now) { cutoffs += it }
 
         assertEquals(listOf(Long.MIN_VALUE), cutoffs)
+    }
+
+    @Test
+    fun `the gate holds ingestion until the persisted settings arrive`() = runTest {
+        val gate = ListenerSettingsGate()
+        val cutoffs = mutableListOf<Long>()
+        val now = 1_700_000_000_000L
+        applyListenerSettings(ListenerSettings())
+
+        val write = launch {
+            persistCapture(gate.awaitSettings(), now) { cutoffs += it }
+        }
+        runCurrent()
+        assertEquals("nothing may be written before the settings are read", 0, cutoffs.size)
+
+        gate.publish(ListenerSettings(retention = HistoryRetention.FOREVER))
+        write.join()
+
+        try {
+            assertEquals(listOf(Long.MIN_VALUE), cutoffs)
+        } finally {
+            applyListenerSettings(ListenerSettings())
+        }
+    }
+
+    @Test
+    fun `a settings read that never arrives falls back instead of parking the worker`() = runTest {
+        // A throw inside the preference collector kills that child and leaves the gate unset.
+        // An unbounded wait would park the ingestion worker, fill the bounded queue, and hang
+        // the service's own shutdown, which joins that worker.
+        val gate = ListenerSettingsGate(timeoutMillis = 1_000L)
+        applyListenerSettings(ListenerSettings())
+
+        val settings = gate.awaitSettings()
+
+        assertEquals(ListenerSettings(), settings)
+        assertEquals(false, gate.isLoaded)
+    }
+
+    @Test
+    fun `a capture the storage policy declines is not counted as persisted`() = runTest {
+        // The worker treats a declined item as a success, which it is. Counting it as persisted
+        // would report rows the database does not hold.
+        val ingestor = NotificationIngestor<Int>(backgroundScope) { value ->
+            persistCapture(ListenerSettings(storage = HistoryStorage.OFF), value.toLong()) { }
+        }
+        ingestor.offer(1)
+        ingestor.close()
+
+        assertEquals(0L, ingestor.metrics.value.persisted)
+        assertEquals(0L, ingestor.metrics.value.failed)
+    }
+
+    @Test
+    fun `a capture the storage policy accepts is counted once`() = runTest {
+        val ingestor = NotificationIngestor<Int>(backgroundScope) { value ->
+            persistCapture(ListenerSettings(storage = HistoryStorage.METADATA_ONLY), value.toLong()) { }
+        }
+        ingestor.offer(1)
+        ingestor.close()
+
+        assertEquals(1L, ingestor.metrics.value.persisted)
     }
 
     @Test
