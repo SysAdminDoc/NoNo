@@ -119,6 +119,20 @@ until the project owner reviews and approves the required signer keys. Run
 `.\gradlew.bat verifyBuildPolicy` from `replica-app` to validate repository, wrapper, catalog,
 and hash-coverage policy locally. Run the strict verification before every release.
 
+### The build cache is off on purpose
+
+`org.gradle.caching=false`, and `settings.gradle` refuses a remote cache outright. Kotlin 2.4.10
+is affected by GHSA-r937-wjx7-w2jp, which concerns the Kotlin Gradle Plugin's build-cache
+handling. On 2026-08-31 the first line carrying the fix was 2.4.20-Beta1, and this project does
+not build against prereleases, so the cache stays off rather than the version moving early. No
+build here needs it: everything compiles on one machine.
+
+`verifyBuildPolicy` fails if the property is flipped back, if the settings guard is deleted, or if
+a build is started with `--build-cache`, and it stops enforcing any of that once the catalog names
+a Kotlin at or above `KOTLIN_ADVISORY_FLOOR` in `build.gradle`. Raise that constant in the same
+commit as the Kotlin and KSP bump, then run the full local suite and the reproducibility script
+before trusting the result.
+
 ## Reproducing audited states
 
 Every native audit capture can be opened through a debug-only intent extra:

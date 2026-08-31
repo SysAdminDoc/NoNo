@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Builds no longer accept a shared or remote Gradle cache. The Kotlin version this app is built with has an advisory open against its cache handling and the fix is only in a prerelease, so the cache is switched off until there is a stable version to move to.
 - The app tells you what it did again. Around thirty messages, including the confirmation that a rule saved and the warning that one did not, were being built in a way the snackbar could not see, so they never appeared.
 - Importing a rule file gives every new rule an id from this device instead of the one the file names. A file could otherwise claim an id that belonged to a rule you had deleted, and an old history record would then say it was caught by the rule that just arrived.
 - The Dismiss control on the capture warning is a real button. It sat inside the tappable banner, so a screen reader announced one control, activating it opened notification access instead of dismissing anything, and it was under the minimum touch size.

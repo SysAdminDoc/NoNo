@@ -5,6 +5,27 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
 }
 
+/** The first Kotlin line carrying the fix for GHSA-r937-wjx7-w2jp. */
+ext.KOTLIN_ADVISORY_FLOOR = '2.4.20'
+
+/** True while the declared Kotlin is older than the patched line and is not a prerelease of it. */
+static boolean isBelowAdvisoryFloorFor(String version, String floor) {
+    def parts = { String v -> v.split('-')[0].tokenize('.').collect { it.toInteger() } }
+    def left = parts(version)
+    def right = parts(floor)
+    for (int i = 0; i < Math.max(left.size(), right.size()); i++) {
+        int a = i < left.size() ? left[i] : 0
+        int b = i < right.size() ? right[i] : 0
+        if (a != b) return a < b
+    }
+    // Equal release numbers: a prerelease of the patched line is not the patched line.
+    return version.contains('-')
+}
+
+boolean isBelowAdvisoryFloor(String version) {
+    isBelowAdvisoryFloorFor(version, KOTLIN_ADVISORY_FLOOR)
+}
+
 tasks.register('verifyBuildPolicy') {
     group = 'verification'
     description = 'Checks repository, wrapper, catalog, and dependency-verification policy.'
@@ -58,9 +79,29 @@ tasks.register('verifyBuildPolicy') {
             failures << "dependency verification hash coverage is incomplete (${hashCount}/${artifactCount})"
         }
 
+        // GHSA-r937-wjx7-w2jp: the Kotlin Gradle Plugin's build-cache handling. As of 2026-08-31
+        // the first patched line is 2.4.20-Beta1, so there is no stable version to move to and the
+        // cache is off instead. When a patched stable Kotlin ships, raise KOTLIN_ADVISORY_FLOOR
+        // with the version bump and this gate lets the cache back in on its own.
+        def kotlinVersion = (catalogText =~ /(?m)^\s*kotlin\s*=\s*"([^"]+)"/).with { it.find() ? it.group(1) : null }
+        if (kotlinVersion == null) {
+            failures << 'the version catalog does not declare a Kotlin version'
+        } else if (isBelowAdvisoryFloor(kotlinVersion)) {
+            def propertiesText = file('gradle.properties').getText('UTF-8')
+            if (!(propertiesText =~ /(?m)^org\.gradle\.caching=false$/).find()) {
+                failures << "Kotlin ${kotlinVersion} is affected by GHSA-r937-wjx7-w2jp; org.gradle.caching=false must stay set"
+            }
+            if (!settingsText.contains('settings.buildCache.remote != null')) {
+                failures << 'the settings guard rejecting a remote build cache has been removed'
+            }
+            if (gradle.startParameter.buildCacheEnabled) {
+                failures << 'this build was started with the build cache enabled; it stays off until Kotlin is patched'
+            }
+        }
+
         if (!failures.isEmpty()) {
             throw new GradleException('Build policy failed:\n - ' + failures.join('\n - '))
         }
-        println "Build policy OK: repositories=${repositories.unique().join(',')} wrapper=9.7.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
+        println "Build policy OK: kotlin=${kotlinVersion} buildCache=${isBelowAdvisoryFloor(kotlinVersion) ? 'off (GHSA-r937-wjx7-w2jp)' : 'permitted'} repositories=${repositories.unique().join(',')} wrapper=9.7.1 daemonJvm=21 verifiedArtifacts=${hashCount} advisoryGate=CI"
     }
 }

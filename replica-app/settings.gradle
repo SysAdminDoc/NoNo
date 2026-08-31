@@ -36,3 +36,18 @@ if (!supportedJavaMajors.contains(currentJavaMajor)) {
         "reproducible builds are established against an LTS OpenJDK."
     )
 }
+
+// A remote or shared build cache is the delivery route for GHSA-r937-wjx7-w2jp: a poisoned entry
+// is what the advisory is about, and this build has no need of one. Checked here rather than only
+// in the policy task, because an init script or a --build-cache flag can introduce a cache that no
+// file in this repository mentions.
+gradle.settingsEvaluated { settings ->
+    if (settings.buildCache.remote != null) {
+        throw new GradleException(
+            "A remote build cache is configured. It stays off while Kotlin 2.4.10 is in use: " +
+            "GHSA-r937-wjx7-w2jp affects the Kotlin Gradle Plugin's build-cache handling, and as " +
+            "of 2026-08-31 the first patched line is 2.4.20-Beta1, which is not stable. Remove the " +
+            "cache, or lift this together with the Kotlin upgrade."
+        )
+    }
+}
