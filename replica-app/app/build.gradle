@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+/** Room's exported schemas. Read by the migration tests, so both ends must name the same place. */
+def roomSchemas = file("$projectDir/schemas")
+
 // Release signing credentials, never committed. See replica-app/README.md.
 // Absent on a machine that only builds debug, which is why the config below is conditional and
 // the verifyReleaseSigning task exists to refuse an unsigned release rather than ship one.
@@ -88,7 +91,12 @@ android {
         // MigrationTestHelper reads the exported schemas from the test APK's assets. Without
         // this the migration tests fail at createDatabase with "Cannot find the schema file",
         // which is what kept them from ever passing on a device.
-        androidTest.assets.srcDirs += files("$projectDir/schemas")
+        //
+        // builtBy is what makes the asset merge wait for the annotation processor. Adding the
+        // directory alone leaves the producer unmodelled: on a clean tree the assets are gathered
+        // before Room writes them, so the first run after a schema bump packages the previous
+        // version and the migration test validates against a schema that is no longer the code's.
+        androidTest.assets.srcDirs += roomSchemas
     }
 
     lint {
@@ -100,7 +108,43 @@ android {
 }
 
 ksp {
-    arg('room.schemaLocation', "$projectDir/schemas")
+    // Passed as a provider rather than a bare string so the directory is declared as an output of
+    // the KSP task. A plain `arg` is opaque to Gradle: the schema files are produced by a task
+    // that never says it produces them, which is both an undeclared dependency for anything
+    // reading them and invisible to up-to-date checking.
+    arg(new RoomSchemaArgumentProvider(objects.directoryProperty().fileValue(roomSchemas)))
+}
+
+// AGP resolves `assets.srcDirs` to plain paths and drops any task dependency the file collection
+// carried, so `builtBy` on the source set is silently ignored. Every androidTest task that reads
+// the schema directory therefore has to say so itself: the asset merge, and lint's model writer,
+// which walks the same source set. Without this the asset merge can run before the annotation
+// processor - on a clean tree the first run after a schema bump packages the previous version, and
+// the migration test then validates against a schema that is no longer the code's - and Gradle
+// fails the lint model task outright for the undeclared dependency.
+//
+// Matched by name because that is the only handle AGP offers, and narrowly: naming every task with
+// "androidTest" in it cycles, because KSP's own androidTest variant needs the generated
+// BuildConfig that such a pattern also catches.
+tasks.matching { it.name ==~ /((generate|merge)\w*AndroidTest(Assets|LintModel)|lintAnalyze\w*AndroidTest)/ }
+    .configureEach { consumer ->
+        consumer.dependsOn(tasks.matching { it.name ==~ /ksp\w*Kotlin/ })
+    }
+
+/** Declares Room's exported-schema directory as a real task output. */
+class RoomSchemaArgumentProvider implements CommandLineArgumentProvider {
+
+    @OutputDirectory
+    final DirectoryProperty schemaDirectory
+
+    RoomSchemaArgumentProvider(DirectoryProperty schemaDirectory) {
+        this.schemaDirectory = schemaDirectory
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        ["room.schemaLocation=${schemaDirectory.get().asFile.absolutePath}".toString()]
+    }
 }
 
 dependencies {
