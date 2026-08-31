@@ -5,9 +5,9 @@ Device: `emulator-5566` (`irlstreamer_drain_api35`, Android 15/API 35, 1080 × 2
 
 ## Automated results
 
-- Unit tests: **PASS**, 131 tests, 0 failures.
+- Unit tests: **PASS**, 265 tests, 0 failures.
 - Android lint: **PASS**.
-- Instrumentation: **PASS**, 16 tests, 0 failures on the validation emulator.
+- Instrumentation: **PASS**, 51 tests, 0 failures on the validation emulator.
 - Build/install/launch: **PASS** for `com.sysadmindoc.nono.debug`.
 
 ## Flow coverage
@@ -17,16 +17,16 @@ Device: `emulator-5566` (`irlstreamer_drain_api35`, Android 15/API 35, 1080 × 2
 | F01 First launch onboarding | PASS | Actual Android notification permission, battery exemption, notification-listener settings, warning, return, and automatic home transition were exercised. |
 | F02 Primary navigation and empty states | PASS | All four roots and empty states captured; Compose semantics present. |
 | F03 Create rule and content filter | PASS | App/phrase/filter states captured; sentence and validation unit tests pass; saved rule persists. |
-| F04 Action catalog and selection | PASS | All 29 action entries and scroll states reproduced; selection is local. |
+| F04 Action catalog and selection | PASS | The catalog and its scroll states are reproduced. Recording the match is the only outcome this build performs, so it is the only one a rule can be saved with; the 29 device actions are shown as unavailable with the reason, and a rule that arrives from a file carrying one is readable but cannot be saved again. |
 | F05 Save and manage rule | PARTIAL | Save, enable/disable, rename, duplicate, and delete model paths exist; folder/priority/duration effects are not persisted because commit behavior was not safely confirmed. |
 | F06 History empty and search | PASS | Empty, search, no-result, and filtering logic validated. |
 | F07 History populated and item actions | PARTIAL | Deterministic record/detail/activity works; real restore/open/reply/delete side effects are simulated or untested. |
 | F08 Explore articles and scroll | PARTIAL | Native list/scroll/handoff works; external article contents and original editorial assets are excluded. |
 | F09 Explore suggestion preview | PASS | Deterministic suggestion opens a populated rule builder. |
 | F10 Settings and dialogs | PARTIAL | All observed sections/dialogs and preference persistence work; destructive and integration effects remain safe simulations. |
-| F11 Backup import/export | NOT IMPLEMENTED | Android picker handoff works; serialization and scheduled backups were not observable. |
+| F11 Rule import/export | PASS | Encrypted and plaintext files round-trip through the picker with a passphrase, a preview, a conflict choice, and bounded reads. History export writes every retained record. There is no backup scheduler; that is a stated absence, not an untested one. |
 
-Totals: 6 fully validated, 4 partially validated, 1 not implemented.
+Totals: 7 fully validated, 4 partially validated, 0 not implemented.
 
 ## Lifecycle and persistence evidence
 

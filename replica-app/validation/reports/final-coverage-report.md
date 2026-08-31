@@ -1,5 +1,9 @@
 # Final coverage report
 
+This is the canonical count. The behavioral and visual reports cover one dimension each and are
+summarised here; where a number appears in more than one place, this file is the one to trust.
+Test totals are as of the run on 2026-08-31.
+
 ## Outcome
 
 The Android project builds, installs, launches, and exposes all 76 native audit states through real Compose UI. Eight audited system/browser rows are implemented as public-intent handoffs; three LiteAPKS/repackaging rows are excluded as requested; the emulator baseline is not application scope.
@@ -19,11 +23,11 @@ This is a functional clean-room reconstruction with material visual and integrat
 | Configured 0.85 threshold passes | 67 | 88.2% |
 | Configured threshold misses | 9 | Documented |
 | Preferred 0.985 target passes | 0 | Target not achieved |
-| Fully behaviorally validated flows | 6 | PASS |
+| Fully behaviorally validated flows | 7 | PASS |
 | Partially validated flows | 4 | PARTIAL |
-| Not implemented flows | 1 | Backup serialization |
-| Unit tests | 4 | PASS |
-| Instrumentation tests | 1 | PASS |
+| Not implemented flows | 0 | - |
+| Unit tests | 265 | PASS |
+| Instrumentation tests | 51 | PASS |
 
 ## Visual results
 
@@ -66,7 +70,7 @@ The misses are concentrated in onboarding and Explore/suggestion content where t
 - Independent name, icon, code-native artwork, article summaries, and system font differ from the original.
 - The prompt's preferred 0.985 visual target was not achieved.
 - Real notification-changing integrations are simulated locally.
-- Backup serialization/automatic backup and launcher shortcut publication are not implemented.
+- Rule serialization and launcher-shortcut pinning are implemented. Automatic scheduled backup is not: nothing in this build runs on a timer.
 - Destructive, financial, privacy-sensitive, external-content, and permission-denial branches remain safely untested or disabled.
 - Exact animation timing and full TalkBack traversal were not exhaustively measured.
 
