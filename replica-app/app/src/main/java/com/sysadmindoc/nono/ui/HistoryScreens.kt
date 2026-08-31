@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
@@ -330,7 +331,7 @@ fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
                 SignalGroupedSurface(Modifier.fillMaxWidth()) {
                     ActivityRow("Notification posted", "Captured locally without storing private payloads.")
                     SignalDivider()
-                    ActivityRow("Action preview only", "${trace.actionResult}: no notification, sound, or setting was changed.")
+                    ActivityRow("Action preview only", "No device action: no notification, sound, or setting was changed.")
                 }
             }
         }
@@ -375,7 +376,7 @@ private fun EvaluationTrace(trace: RuleEvaluationTrace) {
         SignalDivider()
         ActivityStep(2, "Content", contentStateLabel(trace))
         SignalDivider()
-        ActivityStep(3, "Action", trace.actionResult.toString())
+        ActivityStep(3, "Action", NO_DEVICE_ACTION_LABEL)
     }
 }
 

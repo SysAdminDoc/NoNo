@@ -23,7 +23,6 @@ enum class Overlay {
     CONDITION_TYPE,
     ADD_FILTER,
     RULE_MORE,
-    ENABLE_FOR,
     PRIORITY,
     FOLDER,
     RENAME,
@@ -145,10 +144,6 @@ fun isNegatedMatchType(matchType: String): Boolean =
 
 /** Why the filter-group and extra-property controls cannot be used. */
 const val NO_FILTER_ENGINE = "This build evaluates app and phrase conditions only."
-
-val enableForCatalog = listOf(
-    "10 mins", "30 mins", "1 hour", "6 hours", "8 hours", "12 hours", "1 day", "7 days",
-)
 
 /**
  * Versioned persisted form of the rule list. The version field exists so a store written
@@ -350,15 +345,59 @@ val actionCatalog = listOf(
     "Restore after reboot", "Set ringer", "Trigger MacroDroid", "Trigger Tasker", "Multi-tool"
 )
 
+/**
+ * The only outcome this build produces: the match is recorded, and the device is left alone.
+ *
+ * There is no action engine, and adding one was rejected. A rule that could be saved naming
+ * Mute or Flashlight would be claiming a capability that does not exist.
+ */
+const val RECORD_ONLY_ACTION = "record the match"
+
+/** Shown wherever a rule's outcome is summarised, so the absence of an action is explicit. */
+const val NO_DEVICE_ACTION_LABEL = "no device action"
+
+/** Why an action from the catalog cannot be saved. */
+const val UNSUPPORTED_ACTION_MESSAGE =
+    "This build performs no device actions, so that action cannot be saved."
+
+/** Why a rule cannot be given an expiry. */
+const val NO_RULE_EXPIRY_MESSAGE = "This build has no scheduler, so a rule cannot expire on its own."
+
+/**
+ * True when [action] names a change to the device.
+ *
+ * An imported file, or a rule saved by an older build, can carry any of the catalog's names.
+ * They stay readable, and they are labelled as never executed, but they cannot be saved again.
+ */
+fun isExecutableAction(action: String): Boolean {
+    val normalized = action.trim()
+    return normalized.isNotBlank() &&
+        !normalized.equals(RECORD_ONLY_ACTION, ignoreCase = true) &&
+        !normalized.equals("nothing", ignoreCase = true) &&
+        !normalized.equals("Do nothing", ignoreCase = true)
+}
+
+/** How a rule's outcome reads anywhere it is summarised. */
+fun renderActionSummary(action: String): String = when {
+    action.isBlank() || action.equals("nothing", ignoreCase = true) -> "No action chosen"
+    isExecutableAction(action) -> "$action (not executed)"
+    else -> "Record the match · $NO_DEVICE_ACTION_LABEL"
+}
+
 fun renderRuleSentence(rule: SignalRule): String =
-    "When I get a notification from ${rule.app} that ${rule.matchType} ${rule.phrase} then do ${rule.action}"
+    "When I get a notification from ${rule.app} that ${rule.matchType} ${rule.phrase} then ${actionClause(rule.action)}"
 
 /** Wrapped form used on the rule card, which lays the sentence out over four lines. */
 fun renderRuleCardSentence(rule: SignalRule): String = buildString {
     appendLine("When I get a notification")
     appendLine("from ${rule.app} that ${rule.matchType}")
     appendLine("\"${rule.phrase}\"")
-    append("then ${rule.action.lowercase()}")
+    append("then ${actionClause(rule.action)}")
+}
+
+private fun actionClause(action: String): String = when {
+    isExecutableAction(action) -> "do ${action.lowercase()}, which this build never executes"
+    else -> "$RECORD_ONLY_ACTION and take $NO_DEVICE_ACTION_LABEL"
 }
 
 /** Verbatim validation copy recorded in the audit (V001). */
@@ -368,6 +407,9 @@ fun validateRule(rule: SignalRule): String? = when {
     rule.app.isBlank() -> "Choose an app."
     rule.phrase.isBlank() -> "Choose notification content to match."
     rule.action.isBlank() || rule.action == "nothing" -> MISSING_FIELD_MESSAGE
+    // An imported rule keeps its action and stays readable, but saving it again would be the
+    // app agreeing to carry it out.
+    isExecutableAction(rule.action) -> UNSUPPORTED_ACTION_MESSAGE
     else -> null
 }
 

@@ -74,6 +74,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
+import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
+import com.sysadmindoc.nono.model.UNSUPPORTED_ACTION_MESSAGE
+import com.sysadmindoc.nono.model.isExecutableAction
+import com.sysadmindoc.nono.model.renderActionSummary
 import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
@@ -193,7 +197,7 @@ private fun RuleCard(rule: SignalRule, model: MainViewModel, matchCount: Int) {
             RuleConnector()
             RuleFlowRow(2, Icons.Rounded.Search, "MATCH", "${rule.matchType.replaceFirstChar { it.uppercase() }} ${rule.phrase}")
             RuleConnector()
-            RuleFlowRow(3, actionIcon(rule.action), "ACTION", rule.action.replaceFirstChar { it.uppercase() })
+            RuleFlowRow(3, actionIcon(rule.action), "ACTION", renderActionSummary(rule.action))
             if (rule.extras.isNotEmpty()) {
                 Text("Filters: ${rule.extras.joinToString()}", color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
             }
@@ -283,7 +287,7 @@ fun RuleBuilderScreen(state: UiState, model: MainViewModel) {
             BuilderStep(
                 step = 3,
                 label = "THEN",
-                value = state.draft.action.replaceFirstChar { it.uppercase() },
+                value = renderActionSummary(state.draft.action),
                 icon = actionIcon(state.draft.action),
                 action = "Choose action",
                 onAction = { model.navigate(Route.ACTION_SELECTOR) },
@@ -585,13 +589,11 @@ fun FilterGroupScreen(state: UiState, model: MainViewModel) {
 @Composable
 fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
     var query by remember { mutableStateOf("") }
-    val actionChoices = listOf("Do nothing", "Mute", "Snooze", "Remind me", "Open notification") +
-        actionCatalog.filterNot { it in setOf("Mute", "Remind me", "Open notification") }
-    val filtered = actionChoices.filter { it.contains(query, ignoreCase = true) }
+    val filtered = actionCatalog.filter { it.contains(query, ignoreCase = true) }
     Column(Modifier.fillMaxSize()) {
         SignalTopBar("Choose action", onBack = { model.navigate(Route.RULE_BUILDER) })
         Column(Modifier.padding(horizontal = SignalMetrics.pageHorizontal)) {
-            SignalStatusPanel("Preview only", "Actions are described, not executed.", icon = Icons.Rounded.Shield)
+            SignalStatusPanel("Preview only", UNSUPPORTED_ACTION_MESSAGE, icon = Icons.Rounded.Shield)
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
@@ -602,7 +604,7 @@ fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
                 colors = signalTextFieldColors(),
                 modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
             )
-            Text("AVAILABLE ACTIONS", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 18.dp, bottom = 10.dp))
+            Text("WHAT THIS BUILD DOES", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 18.dp, bottom = 10.dp))
         }
         LazyColumn(
             modifier = Modifier.weight(1f).padding(horizontal = SignalMetrics.pageHorizontal),
@@ -610,14 +612,38 @@ fun ActionSelectorScreen(state: UiState, model: MainViewModel) {
         ) {
             item {
                 SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                    SignalListRow(
+                        Icons.Rounded.VisibilityOff,
+                        RECORD_ONLY_ACTION.replaceFirstChar { it.uppercase() },
+                        "The match is written to History. Nothing on the device changes.",
+                        selected = !isExecutableAction(state.draft.action),
+                        onClick = { model.updateDraft { it.copy(action = RECORD_ONLY_ACTION) } },
+                    )
+                }
+            }
+            item {
+                Text(
+                    "NOT AVAILABLE IN THIS BUILD",
+                    color = SignalColors.Secondary,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(top = 18.dp, bottom = 10.dp),
+                )
+            }
+            item {
+                SignalGroupedSurface(Modifier.fillMaxWidth()) {
                     filtered.forEachIndexed { index, action ->
                         SignalListRow(
                             actionIcon(action),
                             action,
-                            actionDescription(action),
-                            selected = state.draft.action.equals(action, ignoreCase = true) ||
-                                (action == "Do nothing" && state.draft.action.equals("nothing", ignoreCase = true)),
-                            onClick = { model.updateDraft { it.copy(action = if (action == "Do nothing") "nothing" else action) } },
+                            // An imported rule can already name this one, so say so rather than
+                            // showing it as an ordinary greyed row.
+                            if (state.draft.action.equals(action, ignoreCase = true)) {
+                                "In this rule from an import. Never executed, and it cannot be saved again."
+                            } else {
+                                UNSUPPORTED_ACTION_MESSAGE
+                            },
+                            selected = state.draft.action.equals(action, ignoreCase = true),
+                            enabled = false,
                         )
                         if (index != filtered.lastIndex) SignalDivider()
                     }

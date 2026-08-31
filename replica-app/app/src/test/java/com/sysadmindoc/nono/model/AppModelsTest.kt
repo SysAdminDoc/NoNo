@@ -21,9 +21,26 @@ class AppModelsTest {
 
     @Test
     fun completedRule_isValidAndRendersNaturalLanguage() {
-        val rule = SignalRule(app = "Messages", phrase = "urgent", action = "Flashlight")
+        // Flashlight was the example here, back when any of the twenty-nine catalog actions could
+        // be saved even though none of them ran. The only outcome this build produces is the one
+        // a rule may now name.
+        val rule = SignalRule(app = "Messages", phrase = "urgent", action = RECORD_ONLY_ACTION)
         assertNull(validateRule(rule))
-        assertEquals("When I get a notification from Messages that contains urgent then do Flashlight", renderRuleSentence(rule))
+        assertEquals(
+            "When I get a notification from Messages that contains urgent then record the match and take no device action",
+            renderRuleSentence(rule),
+        )
+    }
+
+    @Test
+    fun anImportedDeviceActionIsRejectedRatherThanSilentlyAccepted() {
+        val flashlight = SignalRule(app = "Messages", phrase = "urgent", action = "Flashlight")
+
+        assertEquals(UNSUPPORTED_ACTION_MESSAGE, validateRule(flashlight))
+        assertEquals(
+            "When I get a notification from Messages that contains urgent then do flashlight, which this build never executes",
+            renderRuleSentence(flashlight),
+        )
     }
 
     @Test

@@ -763,12 +763,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = emptyList()))
     }
 
-    fun setEnabledFor(duration: String) {
-        mutateRule(_state.value.selectedRuleId) { it.copy(enabledFor = duration, enabled = true) }
-        _state.value = _state.value.copy(
-            overlay = Overlay.NONE,
-            transientMessage = "Rule enabled for $duration",
-        )
+    /**
+     * Clears an expiry an imported rule carries.
+     *
+     * There is no scheduler, so an expiry was never going to fire. Setting one is gone; removing
+     * one an import brought along is the repair.
+     */
+    fun clearRuleExpiry() {
+        mutateRule(_state.value.selectedRuleId) { it.copy(enabledFor = null) }
+        _state.value = _state.value.copy(overlay = Overlay.NONE)
     }
 
     fun setRuleFolder(folder: String) {

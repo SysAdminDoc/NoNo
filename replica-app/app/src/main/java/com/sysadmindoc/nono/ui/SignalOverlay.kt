@@ -64,8 +64,8 @@ import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
+import com.sysadmindoc.nono.model.NO_RULE_EXPIRY_MESSAGE
 import com.sysadmindoc.nono.model.NotificationContentState
-import com.sysadmindoc.nono.model.enableForCatalog
 import com.sysadmindoc.nono.model.importanceCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
 import com.sysadmindoc.nono.runtime.historyRetentionCatalog
@@ -94,21 +94,30 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         )
         Overlay.RULE_MORE -> MenuDialog(
             "Rule options",
-            listOf(
-                MenuItem("Enable for…", Icons.Rounded.MoreTime) { model.showOverlay(Overlay.ENABLE_FOR) },
-                MenuItem("Set priority", Icons.Rounded.Tune) { model.showOverlay(Overlay.PRIORITY) },
-                MenuItem("Set folder", Icons.Rounded.Folder) { model.showOverlay(Overlay.FOLDER) },
-                MenuItem("Rename", Icons.Rounded.DriveFileRenameOutline) { model.setRenameDraft(state.rules.firstOrNull { it.id == state.selectedRuleId }?.name.orEmpty()); model.showOverlay(Overlay.RENAME) },
-                MenuItem("Duplicate", Icons.Rounded.Add) { model.duplicateRule() },
-                MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.deleteRule() },
-            ), model::dismissOverlay,
-        )
-        Overlay.ENABLE_FOR -> ChoiceDialog(
-            "Enable for…",
-            enableForCatalog,
-            state.rules.firstOrNull { it.id == state.selectedRuleId }?.enabledFor,
+            buildList {
+                val selected = state.rules.firstOrNull { it.id == state.selectedRuleId }
+                if (selected?.enabledFor != null) {
+                    // Only an imported rule can carry one, and it never fired.
+                    add(
+                        MenuItem("Remove the \"${selected.enabledFor}\" expiry", Icons.Rounded.MoreTime) {
+                            model.clearRuleExpiry()
+                        },
+                    )
+                } else {
+                    add(MenuItem("Enable for…", Icons.Rounded.MoreTime, unavailable = NO_RULE_EXPIRY_MESSAGE) {})
+                }
+                addAll(
+                    listOf(
+                        MenuItem("Set priority", Icons.Rounded.Tune) { model.showOverlay(Overlay.PRIORITY) },
+                        MenuItem("Set folder", Icons.Rounded.Folder) { model.showOverlay(Overlay.FOLDER) },
+                        MenuItem("Rename", Icons.Rounded.DriveFileRenameOutline) { model.setRenameDraft(selected?.name.orEmpty()); model.showOverlay(Overlay.RENAME) },
+                        MenuItem("Duplicate", Icons.Rounded.Add) { model.duplicateRule() },
+                        MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.deleteRule() },
+                    ),
+                )
+            },
             model::dismissOverlay,
-        ) { model.setEnabledFor(it) }
+        )
         Overlay.PRIORITY -> ChoiceDialog("Rule priority", listOf("Highest", "High", "Normal", "Low", "Lowest"), state.rules.firstOrNull { it.id == state.selectedRuleId }?.priority, model::dismissOverlay) { model.setRulePriority(it) }
         Overlay.FOLDER -> TextEntryDialog("Pick folder", state.folderDraft, model::setFolderDraft, model::dismissOverlay) { model.setRuleFolder(state.folderDraft) }
         Overlay.RENAME -> RenameDialog(state, model)

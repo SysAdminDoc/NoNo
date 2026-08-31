@@ -80,10 +80,13 @@ class RuleOperationsTest {
 
     @Test
     fun `the card sentence names the rule's own action rather than a fixed glyph`() {
+        // The action still has to be visible. What changed is that an imported one is labelled
+        // as never executed rather than reading like something the app does.
         val flashlight = SignalRule(app = "Messages", phrase = "urgent", action = "Flashlight")
         val rendered = renderRuleCardSentence(flashlight)
 
-        assertTrue(rendered.contains("then flashlight"))
+        assertTrue(rendered.contains("then do flashlight"))
+        assertTrue(rendered.contains("never executes"))
         assertTrue(rendered.contains("from Messages that contains"))
         assertTrue(rendered.contains("\"urgent\""))
         assertEquals(4, rendered.lines().size)
@@ -137,7 +140,35 @@ class RuleOperationsTest {
     @Test
     fun `validation reports the audited copy for a missing action`() {
         assertEquals(MISSING_FIELD_MESSAGE, validateRule(SignalRule(action = "nothing")))
-        assertNull(validateRule(SignalRule(action = "Mute")))
+        assertNull(validateRule(SignalRule(action = RECORD_ONLY_ACTION)))
+    }
+
+    @Test
+    fun `a rule naming a device action cannot be saved`() {
+        // The catalog exists so an imported rule stays readable. Saving one again would be the
+        // app agreeing to carry it out, and there is nothing here that can.
+        actionCatalog.forEach { action ->
+            assertEquals(
+                "action $action",
+                UNSUPPORTED_ACTION_MESSAGE,
+                validateRule(SignalRule(id = 1L, action = action)),
+            )
+        }
+    }
+
+    @Test
+    fun `the only savable action is the one this build performs`() {
+        assertNull(validateRule(SignalRule(id = 1L, action = RECORD_ONLY_ACTION)))
+        assertEquals(MISSING_FIELD_MESSAGE, validateRule(SignalRule(id = 1L, action = "nothing")))
+    }
+
+    @Test
+    fun `an imported action stays readable and is labelled as never executed`() {
+        assertEquals("Mute (not executed)", renderActionSummary("Mute"))
+        assertEquals("Record the match · no device action", renderActionSummary(RECORD_ONLY_ACTION))
+        assertEquals("No action chosen", renderActionSummary("nothing"))
+        assertTrue(renderRuleSentence(SignalRule(action = "Mute")).contains("never executes"))
+        assertTrue(renderRuleSentence(SignalRule(action = RECORD_ONLY_ACTION)).contains("no device action"))
     }
 
     @Test

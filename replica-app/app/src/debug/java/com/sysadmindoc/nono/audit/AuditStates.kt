@@ -6,6 +6,7 @@ import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
+import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
@@ -107,11 +108,11 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
         id.startsWith("044_") -> base.copy(route = Route.RULE_BUILDER, overlay = Overlay.ADD_FILTER)
         id.startsWith("049_") || id.startsWith("050_") || id.startsWith("051_") || id.startsWith("052_") || id.startsWith("053_") || id.startsWith("054_") || id.startsWith("055_") || id.startsWith("056_") || id.startsWith("057_") || id.startsWith("058_") || id.startsWith("061_") -> base.copy(route = Route.ACTION_SELECTOR, draft = if (id.startsWith("061_")) base.draft.copy(action = "Mute") else base.draft)
         id.startsWith("059_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "New rule", phrase = "anything", action = "nothing"), transientMessage = null)
-        id.startsWith("035_") || id.startsWith("042_") || id.startsWith("060_") || id.startsWith("062_") || id.startsWith("043_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "New rule", app = "NoNo", phrase = "audit phrase", action = if (id.startsWith("062_")) "Mute" else "nothing"))
+        id.startsWith("035_") || id.startsWith("042_") || id.startsWith("060_") || id.startsWith("062_") || id.startsWith("043_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "New rule", app = "NoNo", phrase = "audit phrase", action = if (id.startsWith("062_")) RECORD_ONLY_ACTION else "nothing"))
         id.startsWith("063_") || id.startsWith("085_") || id.startsWith("087_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute", enabled = true)))
         id.startsWith("064_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute", enabled = false)))
         id.startsWith("065_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute")), overlay = Overlay.RULE_MORE)
-        id.startsWith("066_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute")), overlay = Overlay.ENABLE_FOR)
+        id.startsWith("066_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute", enabledFor = "1 hour")), selectedRuleId = 1L, overlay = Overlay.RULE_MORE)
         id.startsWith("067_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute")), overlay = Overlay.PRIORITY)
         id.startsWith("068_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute")), overlay = Overlay.FOLDER)
         id.startsWith("069_") -> base.copy(route = Route.ROOT, rootTab = RootTab.RULES, rules = listOf(SignalRule(id = 1L, action = "Mute")), overlay = Overlay.RENAME, renameDraft = "Test rule")
