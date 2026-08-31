@@ -24,4 +24,9 @@ Version 1.4.0 introduces a complete visual redesign across onboarding, rules, hi
 Settings, and every rule editor. The source mockups and side-by-side implementation checks are
 recorded in [`design-qa.md`](design-qa.md).
 
+Installing this APK yourself is not affected by the app-store developer-verification requirement
+starting 2026-09-30, which applies to participating stores in four countries. The detail, and the
+obligation to recheck the dates before any release, is in
+[`replica-app/README.md`](replica-app/README.md#android-developer-verification-and-what-it-does-and-does-not-cover).
+
 Start with [`replica-app/README.md`](replica-app/README.md). Build the APK with `replica-app/scripts/build-debug.ps1`; the binary is not tracked in git. The expected SHA-256 digest of the frozen deliverable is recorded in [`replica-app/dist/SHA256SUMS.txt`](replica-app/dist/SHA256SUMS.txt).

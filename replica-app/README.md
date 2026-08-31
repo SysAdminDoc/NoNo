@@ -100,6 +100,33 @@ The signer certificate SHA-256 is
 `f64b4691203ed903ddd4007d7630a65045ef2ad20d579388444bce22c482a724`. Every release is signed with
 that key, so a build reporting a different one did not come from this project.
 
+## Android developer verification, and what it does and does not cover
+
+Android is introducing a requirement that the developer behind an app be verified. It matters for
+how this APK reaches a device, so here is what the requirement actually says as of the Android
+developer-verification FAQ dated 2026-07-15.
+
+Enforcement starts 2026-09-30 and applies to participating app stores in Brazil, Indonesia,
+Singapore and Thailand. It is a store-side requirement in those four countries on that date, not a
+device-wide one. Google has said the requirement widens during 2027; the countries and the exact
+dates for that are not settled, so treat anything you read about 2027 as provisional until the
+official page says otherwise.
+
+What is not covered by the 2026-09-30 date: installing an APK yourself, and stores that are not
+participating. `adb install` keeps working, as does building this project and running
+`.\scripts\install-debug.ps1`. Google has also described a flow for experienced users who want to
+install unverified apps directly. That flow exists precisely because direct installation is not
+the thing being switched off.
+
+This project has not chosen a distribution channel. `..\Roadmap_Blocked.md` records that decision
+as open, and nothing here should be read as a plan to publish through a particular store or to
+avoid one. Whether verification applies depends entirely on that choice.
+
+**Before any release, recheck this.** The dates and the country list above are a snapshot taken on
+2026-08-31 and they will move. Read the official developer-verification page again, write the date
+you read it into this section, and correct anything that has changed. A statement about a
+regulatory deadline is worth nothing without the date it was true.
+
 ## Tests and validation
 
 ```powershell

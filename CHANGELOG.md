@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The README says what Android's developer-verification requirement covers and what it does not. Installing this APK yourself is not affected by the 2026-09-30 date, which applies to participating stores in four countries, and the section carries the date those facts were checked so the next person knows when to check again.
 - The documentation says what the app actually does. It claimed the history schema was four versions behind where it is, that rule import and export were missing, that pinning a rule to the launcher was not built, and it carried test counts from a run with a fraction of today's tests. The README screenshot was recaptured from the current build.
 - Builds no longer accept a shared or remote Gradle cache. The Kotlin version this app is built with has an advisory open against its cache handling and the fix is only in a prerelease, so the cache is switched off until there is a stable version to move to.
 - The app tells you what it did again. Around thirty messages, including the confirmation that a rule saved and the warning that one did not, were being built in a way the snackbar could not see, so they never appeared.
