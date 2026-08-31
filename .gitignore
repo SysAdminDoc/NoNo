@@ -37,3 +37,6 @@ Thumbs.db
 replica-app/keystore.properties
 *.jks
 *.keystore
+
+# JVM crash replay dumps left by a killed Kotlin compiler
+replay_pid*.log
