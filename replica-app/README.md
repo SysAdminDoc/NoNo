@@ -321,8 +321,12 @@ reconstruction, and no companion association or exemption is requested. The opti
 the only feature that asks to post a notification, and it does so only after the user starts it.
 Notification capture can be paused from the Quick Settings tile or Settings without revoking
 listener access; paused callbacks are ignored before sanitization and the gate survives restart.
-The optional home-screen widget shows only the bounded metadata count, latest timestamp,
+The optional home-screen widget shows only a bounded metadata count, latest timestamp,
 content-provenance state, or paused state; it never renders notification content or package names.
+Its count answers one of three questions, chosen in Settings: everything captured, what a rule
+matched, or what you starred. The label names the scope, so a number cannot be read as answering a
+question it is not. Group summaries are excluded from all three, as they are from every other count
+in the app.
 
 Settings that would depend on the absent action engine are shown disabled with the reason
 inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is

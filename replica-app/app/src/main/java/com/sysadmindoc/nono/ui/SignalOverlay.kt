@@ -74,6 +74,7 @@ import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.runtime.BackupCadence
+import com.sysadmindoc.nono.runtime.WidgetScope
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
@@ -224,6 +225,12 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             state.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING],
             model::dismissOverlay,
         ) { model.setSetting(SignalPreferences.AUTOMATIC_BACKUP_SETTING, it) }
+        Overlay.WIDGET_SCOPE -> ChoiceDialog(
+            "Widget count",
+            WidgetScope.entries.map { it.label },
+            state.settings[SignalPreferences.WIDGET_COUNT_SETTING],
+            model::dismissOverlay,
+        ) { model.setSetting(SignalPreferences.WIDGET_COUNT_SETTING, it) }
         Overlay.TRANSFER_EXPORT_PASSPHRASE -> TransferPassphraseDialog(
             title = "Encrypt rule export",
             explanation = "The passphrase is used once and never saved or logged. Notification history is never included.",

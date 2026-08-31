@@ -49,6 +49,7 @@ import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.automirrored.rounded.Shortcut
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -182,6 +183,14 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                     "Notification capture",
                     value = if (state.capturePaused) "Paused" else "Active",
                     onClick = { model.setCapturePaused(!state.capturePaused) },
+                )
+                SignalDivider()
+                PreferenceRow(
+                    Icons.Rounded.Widgets,
+                    "Widget count",
+                    "What the home-screen widget's number counts.",
+                    value = state.settings[SignalPreferences.WIDGET_COUNT_SETTING],
+                    onClick = { model.showOverlay(Overlay.WIDGET_SCOPE) },
                 )
                 SignalDivider()
                 PreferenceRow(Icons.Rounded.VisibilityOff, "Why do some records have no content?", "Some notifications arrive with no text at all, and Android redacts sensitive ones.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) })

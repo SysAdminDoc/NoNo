@@ -113,6 +113,7 @@ import com.sysadmindoc.nono.runtime.historyStorage
 import com.sysadmindoc.nono.runtime.listenerSettings
 import com.sysadmindoc.nono.runtime.retentionCutoffEpochMillis
 import com.sysadmindoc.nono.runtime.SignalNotificationListener
+import com.sysadmindoc.nono.runtime.SignalWidgetProvider
 import com.sysadmindoc.nono.model.validateRule
 import com.sysadmindoc.nono.ui.historyMetadataClipboardText
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1638,6 +1639,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // write lands means it reads the old value, decides the schedule is off, and
                 // writes no result at all.
                 if (cadence.enabled && hasFolder) BackupScheduler.runOnce(app)
+            }
+            return
+        }
+        if (label == SignalPreferences.WIDGET_COUNT_SETTING) {
+            val app = getApplication<Application>()
+            _state.value = _state.value.copy(
+                settings = _state.value.settings + (label to value),
+                overlay = Overlay.NONE,
+            )
+            viewModelScope.launch {
+                try {
+                    dataStore.edit { it[settingKey(label)] = value }
+                } catch (error: IOException) {
+                    _state.value = _state.value.withMessage("Could not save to storage.")
+                    return@launch
+                }
+                // The provider reads this back out of the store, so the redraw has to come after
+                // the write or the widget shows the previous scope's number under the new label.
+                SignalWidgetProvider.requestUpdate(app)
             }
             return
         }

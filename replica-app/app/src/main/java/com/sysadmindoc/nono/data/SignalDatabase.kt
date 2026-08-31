@@ -557,6 +557,22 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 1")
     suspend fun readGroupSummaryCount(): Int
 
+    /**
+     * Notifications a saved rule matched when they arrived.
+     *
+     * The same condition History's "Rule-triggered" filter uses, so the widget's number and the
+     * screen it leads to cannot disagree.
+     */
+    @Query(
+        "SELECT COUNT(*) FROM notification_history " +
+            "WHERE isGroupSummary = 0 AND matchedRuleIds IS NOT NULL AND matchedRuleIds != ''",
+    )
+    suspend fun readRuleMatchedWidgetCount(): Int
+
+    /** Notifications the user starred, which are also the ones retention keeps. */
+    @Query("SELECT COUNT(*) FROM notification_history WHERE isGroupSummary = 0 AND starred = 1")
+    suspend fun readStarredWidgetCount(): Int
+
     @Query(
         """
         SELECT postedAtEpochMillis, contentState FROM notification_history

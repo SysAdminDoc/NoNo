@@ -36,6 +36,9 @@ object SignalPreferences {
     const val HISTORY_RETENTION_SETTING = "History retention"
     const val HISTORY_STORAGE_SETTING = "Notification history"
 
+    /** Read by the widget provider, which runs in a broadcast receiver with no view model. */
+    const val WIDGET_COUNT_SETTING = "Widget count"
+
     /** Read by the backup worker, which runs with no Activity and no view model. */
     const val AUTOMATIC_BACKUP_SETTING = "Automatic backups"
     val BACKUP_FOLDER_URI = stringPreferencesKey("backup_folder_uri")
