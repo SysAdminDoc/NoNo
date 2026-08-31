@@ -247,12 +247,19 @@ Two are worth stating even though they need no code change:
   backup scheduler rather than with the target change, and none of them is affected by Android 17.
 
 The bump itself is held back for one reason only: no Android 17 emulator on this machine stays up
-long enough to run the instrumented suite. Every `android-37.0` image tried here crash-loops
-`surfaceflinger` inside `mapper.ranchu.so`, taking `system_server` with it. A target change nobody
-has run on the target platform is not one worth shipping, so `targetSdk` stays at 36 until the
-suite can be run on Android 17. `RemovalReasonPlatformTest` covers the part that can be checked
-without one: it compiles against SDK 37 and compares every hard-coded platform reason code against
-the constant the running device reports.
+long enough to run the instrumented suite. The fault is in the guest's own graphics mapper,
+`GoldfishMapper::readFromHost` in `mapper.ranchu.so`, which aborts and takes down whichever process
+called it. Both `android-37.0` and the newer `android-37.1` image behave the same way, with or
+without host GPU emulation, so it is not a matter of picking different settings. A target change
+nobody has run on the target platform is not one worth shipping, so `targetSdk` stays at 36 until
+the suite can be run on Android 17.
+
+What has been checked on Android 17 is `RemovalReasonPlatformTest`. It compiles against SDK 37 and
+compares every hard-coded platform reason code against the constant the running device reports, and
+on 2026-08-31 all four of its cases ran and passed on an Android 17 emulator with none skipped.
+That includes the bundle-dismissal case, which is skipped by an assumption on every earlier
+platform and so had never actually executed before. The reason code this app hard-codes for a
+notification cleared with its bundle is the one Android 17 itself defines.
 
 ## Android developer verification, and what it does and does not cover
 
