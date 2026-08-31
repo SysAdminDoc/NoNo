@@ -1,7 +1,6 @@
 package com.sysadmindoc.nono.runtime
 
 import android.os.Build
-import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
@@ -91,27 +90,6 @@ fun evaluateRules(
         priorityOverrides = overrides,
     )
 }
-
-/**
- * Builds a dry-run payload from a metadata-only history row. No title/body is reconstructed;
- * the stored content provenance is passed directly to the classifier.
- */
-fun evaluateHistoryRecord(
-    rules: List<SignalRule>,
-    record: HistoryRecord,
-    sdkInt: Int = Build.VERSION.SDK_INT,
-): RuleEvaluationTrace = evaluateRules(
-    rules = rules,
-    payload = NotificationPayload(
-        title = null,
-        text = null,
-        appLabel = record.app,
-        packageName = record.appPackageName ?: record.app.takeIf { it.contains('.') },
-        contentStateOverride = record.contentState,
-    ),
-    sdkInt = sdkInt,
-    traceId = "history-${record.id}",
-)
 
 /**
  * What a capture should record about the rules that matched it.

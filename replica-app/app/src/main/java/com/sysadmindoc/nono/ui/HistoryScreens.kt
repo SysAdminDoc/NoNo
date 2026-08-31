@@ -68,8 +68,6 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.importanceLabel
 import com.sysadmindoc.nono.runtime.EvaluationReason
-import com.sysadmindoc.nono.runtime.RuleEvaluationTrace
-import com.sysadmindoc.nono.runtime.evaluateHistoryRecord
 
 @Composable
 fun HistoryScreen(state: UiState, model: MainViewModel) {
@@ -304,14 +302,14 @@ private fun historyMetadataSummary(state: UiState): String = listOfNotNull(
 @Composable
 fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
     val selected = state.history.firstOrNull { it.id == state.selectedHistoryId }
-    val trace = selected?.let { evaluateHistoryRecord(state.rules, it) }
+    val attribution = selected?.let { captureAttribution(it, state.rules) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item { SignalTopBar("Notification activity", onBack = { model.selectRoot(RootTab.HISTORY) }) }
-        if (selected == null || trace == null) {
+        if (selected == null || attribution == null) {
             item { HistoryStatePanel("History entry unavailable", "The selected record is no longer in the bounded history query.", Icons.Rounded.History) }
             return@LazyColumn
         }
@@ -324,14 +322,32 @@ fun HistoryActivityScreen(state: UiState, model: MainViewModel) {
         }
         item {
             SignalStatusPanel(
-                title = trace.matchedRuleId?.let { id -> "Would match ${state.rules.firstOrNull { it.id == id }?.name ?: "rule $id"}" } ?: "No rule would match",
-                description = "Preview only. No action was executed.",
+                title = attribution.headline,
+                description = "Recorded when this arrived. No action was executed.",
                 icon = Icons.Rounded.Shield,
             )
         }
         if (state.historyActivityTab == "Rules") {
             item { Text("EVALUATION", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
-            item { EvaluationTrace(trace) }
+            item { AttributionTrace(attribution) }
+            if (attribution.rules.isNotEmpty()) {
+                item { Text("RULES THAT MATCHED", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
+                item {
+                    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                        attribution.rules.forEachIndexed { index, rule ->
+                            ActivityRow(
+                                rule.name,
+                                if (rule.deleted) {
+                                    "Rule ${rule.id} no longer exists. It matched when this arrived."
+                                } else {
+                                    "Rule ${rule.id}"
+                                },
+                            )
+                            if (index != attribution.rules.lastIndex) SignalDivider()
+                        }
+                    }
+                }
+            }
             item { Text("CAPTURED METADATA", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
             item { CapturedMetadata(selected) }
         } else {
@@ -378,12 +394,11 @@ private fun ActivityTab(label: String, selected: Boolean, modifier: Modifier, on
 }
 
 @Composable
-private fun EvaluationTrace(trace: RuleEvaluationTrace) {
+private fun AttributionTrace(attribution: CaptureAttribution) {
     SignalGroupedSurface(Modifier.fillMaxWidth()) {
-        val matched = trace.matchedRuleId != null
-        ActivityStep(1, "App", if (matched) "App condition matched" else "No enabled rule matched the app")
+        ActivityStep(1, "Rules", attribution.evaluationDetail)
         SignalDivider()
-        ActivityStep(2, "Content", contentStateLabel(trace))
+        ActivityStep(2, "Content", attribution.contentDetail)
         SignalDivider()
         ActivityStep(3, "Action", NO_DEVICE_ACTION_LABEL)
     }
@@ -435,12 +450,6 @@ private fun ActivityRow(title: String, body: String) {
     }
 }
 
-private fun contentStateLabel(trace: RuleEvaluationTrace): String = when (trace.contentState) {
-    NotificationContentState.AVAILABLE -> "Content available to the matcher"
-    NotificationContentState.HIDDEN_BY_SYSTEM -> "Content recorded as hidden by an earlier build"
-    NotificationContentState.NOT_AVAILABLE -> "No content arrived"
-    NotificationContentState.NOT_STORED -> "Content not stored"
-}
 
 private fun EvaluationReason.displayName(): String = when (this) {
     EvaluationReason.DISABLED -> "disabled"
@@ -457,6 +466,73 @@ private fun EvaluationReason.displayName(): String = when (this) {
  * Unknown is the honest common case: Android names no author for a summary, so the two grouping
  * signals it does publish only sometimes settle it.
  */
+/**
+ * A rule a record was attributed to when it was captured.
+ *
+ * @property deleted true when the rule no longer exists. Its id is still shown: a record that
+ * quietly dropped the rule it matched would misrepresent what happened at capture time.
+ */
+internal data class AttributedRule(val id: Long, val name: String, val deleted: Boolean)
+
+/** Everything the Activity screen says about a record, read from what capture stored. */
+internal data class CaptureAttribution(
+    val matchState: RuleMatchState,
+    val rules: List<AttributedRule>,
+    val headline: String,
+    val evaluationDetail: String,
+    val contentDetail: String,
+)
+
+/**
+ * Reads a record's stored attribution. Nothing is re-evaluated.
+ *
+ * A stored row is metadata only: it replays with no title and no text whatever content it
+ * originally carried. Running the current rules against that answered a different question from
+ * the one the screen asks, and could contradict the ids capture actually recorded.
+ */
+internal fun captureAttribution(record: HistoryRecord, rules: List<SignalRule>): CaptureAttribution {
+    val attributed = record.matchedRuleIds.map { id ->
+        val rule = rules.firstOrNull { it.id == id }
+        AttributedRule(id = id, name = rule?.name ?: "Deleted rule $id", deleted = rule == null)
+    }
+    val headline = when {
+        record.matchState == RuleMatchState.GROUP_SUMMARY -> "Group summary: no rule was tested"
+        attributed.isEmpty() -> "No rule matched"
+        attributed.size == 1 -> "Matched ${attributed.single().name}"
+        else -> "Matched ${attributed.size} rules"
+    }
+    val evaluationDetail = when (record.matchState) {
+        RuleMatchState.NOT_EVALUATED -> "No rules were saved when this arrived."
+        RuleMatchState.RULES_NOT_LOADED ->
+            "This arrived before the saved rules had been read from disk, so none were tested."
+        RuleMatchState.GROUP_SUMMARY ->
+            "A group summary stands for its group rather than being an arrival of its own."
+        RuleMatchState.CONTENT_HIDDEN ->
+            "No content arrived, so any rule testing a phrase could not be checked."
+        RuleMatchState.EVALUATED -> if (attributed.isEmpty()) {
+            "Checked against the rules saved at the time. None matched."
+        } else {
+            "Checked against the rules saved at the time."
+        }
+    }
+    return CaptureAttribution(
+        matchState = record.matchState,
+        rules = attributed,
+        headline = headline,
+        evaluationDetail = evaluationDetail,
+        contentDetail = describeStoredContent(record.contentState),
+    )
+}
+
+/** What the record says about its own content, rather than what a fresh look would say. */
+internal fun describeStoredContent(state: NotificationContentState): String = when (state) {
+    NotificationContentState.AVAILABLE -> "Content reached the matcher and was not stored."
+    NotificationContentState.HIDDEN_BY_SYSTEM ->
+        "Recorded as hidden by an earlier build, which inferred that without platform confirmation."
+    NotificationContentState.NOT_AVAILABLE -> "This notification arrived with no title and no text."
+    NotificationContentState.NOT_STORED -> "Metadata only. Content was never persisted."
+}
+
 internal fun describeGroupSummary(origin: GroupSummaryOrigin): String = when (origin) {
     GroupSummaryOrigin.APP -> "Group summary, from the app's own group. Not counted as a notification."
     GroupSummaryOrigin.SYSTEM -> "Group summary, from a group Android imposed. Not counted as a notification."

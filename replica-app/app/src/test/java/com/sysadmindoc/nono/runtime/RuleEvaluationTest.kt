@@ -1,7 +1,6 @@
 package com.sysadmindoc.nono.runtime
 
 import com.sysadmindoc.nono.model.NotificationContentState
-import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.SignalRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,6 +13,24 @@ class RuleEvaluationTest {
         text = "The main branch is red",
         appLabel = "CI",
         packageName = "com.example.ci",
+    )
+
+    /**
+     * The shape a stored, metadata-only row replays as: its provenance, and no text at all.
+     *
+     * The Activity screen no longer re-evaluates a stored row, but the evaluator still has to
+     * refuse this shape rather than treat missing text as a phrase that was absent.
+     */
+    private fun storedRow(
+        app: String,
+        packageName: String? = null,
+        contentState: NotificationContentState,
+    ) = NotificationPayload(
+        title = null,
+        text = null,
+        appLabel = app,
+        packageName = packageName,
+        contentStateOverride = contentState,
     )
 
     @Test
@@ -87,9 +104,9 @@ class RuleEvaluationTest {
         // History, with no reason given.
         val negated = SignalRule(id = 7, app = "any app", phrase = "invoice", matchType = "doesn't contain", action = "Mute")
 
-        val trace = evaluateHistoryRecord(
+        val trace = evaluateRules(
             rules = listOf(negated),
-            record = HistoryRecord(id = 3L, app = "com.example.chat", contentState = NotificationContentState.AVAILABLE),
+            payload = storedRow(app = "com.example.chat", contentState = NotificationContentState.AVAILABLE),
             sdkInt = 36,
         )
 
@@ -102,12 +119,11 @@ class RuleEvaluationTest {
         // The counterpart: absent text is only a refusal for a rule that tests text.
         val appOnly = SignalRule(id = 8, app = "com.example.chat", appPackageName = "com.example.chat", phrase = "anything", action = "Mute")
 
-        val trace = evaluateHistoryRecord(
+        val trace = evaluateRules(
             rules = listOf(appOnly),
-            record = HistoryRecord(
-                id = 4L,
+            payload = storedRow(
                 app = "com.example.chat",
-                appPackageName = "com.example.chat",
+                packageName = "com.example.chat",
                 contentState = NotificationContentState.NOT_STORED,
             ),
             sdkInt = 36,
@@ -135,7 +151,7 @@ class RuleEvaluationTest {
 
     @Test
     fun `metadata history preview preserves provenance and never executes`() {
-        val trace = evaluateHistoryRecord(
+        val trace = evaluateRules(
             rules = listOf(
                 SignalRule(
                     id = 11,
@@ -145,13 +161,13 @@ class RuleEvaluationTest {
                     action = "Copy verification code",
                 ),
             ),
-            record = HistoryRecord(
-                id = 42,
+            payload = storedRow(
                 app = "Messages",
-                appPackageName = "com.google.android.apps.messaging",
+                packageName = "com.google.android.apps.messaging",
                 contentState = NotificationContentState.NOT_STORED,
             ),
             sdkInt = 35,
+            traceId = "history-42",
         )
 
         assertEquals("history-42", trace.traceId)
