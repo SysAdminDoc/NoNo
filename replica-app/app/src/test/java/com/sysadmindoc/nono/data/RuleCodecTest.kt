@@ -1,5 +1,7 @@
 package com.sysadmindoc.nono.data
 
+import com.sysadmindoc.nono.model.DEFAULT_MATCH_TYPE
+import com.sysadmindoc.nono.model.NEGATED_MATCH_TYPE
 import com.sysadmindoc.nono.model.SignalRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -27,10 +29,29 @@ class RuleCodecTest {
     @Test
     fun `round trips the dialog-driven fields`() {
         val configured = listOf(
-            SignalRule(id = 5L, matchType = "doesn't contain all of", extras = listOf("Image", "Category"), filterOperator = "Contains all", enabledFor = "6 hours"),
+            SignalRule(id = 5L, matchType = NEGATED_MATCH_TYPE, extras = listOf("Image", "Category"), filterOperator = "Contains all", enabledFor = "6 hours"),
         )
 
         assertEquals(configured, decodeRules(encodeRules(configured)))
+    }
+
+    @Test
+    fun `legacy phrase-group operators collapse onto an operator the evaluator implements`() {
+        val legacy = listOf(
+            SignalRule(id = 1L, matchType = "contains any of"),
+            SignalRule(id = 2L, matchType = "contains all of"),
+            SignalRule(id = 3L, matchType = "doesn't contain any of"),
+            SignalRule(id = 4L, matchType = "doesn't contain all of"),
+        )
+
+        val decoded = decodeRules(encodeRules(legacy)).orEmpty()
+
+        assertEquals(
+            listOf(DEFAULT_MATCH_TYPE, DEFAULT_MATCH_TYPE, NEGATED_MATCH_TYPE, NEGATED_MATCH_TYPE),
+            decoded.map { it.matchType },
+        )
+        // Deterministic: decoding what was already decoded changes nothing further.
+        assertEquals(decoded, decodeRules(encodeRules(decoded)))
     }
 
     @Test

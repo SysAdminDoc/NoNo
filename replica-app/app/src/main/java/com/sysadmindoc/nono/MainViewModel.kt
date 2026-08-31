@@ -37,6 +37,7 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.applyToRule
 import com.sysadmindoc.nono.model.duplicateRule as duplicateRuleIn
 import com.sysadmindoc.nono.model.nextRuleId as nextRuleIdFor
+import com.sysadmindoc.nono.model.normalizeMatchType
 import com.sysadmindoc.nono.model.removeRule
 import com.sysadmindoc.nono.model.resolveSavedRule
 import com.sysadmindoc.nono.model.upsertRule
@@ -667,20 +668,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setMatchType(matchType: String) {
-        _state.value = _state.value.copy(draft = _state.value.draft.copy(matchType = matchType), overlay = Overlay.NONE)
+        _state.value = _state.value.copy(
+            draft = _state.value.draft.copy(matchType = normalizeMatchType(matchType)),
+            overlay = Overlay.NONE,
+        )
     }
 
-    fun setFilterOperator(operator: String) {
-        _state.value = _state.value.copy(draft = _state.value.draft.copy(filterOperator = operator), overlay = Overlay.NONE)
-    }
-
-    /** Extras are a set in practice; selecting an already-chosen one removes it. */
-    fun toggleExtraFilter(extra: String) {
-        val current = _state.value.draft.extras
-        val updated = if (current.contains(extra)) current - extra else current + extra
-        _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = updated), overlay = Overlay.NONE)
-    }
-
+    /**
+     * Removes every extra filter from the draft.
+     *
+     * Extras cannot be added any more, because nothing evaluates them, but an imported rule can
+     * still carry them and they stop it matching. Clearing is the repair.
+     */
     fun clearExtraFilters() {
         _state.value = _state.value.copy(draft = _state.value.draft.copy(extras = emptyList()))
     }

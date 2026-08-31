@@ -74,6 +74,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sysadmindoc.nono.MainViewModel
+import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
@@ -523,18 +524,18 @@ fun FilterGroupScreen(state: UiState, model: MainViewModel) {
         contentPadding = PaddingValues(horizontal = SignalMetrics.pageHorizontal, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { SignalTopBar("Extra filters", onBack = { model.navigate(Route.RULE_BUILDER) }, actionIcon = Icons.Rounded.Info, onAction = { model.showMessage("All enabled filters must match.") }) }
-        item { SignalSectionHeading("Narrow this match", "All enabled filters must match.") }
+        item { SignalTopBar("Extra filters", onBack = { model.navigate(Route.RULE_BUILDER) }, actionIcon = Icons.Rounded.Info, onAction = { model.showMessage(NO_FILTER_ENGINE) }) }
+        item { SignalSectionHeading("Narrow this match", NO_FILTER_ENGINE) }
         item { Text("NOTIFICATION METADATA", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                metadataFilters.forEachIndexed { index, (title, subtitle, icon) ->
+                metadataFilters.forEachIndexed { index, (title, _, icon) ->
                     SignalListRow(
                         icon = icon,
                         title = title,
-                        subtitle = subtitle,
+                        subtitle = NO_FILTER_ENGINE,
                         selected = state.draft.extras.contains(title),
-                        onClick = { model.toggleExtraFilter(title) },
+                        enabled = false,
                     )
                     if (index != metadataFilters.lastIndex) SignalDivider()
                 }
@@ -543,27 +544,39 @@ fun FilterGroupScreen(state: UiState, model: MainViewModel) {
         item { Text("SYSTEM STATE", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                systemFilters.forEachIndexed { index, (title, subtitle, icon) ->
+                systemFilters.forEachIndexed { index, (title, _, icon) ->
                     SignalListRow(
                         icon = icon,
                         title = title,
-                        subtitle = subtitle,
+                        subtitle = NO_FILTER_ENGINE,
                         selected = state.draft.extras.contains(title),
-                        onClick = { model.toggleExtraFilter(title) },
+                        enabled = false,
                     )
                     if (index != systemFilters.lastIndex) SignalDivider()
                 }
             }
         }
-        item { SignalStatusPanel("Metadata only", "Filters never save notification content.", icon = Icons.Rounded.Shield) }
-        item { SignalPrimaryButton("Use filters", { model.navigate(Route.RULE_BUILDER) }) }
+        item {
+            SignalStatusPanel(
+                "Not evaluated",
+                "A rule carrying any of these never matches. Clear them to make the rule work again.",
+                icon = Icons.Rounded.Shield,
+            )
+        }
+        item { SignalPrimaryButton("Back to the rule", { model.navigate(Route.RULE_BUILDER) }) }
         if (state.draft.extras.isNotEmpty()) {
-            item { SignalOutlineButton("Reset filters", model::clearExtraFilters, Modifier.fillMaxWidth()) }
+            item { SignalOutlineButton("Clear these filters", model::clearExtraFilters, Modifier.fillMaxWidth()) }
         }
         item { Text("MATCH LOGIC", color = SignalColors.Secondary, style = MaterialTheme.typography.labelMedium) }
         item {
             SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                SignalListRow(Icons.Rounded.FilterAlt, "Operator", state.draft.filterOperator, onClick = { model.showOverlay(Overlay.FILTER_OPERATOR) })
+                SignalListRow(
+                    Icons.Rounded.FilterAlt,
+                    "Operator",
+                    subtitle = NO_FILTER_ENGINE,
+                    value = state.draft.filterOperator,
+                    enabled = false,
+                )
             }
         }
     }

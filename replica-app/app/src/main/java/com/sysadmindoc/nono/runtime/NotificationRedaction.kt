@@ -10,13 +10,13 @@ import com.sysadmindoc.nono.model.NotificationContentState
 /**
  * The system can replace OTP and similar sensitive notification fields before delivering a
  * notification to an untrusted listener on Android 15+. The replacement is still a normal
- * StatusBarNotification, so treating its text as user content would create false rule matches.
+ * StatusBarNotification, and the platform publishes no supported way to tell one apart, so an
+ * empty payload is reported as unavailable rather than attributed to Android.
  */
 data class NotificationPayload(
     val title: CharSequence?,
     val text: CharSequence?,
     val appLabel: CharSequence?,
-    val systemMarkedSensitive: Boolean = false,
     val packageName: String? = null,
     /** Used by metadata-only previews to preserve provenance without supplying content. */
     val contentStateOverride: NotificationContentState? = null,
@@ -51,24 +51,26 @@ data class SanitizedNotification(
     val isOngoing: Boolean = false,
 )
 
-private const val ANDROID_SENSITIVE_CONTENT_EXTRA = "key_sensitive_content"
-
 /**
  * This is intentionally conservative: an uncertain payload is never promoted to matchable
- * content. The Android marker is localized on some releases, so known English variants are
- * matched by shape and the explicit sensitive-content extra is preferred when available.
+ * content, and it is never attributed to Android either.
+ *
+ * Android 15 redacts sensitive notifications for untrusted listeners, but as of API 37 there is
+ * no public flag, ranking method, or documented extra that says so, and the placeholder text is
+ * localized. An earlier revision guessed from an undocumented extra key and a list of English
+ * strings, which claimed provenance the platform never supplied and would misread an app that
+ * happened to post "content hidden". Missing content is now simply
+ * [NotificationContentState.NOT_AVAILABLE].
+ *
+ * @param sdkInt kept in the signature because callers pass the device level and the
+ * classification is deliberately the same on every one of them.
  */
+@Suppress("UNUSED_PARAMETER")
 fun classifyNotificationContent(
     payload: NotificationPayload,
     sdkInt: Int = Build.VERSION.SDK_INT,
 ): NotificationContentState {
     payload.contentStateOverride?.let { return it }
-    if (payload.systemMarkedSensitive ||
-        (sdkInt >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
-            (isSystemRedactionMarker(payload.title) || isSystemRedactionMarker(payload.text)))
-    ) {
-        return NotificationContentState.HIDDEN_BY_SYSTEM
-    }
 
     if (payload.title.isNullOrBlank() && payload.text.isNullOrBlank()) {
         return NotificationContentState.NOT_AVAILABLE
@@ -101,7 +103,6 @@ fun notificationPayload(sbn: StatusBarNotification): NotificationPayload {
         title = extras.getCharSequence(Notification.EXTRA_TITLE),
         text = extras.getCharSequence(Notification.EXTRA_TEXT),
         appLabel = null,
-        systemMarkedSensitive = extras.getBoolean(ANDROID_SENSITIVE_CONTENT_EXTRA, false),
         packageName = sbn.packageName,
     )
 }
@@ -135,22 +136,7 @@ fun sanitizeNotification(
     )
 }
 
-private fun isSystemRedactionMarker(value: CharSequence?): Boolean {
-    val normalized = value?.toString()?.trim()?.lowercase() ?: return false
-    if (normalized.isBlank()) return false
-    return normalized in REDACTION_MARKERS ||
-        (normalized.contains("sensitive") && normalized.contains("hidden")) ||
-        (normalized.contains("notification") && normalized.contains("content") && normalized.contains("hidden"))
-}
-
-private val REDACTION_MARKERS = setOf(
-    "sensitive notification content hidden",
-    "sensitive content hidden",
-    "notification content hidden",
-    "content hidden by the system",
-)
-
-/** Testable bridge for a synthetic Android Bundle without exposing platform placeholder text. */
+/** Testable bridge for a synthetic Android Bundle. */
 fun notificationPayloadFromExtras(
     extras: Bundle,
     appLabel: CharSequence? = null,
@@ -160,6 +146,5 @@ fun notificationPayloadFromExtras(
         title = extras.getCharSequence(Notification.EXTRA_TITLE),
         text = extras.getCharSequence(Notification.EXTRA_TEXT),
         appLabel = appLabel,
-        systemMarkedSensitive = extras.getBoolean(ANDROID_SENSITIVE_CONTENT_EXTRA, false),
         packageName = packageName,
     )

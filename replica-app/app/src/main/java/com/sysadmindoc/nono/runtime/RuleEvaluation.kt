@@ -5,6 +5,7 @@ import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
+import com.sysadmindoc.nono.model.isNegatedMatchType
 
 /** Why a rule was not selected during a dry-run evaluation. */
 enum class EvaluationReason {
@@ -107,7 +108,6 @@ fun evaluateHistoryRecord(
         appLabel = record.app,
         packageName = record.appPackageName ?: record.app.takeIf { it.contains('.') },
         contentStateOverride = record.contentState,
-        systemMarkedSensitive = record.contentState == NotificationContentState.HIDDEN_BY_SYSTEM,
     ),
     sdkInt = sdkInt,
     traceId = "history-${record.id}",
@@ -190,9 +190,14 @@ private fun matchesApp(rule: SignalRule, payload: NotificationPayload): Boolean 
     return payload.appLabel?.toString()?.equals(rule.app, ignoreCase = true) == true
 }
 
+/**
+ * A negated rule still needs the text. Absence cannot be asserted about content the app never
+ * saw, so an unreadable notification refuses both operators rather than matching by default.
+ */
 private fun matchesPhrase(rule: SignalRule, text: String?): Boolean {
     if (rule.phrase.isBlank() || rule.phrase.equals("anything", ignoreCase = true)) return true
-    return text?.contains(rule.phrase.trim().lowercase()) == true
+    val present = text?.contains(rule.phrase.trim().lowercase()) == true
+    return if (isNegatedMatchType(rule.matchType)) !present else present
 }
 
 private fun specificity(rule: SignalRule): Int =

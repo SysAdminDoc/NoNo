@@ -141,7 +141,7 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                     onClick = { model.setCapturePaused(!state.capturePaused) },
                 )
                 SignalDivider()
-                PreferenceRow(Icons.Rounded.VisibilityOff, "Why is content hidden?", "Android may redact sensitive notifications before NoNo reads metadata.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) })
+                PreferenceRow(Icons.Rounded.VisibilityOff, "Why do some records have no content?", "Some notifications arrive with no text at all, and Android redacts sensitive ones.", onClick = { model.showOverlay(Overlay.CONTENT_HIDDEN) })
             }
         }
 

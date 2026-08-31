@@ -421,22 +421,22 @@ private fun ActivityRow(title: String, body: String) {
 
 private fun contentStateLabel(trace: RuleEvaluationTrace): String = when (trace.contentState) {
     NotificationContentState.AVAILABLE -> "Content available to the matcher"
-    NotificationContentState.HIDDEN_BY_SYSTEM -> "Content hidden by Android"
-    NotificationContentState.NOT_AVAILABLE -> "Content unavailable"
+    NotificationContentState.HIDDEN_BY_SYSTEM -> "Content recorded as hidden by an earlier build"
+    NotificationContentState.NOT_AVAILABLE -> "No content arrived"
     NotificationContentState.NOT_STORED -> "Content not stored"
 }
 
 private fun EvaluationReason.displayName(): String = when (this) {
     EvaluationReason.DISABLED -> "disabled"
     EvaluationReason.APP_MISMATCH -> "app mismatch"
-    EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM -> "content hidden by system"
-    EvaluationReason.CONTENT_NOT_AVAILABLE -> "content unavailable"
+    EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM -> "recorded as hidden by an earlier build"
+    EvaluationReason.CONTENT_NOT_AVAILABLE -> "no content arrived"
     EvaluationReason.PHRASE_MISMATCH -> "phrase mismatch"
     EvaluationReason.EXTRA_FILTER_UNSUPPORTED -> "extra filter unsupported"
 }
 
 internal fun describeMatchedRules(record: HistoryRecord, rules: List<SignalRule>): String? = when {
-    record.matchState == RuleMatchState.CONTENT_HIDDEN -> "Not matched: the system hid this content"
+    record.matchState == RuleMatchState.CONTENT_HIDDEN -> "Not matched: no content arrived to test"
     record.matchedRuleIds.isEmpty() -> null
     else -> {
         val names = record.matchedRuleIds.map { id -> rules.firstOrNull { it.id == id }?.name ?: "deleted rule $id" }

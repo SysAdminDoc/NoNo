@@ -27,12 +27,11 @@ class CaptureEvaluationTest {
         action = "Mute",
     )
 
-    private fun payload(title: String?, text: String?, packageName: String, sensitive: Boolean = false) =
+    private fun payload(title: String?, text: String?, packageName: String) =
         NotificationPayload(
             title = title,
             text = text,
             appLabel = null,
-            systemMarkedSensitive = sensitive,
             packageName = packageName,
         )
 
@@ -60,14 +59,14 @@ class CaptureEvaluationTest {
     }
 
     @Test
-    fun contentTheSystemHidIsMarkedAndMatchesNothing() {
+    fun aRuleTestingAPhraseCannotMatchANotificationThatCarriedNoText() {
         val evaluation = evaluateCapture(
-            rules = listOf(chatRule, invoiceRule),
-            payload = payload("Sensitive notification content hidden", null, "com.example.chat", sensitive = true),
+            rules = listOf(invoiceRule),
+            payload = payload(null, null, "com.example.chat"),
             sdkInt = 35,
         )
 
-        assertEquals(RuleMatchState.CONTENT_HIDDEN, evaluation.state)
+        assertEquals(RuleMatchState.EVALUATED, evaluation.state)
         assertEquals(emptyList<Long>(), evaluation.matchedRuleIds)
     }
 
@@ -131,15 +130,48 @@ class CaptureEvaluationTest {
     }
 
     @Test
-    fun contentTheSystemHidRefusesEvenARuleThatTestsNoPhrase() {
-        // The hidden text might have matched. Guessing either way would be inventing a result.
+    fun anAppOnlyRuleMatchesANotificationThatCarriedNoText() {
+        // The rule tests no phrase, so absent content is no reason to refuse it.
         val evaluation = evaluateCapture(
             rules = listOf(chatRule),
-            payload = payload("Sensitive notification content hidden", null, "com.example.chat", sensitive = true),
+            payload = payload(null, null, "com.example.chat"),
+            sdkInt = 35,
+        )
+
+        assertEquals(listOf(7L), evaluation.matchedRuleIds)
+        assertEquals(RuleMatchState.EVALUATED, evaluation.state)
+    }
+
+    @Test
+    fun aNegatedPhraseMatchesTextThatDoesNotContainIt() {
+        val negated = invoiceRule.copy(id = 11L, matchType = "doesn't contain")
+
+        val absent = evaluateCapture(
+            rules = listOf(negated),
+            payload = payload("Ada", "lunch?", "com.example.chat"),
+            sdkInt = 35,
+        )
+        val present = evaluateCapture(
+            rules = listOf(negated),
+            payload = payload("Ada", "your invoice is ready", "com.example.chat"),
+            sdkInt = 35,
+        )
+
+        assertEquals(listOf(11L), absent.matchedRuleIds)
+        assertEquals(emptyList<Long>(), present.matchedRuleIds)
+    }
+
+    @Test
+    fun aNegatedPhraseStillRefusesANotificationWithNoText() {
+        // Absence cannot be asserted about text the app never saw.
+        val negated = invoiceRule.copy(id = 11L, matchType = "doesn't contain")
+
+        val evaluation = evaluateCapture(
+            rules = listOf(negated),
+            payload = payload(null, null, "com.example.chat"),
             sdkInt = 35,
         )
 
         assertEquals(emptyList<Long>(), evaluation.matchedRuleIds)
-        assertEquals(RuleMatchState.CONTENT_HIDDEN, evaluation.state)
     }
 }

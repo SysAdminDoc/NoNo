@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selectableGroup
@@ -62,10 +63,9 @@ import com.sysadmindoc.nono.data.ConflictResolution
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.NO_FILTER_ENGINE
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.enableForCatalog
-import com.sysadmindoc.nono.model.extraFilterCatalog
-import com.sysadmindoc.nono.model.filterOperatorCatalog
 import com.sysadmindoc.nono.model.importanceCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
 import com.sysadmindoc.nono.runtime.historyRetentionCatalog
@@ -83,23 +83,11 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             onDismiss = model::dismissOverlay,
             onChoice = model::setMatchType,
         )
-        Overlay.CONDITION_EXTRAS -> CatalogDialog(
-            "Extra notification properties",
-            extraFilterCatalog,
-            when { state.auditState.startsWith("038_") -> 7; state.auditState.startsWith("037_") -> 4; else -> 0 },
-            model::dismissOverlay,
-        ) { model.toggleExtraFilter(it) }
-        Overlay.FILTER_OPERATOR -> ChoiceDialog(
-            "Filter operator",
-            filterOperatorCatalog,
-            state.draft.filterOperator,
-            model::dismissOverlay,
-        ) { model.setFilterOperator(it) }
         Overlay.ADD_FILTER -> MenuDialog(
             "Add a filter",
             listOf(
                 MenuItem("Words or phrase", Icons.Rounded.Add) { model.setPhraseDraft(""); model.navigate(Route.PHRASE_EDITOR) },
-                MenuItem("Extra property", Icons.Rounded.FilterAlt) { model.showOverlay(Overlay.CONDITION_EXTRAS) },
+                MenuItem("Extra property", Icons.Rounded.FilterAlt, unavailable = NO_FILTER_ENGINE) {},
                 MenuItem("Filter group", Icons.Rounded.Tune) { model.navigate(Route.FILTER_GROUP) },
             ),
             model::dismissOverlay,
@@ -143,8 +131,8 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                     },
                 )
                 // Only offered where it applies, so it explains this record rather than a general topic.
-                if (state.selectedHistoryContentState == NotificationContentState.HIDDEN_BY_SYSTEM) {
-                    add(MenuItem("Why is content hidden?", Icons.Rounded.Tune) { model.showOverlay(Overlay.CONTENT_HIDDEN) })
+                if (state.selectedHistoryContentState in CONTENT_MISSING_STATES) {
+                    add(MenuItem("Why was there no content?", Icons.Rounded.Tune) { model.showOverlay(Overlay.CONTENT_HIDDEN) })
                 }
                 add(MenuItem("Delete", Icons.Rounded.DeleteForever, destructive = true) { model.dismissOverlay() })
             }, model::dismissOverlay,
@@ -213,24 +201,26 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
 private fun ContentHiddenDialog(model: MainViewModel) {
     val context = LocalContext.current
     val command = remember { sensitiveNotificationsAppOpsCommand(context.packageName) }
-    DialogFrame("Content hidden by the system", model::dismissOverlay) {
+    DialogFrame("No content arrived", model::dismissOverlay) {
         Column(Modifier.padding(horizontal = 8.dp)) {
             Text(
-                "Android hides the text of notifications it treats as sensitive, such as ones " +
-                    "carrying a sign-in code, from every app that reads notifications. NoNo " +
-                    "never received the content, so it stored none.",
+                "This notification reached NoNo with no title and no text. Some apps post one " +
+                    "that way. Android also hides the text of notifications it treats as " +
+                    "sensitive, such as ones carrying a sign-in code, from every app that reads " +
+                    "notifications. It gives an app no way to tell the two apart, so NoNo does " +
+                    "not guess which happened here.",
                 color = SignalColors.Secondary,
                 fontSize = 15.sp,
             )
             Spacer(Modifier.padding(vertical = 6.dp))
             Text(
-                "Rules can still match these notifications by app, channel, and group. Only the " +
-                    "phrase condition needs text, and it will not match a hidden notification.",
+                "A rule that matches on the app still works. Only a phrase condition needs text, " +
+                    "and it cannot be tested against a notification that carried none.",
                 color = SignalColors.Secondary,
                 fontSize = 15.sp,
             )
             Spacer(Modifier.padding(vertical = 6.dp))
-            Text("If you want the text", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text("If Android was the reason", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Text(
                 "Some devices offer Enhanced notifications under notification settings; turning it " +
                     "off stops the redaction. Where that switch is missing, the permission can be " +
@@ -294,6 +284,17 @@ private fun ListenerChecklistDialog(model: MainViewModel) {
     }
 }
 
+/**
+ * Record states the explainer applies to.
+ *
+ * [NotificationContentState.HIDDEN_BY_SYSTEM] only appears on rows an earlier build stored, back
+ * when redaction was inferred; new captures with no content are NOT_AVAILABLE.
+ */
+internal val CONTENT_MISSING_STATES = setOf(
+    NotificationContentState.NOT_AVAILABLE,
+    NotificationContentState.HIDDEN_BY_SYSTEM,
+)
+
 /** Built here so the dialog and its test agree on the exact command. */
 internal fun sensitiveNotificationsAppOpsCommand(packageName: String): String =
     "adb shell cmd appops set --user 0 $packageName RECEIVE_SENSITIVE_NOTIFICATIONS allow"
@@ -343,18 +344,48 @@ private fun CatalogDialog(title: String, choices: List<String>, initialIndex: In
     }
 }
 
-private data class MenuItem(val label: String, val icon: ImageVector, val destructive: Boolean = false, val action: () -> Unit)
+/** @param unavailable when set, the entry is shown with the reason and cannot be chosen. */
+private data class MenuItem(
+    val label: String,
+    val icon: ImageVector,
+    val destructive: Boolean = false,
+    val unavailable: String? = null,
+    val action: () -> Unit,
+)
 
 @Composable
 private fun MenuDialog(title: String, items: List<MenuItem>, onDismiss: () -> Unit) {
     DialogFrame(title, onDismiss) {
         items.forEach { item ->
+            val enabled = item.unavailable == null
             Row(
-                Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = item.action).padding(horizontal = 8.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth()
+                    .clickable(enabled = enabled, role = Role.Button, onClick = item.action)
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .semantics { if (!enabled) contentDescription = "${item.label}. Unavailable: ${item.unavailable}" },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(item.icon, contentDescription = null, tint = if (item.destructive) SignalColors.Error else SignalColors.Yellow)
-                Text(item.label, color = if (item.destructive) SignalColors.Error else SignalColors.White, fontSize = 17.sp, modifier = Modifier.padding(start = 16.dp))
+                Icon(
+                    item.icon,
+                    contentDescription = null,
+                    tint = when {
+                        !enabled -> SignalColors.Muted
+                        item.destructive -> SignalColors.Error
+                        else -> SignalColors.Yellow
+                    },
+                )
+                Column(Modifier.padding(start = 16.dp)) {
+                    Text(
+                        item.label,
+                        color = when {
+                            !enabled -> SignalColors.Muted
+                            item.destructive -> SignalColors.Error
+                            else -> SignalColors.White
+                        },
+                        fontSize = 17.sp,
+                    )
+                    item.unavailable?.let { Text(it, color = SignalColors.Secondary, fontSize = 13.sp) }
+                }
             }
         }
     }

@@ -105,12 +105,12 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
         app = packageName,
         appPackageName = packageName,
         title = when (state) {
-            NotificationContentState.HIDDEN_BY_SYSTEM -> "Content hidden by system"
+            NotificationContentState.HIDDEN_BY_SYSTEM -> "Content recorded as hidden by an earlier build"
             else -> "Notification received"
         },
         body = when (state) {
-            NotificationContentState.HIDDEN_BY_SYSTEM -> "Android redacted sensitive content before delivery."
-            NotificationContentState.NOT_AVAILABLE -> "No notification content was supplied."
+            NotificationContentState.HIDDEN_BY_SYSTEM -> "Stored by an earlier build, which inferred redaction the platform never confirmed."
+            NotificationContentState.NOT_AVAILABLE -> "This notification arrived with no title and no text."
             else -> "Metadata stored locally; notification content is not persisted."
         },
         time = postedAtEpochMillis.toString(),

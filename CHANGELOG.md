@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - The Notification history setting now offers Metadata only and Off, and both are enforced. The old list included content options this build never performed. Off stops new records being written and leaves everything already stored alone until you delete it.
 - Settings has a separate "Keep history for" row. The retention dialog existed but nothing opened it, and the history row showed the retention value while opening the storage chooser.
+- The phrase condition offers "contains" and "doesn't contain", and both now do what they say. The four older options ("contains any of" and friends) all ran the same single containment check, and a rule saved with any of them keeps working: it is read back as whichever of the two operators it meant.
+- Extra properties, filter groups and the filter operator are shown but cannot be set. Nothing evaluates them, and a rule carrying one silently never matched. A rule that already has some can be cleared in one tap so it starts matching again.
+- A notification that arrives with no title and no text is now recorded as exactly that. The app used to file some of them as redacted by Android, based on an undocumented extra and a list of English phrases. Android publishes nothing that confirms it, so the app no longer claims it. The explainer covers both possibilities and still offers the ADB command.
 
 ### Fixed
 

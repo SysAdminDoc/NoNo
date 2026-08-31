@@ -49,7 +49,7 @@ class MatchedRuleSummaryTest {
             rules,
         )
 
-        assertEquals("Not matched: the system hid this content", line)
+        assertEquals("Not matched: no content arrived to test", line)
     }
 
     /**

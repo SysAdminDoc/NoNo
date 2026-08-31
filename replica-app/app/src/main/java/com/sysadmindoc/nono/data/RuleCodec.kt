@@ -5,6 +5,7 @@ import com.sysadmindoc.nono.model.RuleStore
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.ANY_APP_LABEL
 import com.sysadmindoc.nono.model.appOptionForLabel
+import com.sysadmindoc.nono.model.normalizeMatchType
 import kotlinx.serialization.json.Json
 
 /**
@@ -68,6 +69,9 @@ private fun normalizeRule(rule: SignalRule): SignalRule {
         app = normalizedApp,
         appPackageName = packageName,
         phrase = rule.phrase.ifBlank { "anything" },
+        // Older stores carry the four-value phrase-group vocabulary. Collapsing it here means a
+        // decoded rule always names an operator the evaluator implements.
+        matchType = normalizeMatchType(rule.matchType),
         extras = rule.extras.distinct(),
         enabledFor = rule.enabledFor?.ifBlank { null },
     )

@@ -21,8 +21,6 @@ enum class Route {
 enum class Overlay {
     NONE,
     CONDITION_TYPE,
-    CONDITION_EXTRAS,
-    FILTER_OPERATOR,
     ADD_FILTER,
     RULE_MORE,
     ENABLE_FOR,
@@ -71,12 +69,13 @@ data class SignalRule(
 )
 
 /**
- * Operators recorded in the audit for the content filter and for nested filter groups.
+ * Operators for the content filter and for nested filter groups.
  *
- * The default sentence token is the bare verb "contains", exactly as captured; the four
- * explicit operators are what the match-type dialog offers once the user opens it.
+ * The rule's phrase is one string, so "any of" and "all of" would mean the same thing as plain
+ * containment. Only the two operators the evaluator implements are offered.
  */
 const val DEFAULT_MATCH_TYPE = "contains"
+const val NEGATED_MATCH_TYPE = "doesn't contain"
 const val DEFAULT_FILTER_OPERATOR = "Contains any"
 const val ANY_APP_LABEL = "any app"
 
@@ -102,19 +101,39 @@ val appOptions = listOf(
 fun appOptionForLabel(label: String): AppOption? =
     appOptions.firstOrNull { it.label.equals(label.trim(), ignoreCase = true) }
 
-val matchTypeCatalog = listOf(
-    "contains any of",
-    "contains all of",
-    "doesn't contain any of",
-    "doesn't contain all of",
-)
+val matchTypeCatalog = listOf(DEFAULT_MATCH_TYPE, NEGATED_MATCH_TYPE)
 
+/**
+ * Collapses any stored or imported operator onto one the evaluator implements.
+ *
+ * Deterministic in both directions: anything phrased as a negation becomes
+ * [NEGATED_MATCH_TYPE], everything else becomes [DEFAULT_MATCH_TYPE]. The older four-value
+ * vocabulary ("contains any of", "doesn't contain all of") maps through here on decode.
+ */
+fun normalizeMatchType(matchType: String): String {
+    val normalized = matchType.trim().lowercase()
+    val negated = normalized.startsWith("doesn't") ||
+        normalized.startsWith("does not") ||
+        normalized.startsWith("not ")
+    return if (negated) NEGATED_MATCH_TYPE else DEFAULT_MATCH_TYPE
+}
+
+fun isNegatedMatchType(matchType: String): Boolean =
+    normalizeMatchType(matchType) == NEGATED_MATCH_TYPE
+
+/**
+ * Operators for nested filter groups. Nothing evaluates these, so the rule builder shows the
+ * stored value and refuses to change it rather than offering a choice that does nothing.
+ */
 val filterOperatorCatalog = listOf(
     "Contains any",
     "Contains all",
     "Doesn't contain any",
     "Doesn't contain all",
 )
+
+/** Why the filter-group and extra-property controls cannot be used. */
+const val NO_FILTER_ENGINE = "This build evaluates app and phrase conditions only."
 
 val enableForCatalog = listOf(
     "10 mins", "30 mins", "1 hour", "6 hours", "8 hours", "12 hours", "1 day", "7 days",
@@ -224,7 +243,13 @@ enum class NotificationContentState {
     /** The platform supplied content, but this build intentionally does not persist it. */
     AVAILABLE,
 
-    /** Android or the device OEM replaced sensitive content before it reached the listener. */
+    /**
+     * Android or the device OEM replaced sensitive content before it reached the listener.
+     *
+     * Only present on rows an earlier build stored. Nothing infers this any more: the platform
+     * exposes no supported signal for it, and guessing was how the app claimed provenance it
+     * did not have.
+     */
     HIDDEN_BY_SYSTEM,
 
     /** No content was supplied, without enough evidence to attribute that to Android redaction. */

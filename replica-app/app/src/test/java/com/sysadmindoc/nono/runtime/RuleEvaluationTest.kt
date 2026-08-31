@@ -66,16 +66,18 @@ class RuleEvaluationTest {
     }
 
     @Test
-    fun `system redaction blocks matching and explains the unmet condition`() {
+    fun `absent content blocks a phrase rule and explains the unmet condition neutrally`() {
         val trace = evaluateRules(
             rules = listOf(SignalRule(id = 7, app = "CI", phrase = "code", action = "Mute")),
-            payload = payload.copy(text = "Sensitive notification content hidden"),
+            payload = payload.copy(title = null, text = null),
             sdkInt = 35,
         )
 
-        assertEquals(NotificationContentState.HIDDEN_BY_SYSTEM, trace.contentState)
+        assertEquals(NotificationContentState.NOT_AVAILABLE, trace.contentState)
         assertEquals(null, trace.matchedRuleId)
-        assertTrue(EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM in trace.conditions.single().reasons)
+        assertTrue(EvaluationReason.CONTENT_NOT_AVAILABLE in trace.conditions.single().reasons)
+        // The neutral reason is the point: nothing here proves Android redacted anything.
+        assertTrue(EvaluationReason.CONTENT_HIDDEN_BY_SYSTEM !in trace.conditions.single().reasons)
     }
 
     @Test

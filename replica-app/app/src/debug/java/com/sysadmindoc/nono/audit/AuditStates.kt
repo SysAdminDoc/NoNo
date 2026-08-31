@@ -92,9 +92,9 @@ fun auditStateFor(base: UiState, id: String): UiState? = when {
             phraseInputVisible = !id.startsWith("033_"),
             phraseDraft = if (id.startsWith("041_") || id.startsWith("045_") || id.startsWith("046_") || id.startsWith("047_") || id.startsWith("048_")) "audit phrase" else "",
         )
-        id.startsWith("036_") || id.startsWith("037_") || id.startsWith("038_") -> base.copy(route = Route.PHRASE_EDITOR, overlay = Overlay.CONDITION_EXTRAS)
+        id.startsWith("036_") || id.startsWith("037_") || id.startsWith("038_") -> base.copy(route = Route.FILTER_GROUP)
         id.startsWith("039_") -> base.copy(route = Route.FILTER_GROUP)
-        id.startsWith("040_") -> base.copy(route = Route.FILTER_GROUP, overlay = Overlay.FILTER_OPERATOR)
+        id.startsWith("040_") -> base.copy(route = Route.FILTER_GROUP)
         id.startsWith("044_") -> base.copy(route = Route.RULE_BUILDER, overlay = Overlay.ADD_FILTER)
         id.startsWith("049_") || id.startsWith("050_") || id.startsWith("051_") || id.startsWith("052_") || id.startsWith("053_") || id.startsWith("054_") || id.startsWith("055_") || id.startsWith("056_") || id.startsWith("057_") || id.startsWith("058_") || id.startsWith("061_") -> base.copy(route = Route.ACTION_SELECTOR, draft = if (id.startsWith("061_")) base.draft.copy(action = "Mute") else base.draft)
         id.startsWith("059_") -> base.copy(route = Route.RULE_BUILDER, draft = SignalRule(name = "New rule", phrase = "anything", action = "nothing"), transientMessage = null)

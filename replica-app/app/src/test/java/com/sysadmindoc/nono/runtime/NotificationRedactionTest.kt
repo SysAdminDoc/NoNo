@@ -9,7 +9,10 @@ import org.junit.Test
 class NotificationRedactionTest {
 
     @Test
-    fun `android 15 marker is hidden and never matchable`() {
+    fun `english placeholder text is not treated as proof the system redacted anything`() {
+        // Android publishes no supported signal for its redaction, and this string is localized.
+        // An app that legitimately posts it would otherwise have its notification filed under a
+        // provenance the platform never reported.
         val payload = NotificationPayload(
             title = "Messages",
             text = "Sensitive notification content hidden",
@@ -17,19 +20,21 @@ class NotificationRedactionTest {
         )
 
         assertEquals(
-            NotificationContentState.HIDDEN_BY_SYSTEM,
+            NotificationContentState.AVAILABLE,
             classifyNotificationContent(payload, sdkInt = 35),
         )
-        assertNull(matchableNotificationText(payload, sdkInt = 35))
+        assertEquals("Messages Sensitive notification content hidden", matchableNotificationText(payload, sdkInt = 35))
     }
 
     @Test
-    fun `explicit platform provenance wins even when fields look ordinary`() {
+    fun `a stored provenance is preserved rather than reclassified`() {
+        // History rows written by an earlier build carry the state they were stored with, which
+        // is data rather than a fresh inference.
         val payload = NotificationPayload(
-            title = "Messages",
-            text = "Notification received",
+            title = null,
+            text = null,
             appLabel = "Messages",
-            systemMarkedSensitive = true,
+            contentStateOverride = NotificationContentState.HIDDEN_BY_SYSTEM,
         )
 
         assertEquals(NotificationContentState.HIDDEN_BY_SYSTEM, classifyNotificationContent(payload, 35))
@@ -53,8 +58,10 @@ class NotificationRedactionTest {
     }
 
     @Test
-    fun `redaction matrix remains conservative across supported API levels`() {
-        listOf(24, 35, 36).forEach { sdkInt ->
+    fun `classification is the same on every supported API level`() {
+        // No branch on sdkInt survives: the platform behaves differently across releases, but
+        // nothing it exposes lets a listener tell which behaviour produced a given payload.
+        listOf(24, 35, 36, 37).forEach { sdkInt ->
             val ordinary = NotificationPayload("Build", "Tests passed", "CI", packageName = "com.example.ci")
             assertEquals(NotificationContentState.AVAILABLE, classifyNotificationContent(ordinary, sdkInt))
             assertEquals("Build Tests passed", matchableNotificationText(ordinary, sdkInt))
@@ -63,17 +70,8 @@ class NotificationRedactionTest {
             assertEquals(NotificationContentState.NOT_AVAILABLE, classifyNotificationContent(empty, sdkInt))
             assertNull(matchableNotificationText(empty, sdkInt))
 
-            val explicit = ordinary.copy(systemMarkedSensitive = true)
-            assertEquals(NotificationContentState.HIDDEN_BY_SYSTEM, classifyNotificationContent(explicit, sdkInt))
-            assertNull(matchableNotificationText(explicit, sdkInt))
-
             val marker = ordinary.copy(text = "Sensitive notification content hidden")
-            val markerState = if (sdkInt >= 35) {
-                NotificationContentState.HIDDEN_BY_SYSTEM
-            } else {
-                NotificationContentState.AVAILABLE
-            }
-            assertEquals(markerState, classifyNotificationContent(marker, sdkInt))
+            assertEquals(NotificationContentState.AVAILABLE, classifyNotificationContent(marker, sdkInt))
         }
     }
 
