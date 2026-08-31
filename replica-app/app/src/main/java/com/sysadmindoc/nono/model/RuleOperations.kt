@@ -69,6 +69,55 @@ fun upsertRule(rules: List<SignalRule>, rule: SignalRule): List<SignalRule> =
 fun removeRule(rules: List<SignalRule>, ruleId: Long?): List<SignalRule> =
     if (ruleId == null) rules else rules.filterNot { it.id == ruleId }
 
+/** A saved rule plus the position it occupied before an undoable deletion. */
+data class RemovedRule(val index: Int, val rule: SignalRule)
+
+/** Everything one snackbar action can restore, whether one rule or a delete-all batch. */
+data class RuleDeletion(val entries: List<RemovedRule>) {
+    val count: Int get() = entries.size
+}
+
+data class RuleDeletionResult(
+    val remaining: List<SignalRule>,
+    val deletion: RuleDeletion,
+)
+
+/** Removes one addressed rule and returns the exact snapshot needed to undo it. */
+fun deleteRuleWithUndo(rules: List<SignalRule>, ruleId: Long?): RuleDeletionResult? {
+    val index = rules.indexOfFirst { it.id == ruleId }
+    if (index < 0) return null
+    return RuleDeletionResult(
+        remaining = rules.toMutableList().apply { removeAt(index) },
+        deletion = RuleDeletion(listOf(RemovedRule(index, rules[index]))),
+    )
+}
+
+/** Removes the full ordered list as one undoable batch. */
+fun deleteAllRulesWithUndo(rules: List<SignalRule>): RuleDeletionResult? {
+    if (rules.isEmpty()) return null
+    return RuleDeletionResult(
+        remaining = emptyList(),
+        deletion = RuleDeletion(rules.mapIndexed(::RemovedRule)),
+    )
+}
+
+/**
+ * Restores a deletion without replacing a live rule that happens to carry the same id.
+ *
+ * New rules created while the snackbar is visible remain after the restored rules. A duplicate id
+ * refuses the restore instead of silently overwriting either copy.
+ */
+fun restoreDeletedRules(rules: List<SignalRule>, deletion: RuleDeletion): List<SignalRule>? {
+    val removedIds = deletion.entries.map { it.rule.id }
+    if (removedIds.distinct().size != removedIds.size) return null
+    if (rules.any { it.id in removedIds }) return null
+    return rules.toMutableList().apply {
+        deletion.entries.sortedBy { it.index }.forEach { entry ->
+            add(entry.index.coerceIn(0, size), entry.rule)
+        }
+    }
+}
+
 /**
  * Inserts a copy of [ruleId] with a fresh id; returns the list unchanged when absent.
  *

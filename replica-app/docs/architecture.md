@@ -55,6 +55,11 @@ and relative capture age. Its type does not accept notification content or ident
   corrupt store is replaced with defaults rather than crashing the process.
 - The selected retention period is applied on every insert and again when the setting changes.
 
+Rule deletion updates the in-memory list immediately and writes the new encoded store. While the
+snackbar is active, the view model holds an indexed snapshot of the removed rule or batch. Undo
+rejects an id collision instead of replacing a live rule, restores the prior ordering, and writes
+the restored store. A second deletion first restores the active snapshot before replacing it.
+
 ## Evaluation
 
 `RuleEvaluation` is pure. It takes saved rules, the callback payload, and sanitized metadata, then

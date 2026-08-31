@@ -25,6 +25,8 @@ for the privacy and capability boundary.
 
 ![NoNo capture self-test result](replica-app/docs/screenshots/nono-capture-self-test-v1.4.1.png)
 
+![NoNo rule deletion with an Undo action](replica-app/docs/screenshots/nono-rule-delete-undo-v1.4.1.png)
+
 Version 1.4.1 adds an optional wallpaper-matched accent on Android 12 and newer. NoNo checks the
 derived colour against every surface where it appears and keeps the built-in accent if the
 wallpaper colour is not readable. Dark, Light, and System default keep their existing palettes.
@@ -37,6 +39,8 @@ Settings can also post one temporary notification to prove that Android delivers
 listener. The check never enters History or the ingestion counters. A shareable plain-text report
 contains the app version, listener state, counters, and last capture age, with no notification
 content or posting-app identifiers.
+Deleting one rule or clearing the list now offers Undo. A second deletion restores the first
+pending rule before replacing its snackbar, so a quick pair of taps cannot lose both changes.
 The v1.4.0 source mockups and side-by-side implementation checks remain recorded in
 [`design-qa.md`](design-qa.md).
 

@@ -50,11 +50,12 @@ const val UNSAVED_RULE_ID = 0L
 /**
  * Something the user can take back from the snackbar that reported it.
  *
- * Deleting a history record is destructive and there is no confirmation dialog, by design. The
- * undo is what makes that safe.
+ * Deleting a history record or saved rule is destructive and there is no confirmation dialog, by
+ * design. The undo is what makes that safe.
  */
 enum class UndoableAction(val label: String) {
     RESTORE_DELETED_HISTORY("Undo"),
+    RESTORE_DELETED_RULES("Undo"),
 }
 
 @Serializable

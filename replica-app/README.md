@@ -19,6 +19,9 @@ seconds for the real listener callback, then reports Pass or Fail. The check is 
 History or counted as ingestion. The adjacent share action creates a plain-text diagnostics report
 without notification content or posting-app identifiers.
 
+Rule deletion is immediate and recoverable. Deleting one rule offers Undo, as does deleting the
+whole list. A second deletion restores the earlier pending rule before it takes over the snackbar.
+
 ![NoNo rules screen with a wallpaper-matched accent](docs/screenshots/nono-rules-dynamic-v1.4.1.png)
 
 ![NoNo theme chooser with wallpaper matching available](docs/screenshots/nono-theme-dialog-v1.4.1.png)
@@ -26,6 +29,8 @@ without notification content or posting-app identifiers.
 ![NoNo metadata condition editor](docs/screenshots/nono-metadata-filters-v1.4.1.png)
 
 ![NoNo capture self-test result](docs/screenshots/nono-capture-self-test-v1.4.1.png)
+
+![NoNo rule deletion with an Undo action](docs/screenshots/nono-rule-delete-undo-v1.4.1.png)
 
 ## Project identity
 

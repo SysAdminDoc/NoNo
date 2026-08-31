@@ -62,6 +62,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Deleting a rule now shows an Undo action and restores the complete saved rule, including its id, enabled state, schedule, filters, and place in the list. Delete all uses one batch undo. If another deletion happens while the first snackbar is open, NoNo restores the first pending change before offering the next undo.
 - Notification categories now cross the storage boundary only when they match Android's documented values. Apps can write arbitrary strings into that field, so unknown values are dropped during capture and cleared from older rows when NoNo starts.
 - Channel filters no longer appear to survive a rule transfer when their per-install pseudonym cannot. Import clears the unusable value, marks the filter for reselection, warns the user, and keeps the condition from matching until a local channel is chosen.
 - A notification listener started by the system, with the app never opened, now reads your saved retention period before it prunes anything. It previously used the 30 day default until you opened the app, so a saved 7 day or Forever choice was ignored in the background.

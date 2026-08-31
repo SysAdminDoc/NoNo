@@ -21,11 +21,13 @@ import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RECORD_ONLY_ACTION
 import com.sysadmindoc.nono.model.RootTab
+import com.sysadmindoc.nono.model.RuleSchedule
 import com.sysadmindoc.nono.model.RuleStore
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.UndoableAction
 import com.sysadmindoc.nono.model.filterRules
 import com.sysadmindoc.nono.runtime.HistoryStorage
 import com.sysadmindoc.nono.runtime.HistoryStorageSettings
@@ -297,6 +299,109 @@ class MainViewModelStateTest {
         // History rows record the ids that matched them. Reusing a deleted rule id makes an old
         // record claim it was caught by a rule that did not exist when it arrived.
         assertNotEquals("a deleted rule id must not be reissued", first, second)
+    }
+
+    @Test
+    fun deletingARuleOffersUndoAndRestoresItsExactSavedState() {
+        startModel()
+        val schedule = RuleSchedule(days = setOf(1, 3, 5), startMinute = 22 * 60, endMinute = 7 * 60)
+        onMain { newRule() }
+        onMain {
+            updateDraft {
+                it.copy(
+                    name = "Quiet overnight chat",
+                    app = "Chat",
+                    appPackageName = "com.example.chat",
+                    action = RECORD_ONLY_ACTION,
+                    enabled = false,
+                    priority = "High",
+                    folder = "Night",
+                    schedule = schedule,
+                    metadataConditions = listOf(ChannelCondition("channel-91")),
+                )
+            }
+        }
+        onMain { saveRule() }
+        val saved = awaitState("the rule never saved") { it.rules.size == 1 }.rules.single()
+
+        onMain { showRuleOverlay(Overlay.RULE_MORE, saved.id) }
+        onMain { deleteRule() }
+        val deleted = model.state.value
+        assertTrue(deleted.rules.isEmpty())
+        assertEquals("Rule deleted.", deleted.transientMessage)
+        assertEquals(UndoableAction.RESTORE_DELETED_RULES, deleted.transientUndo)
+
+        onMain { performUndo(UndoableAction.RESTORE_DELETED_RULES) }
+        assertEquals(saved, model.state.value.rules.single())
+        awaitPersistedRules("the restored rule never reached storage") { it.rules == listOf(saved) }
+        assertEquals(saved, restartModel().rules.single())
+    }
+
+    @Test
+    fun aSecondRuleDeleteRestoresTheFirstBeforeReplacingItsUndo() {
+        startModel()
+        listOf("First" to "com.example.first", "Second" to "com.example.second").forEach { (name, app) ->
+            onMain { newRule() }
+            onMain { updateDraft { it.copy(name = name, app = app, action = RECORD_ONLY_ACTION) } }
+            onMain { saveRule() }
+        }
+        val original = awaitState("the rules never saved") { it.rules.size == 2 }.rules
+
+        onMain { showRuleOverlay(Overlay.RULE_MORE, original[0].id) }
+        onMain { deleteRule() }
+        assertEquals(listOf(original[1]), model.state.value.rules)
+
+        onMain { showRuleOverlay(Overlay.RULE_MORE, original[1].id) }
+        onMain { deleteRule() }
+        val secondDelete = model.state.value
+        assertEquals(listOf(original[0]), secondDelete.rules)
+        assertEquals(UndoableAction.RESTORE_DELETED_RULES, secondDelete.transientUndo)
+
+        onMain { performUndo(UndoableAction.RESTORE_DELETED_RULES) }
+        assertEquals(original, model.state.value.rules)
+        awaitPersistedRules("both rules were not restored") { it.rules == original }
+    }
+
+    @Test
+    fun deleteAllRulesOffersOneUndoForTheWholeBatch() {
+        startModel()
+        listOf("One", "Two", "Three").forEach { name ->
+            onMain { newRule() }
+            onMain { updateDraft { it.copy(name = name, app = "com.example.$name", action = RECORD_ONLY_ACTION) } }
+            onMain { saveRule() }
+        }
+        val original = awaitState("the rules never saved") { it.rules.size == 3 }.rules
+
+        onMain { deleteAllRules() }
+        val deleted = model.state.value
+        assertTrue(deleted.rules.isEmpty())
+        assertEquals("Deleted 3 rules.", deleted.transientMessage)
+        assertEquals(UndoableAction.RESTORE_DELETED_RULES, deleted.transientUndo)
+
+        onMain { performUndo(UndoableAction.RESTORE_DELETED_RULES) }
+        assertEquals(original, model.state.value.rules)
+        awaitPersistedRules("the restored batch never reached storage") { it.rules == original }
+    }
+
+    @Test
+    fun anExpiredOrMissingRuleDeletionRefusesUndo() {
+        startModel()
+        onMain { deleteRule() }
+        assertEquals("That rule could not be deleted.", model.state.value.transientMessage)
+        assertNull(model.state.value.transientUndo)
+
+        onMain { newRule() }
+        onMain { updateDraft { it.copy(name = "Temporary", app = "com.example.temp", action = RECORD_ONLY_ACTION) } }
+        onMain { saveRule() }
+        val rule = awaitState("the rule never saved") { it.rules.size == 1 }.rules.single()
+        onMain { showRuleOverlay(Overlay.RULE_MORE, rule.id) }
+        onMain { deleteRule() }
+        onMain { clearTransient() }
+        onMain { performUndo(UndoableAction.RESTORE_DELETED_RULES) }
+
+        assertTrue(model.state.value.rules.isEmpty())
+        assertEquals("That deletion can no longer be undone.", model.state.value.transientMessage)
+        assertNull(model.state.value.transientUndo)
     }
 
     @Test

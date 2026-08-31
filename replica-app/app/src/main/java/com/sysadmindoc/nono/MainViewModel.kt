@@ -53,6 +53,8 @@ import com.sysadmindoc.nono.model.HistoryQuery
 import com.sysadmindoc.nono.model.NotificationContentState
 import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import com.sysadmindoc.nono.model.deriveRuleDraft
+import com.sysadmindoc.nono.model.deleteAllRulesWithUndo
+import com.sysadmindoc.nono.model.deleteRuleWithUndo
 import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
@@ -67,13 +69,14 @@ import com.sysadmindoc.nono.model.phraseConditionFor
 import com.sysadmindoc.nono.model.withPhraseCondition
 import com.sysadmindoc.nono.model.withMetadataCondition
 import com.sysadmindoc.nono.model.RuleSchedule
+import com.sysadmindoc.nono.model.RuleDeletion
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.StatusMessages
 import com.sysadmindoc.nono.model.applyToRule
 import com.sysadmindoc.nono.model.duplicateRule as duplicateRuleIn
 import com.sysadmindoc.nono.model.advanceRuleCounter
 import com.sysadmindoc.nono.model.normalizeMatchType
-import com.sysadmindoc.nono.model.removeRule
+import com.sysadmindoc.nono.model.restoreDeletedRules
 import com.sysadmindoc.nono.model.resolveSavedRule
 import com.sysadmindoc.nono.model.upsertRule
 import com.sysadmindoc.nono.model.UNSAVED_RULE_ID
@@ -143,6 +146,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Held between a delete and the snackbar action that can put it back. */
     private var deletedHistoryRecord: com.sysadmindoc.nono.data.NotificationEntity? = null
+
+    /** One rule or one delete-all batch held only while its snackbar can still undo it. */
+    private var deletedRules: RuleDeletion? = null
 
     /**
      * The next rule id to hand out. Saved with the rules, because history stores the ids that
@@ -1085,7 +1091,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // this slot and lose the earlier record with no way back and nothing said. It is
                 // restore, not upsert, for the same reason the undo path is: if the app reposted
                 // that notification meanwhile, upsert would update the live row and drop its star.
-                val pending = deletedHistoryRecord
+                val pending = deletedHistoryRecord.takeIf {
+                    _state.value.transientUndo == UndoableAction.RESTORE_DELETED_HISTORY
+                }
+                deletedHistoryRecord = null
                 val pendingRestored = pending == null || runCatching {
                     historyDatabase.notificationDao().restore(pending)
                 }.getOrDefault(false)
@@ -1123,6 +1132,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }.getOrDefault(false)
                     _state.value = _state.value.withMessage(StatusMessages.restoreOutcome(restored))
                 }
+            }
+            UndoableAction.RESTORE_DELETED_RULES -> {
+                val deletion = deletedRules
+                deletedRules = null
+                if (
+                    deletion == null ||
+                    _state.value.transientUndo != UndoableAction.RESTORE_DELETED_RULES
+                ) {
+                    _state.value = _state.value.withMessage("That deletion can no longer be undone.")
+                    return
+                }
+                val restored = restoreDeletedRules(_state.value.rules, deletion)
+                if (restored == null) {
+                    _state.value = _state.value.withMessage(
+                        if (deletion.count == 1) {
+                            "That rule could not be restored."
+                        } else {
+                            "Those rules could not be restored."
+                        },
+                    )
+                    return
+                }
+                _state.value = _state.value.copy(rules = restored).withMessage(null)
+                persistRules()
             }
         }
     }
@@ -1370,32 +1403,64 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteRule() {
-        val ruleId = _state.value.selectedRuleId
-        val remaining = removeRule(_state.value.rules, ruleId)
-        if (remaining.size == _state.value.rules.size) {
-            _state.value = _state.value.copy(overlay = Overlay.NONE)
+        val current = _state.value
+        val ruleId = current.selectedRuleId
+        if (current.rules.none { it.id == ruleId }) {
+            deletedRules = null
+            _state.value = current.copy(overlay = Overlay.NONE).withMessage("That rule could not be deleted.")
             return
         }
+        val (base, previousRestored) = restorePendingRules(current.rules)
+        val result = checkNotNull(deleteRuleWithUndo(base, ruleId))
+        deletedRules = result.deletion
         _state.value = _state.value.copy(
-            rules = remaining,
+            rules = result.remaining,
             overlay = Overlay.NONE,
             selectedRuleId = null,
+        ).withMessage(
+            if (previousRestored) {
+                "Rule deleted."
+            } else {
+                "Rule deleted. The previous rule could not be restored."
+            },
+            UndoableAction.RESTORE_DELETED_RULES,
         )
         persistRules()
     }
 
     fun deleteAllRules() {
-        if (_state.value.rules.isEmpty()) {
+        val (base, previousRestored) = restorePendingRules(_state.value.rules)
+        val result = deleteAllRulesWithUndo(base)
+        if (result == null) {
+            deletedRules = null
             _state.value = _state.value.withMessage("There are no rules to delete.")
             return
         }
-        val removed = _state.value.rules.size
+        deletedRules = result.deletion
+        val removed = result.deletion.count
         _state.value = _state.value.copy(
-            rules = emptyList(),
+            rules = result.remaining,
             selectedRuleId = null,
             overlay = Overlay.NONE,
-        ).withMessage(if (removed == 1) "Deleted 1 rule" else "Deleted $removed rules")
+        ).withMessage(
+            buildString {
+                append(if (removed == 1) "Deleted 1 rule." else "Deleted $removed rules.")
+                if (!previousRestored) append(" The previous rule could not be restored.")
+            },
+            UndoableAction.RESTORE_DELETED_RULES,
+        )
         persistRules()
+    }
+
+    /** Restores the still-active prior undo before a second delete replaces its snackbar. */
+    private fun restorePendingRules(current: List<SignalRule>): Pair<List<SignalRule>, Boolean> {
+        val pending = deletedRules.takeIf {
+            _state.value.transientUndo == UndoableAction.RESTORE_DELETED_RULES
+        }
+        deletedRules = null
+        if (pending == null) return current to true
+        val restored = restoreDeletedRules(current, pending)
+        return if (restored == null) current to false else restored to true
     }
 
     fun setSetting(label: String, value: String) {
@@ -1429,7 +1494,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun clearTransient() { _state.value = _state.value.withMessage(null) }
+    fun clearTransient() {
+        when (_state.value.transientUndo) {
+            UndoableAction.RESTORE_DELETED_HISTORY -> deletedHistoryRecord = null
+            UndoableAction.RESTORE_DELETED_RULES -> deletedRules = null
+            null -> Unit
+        }
+        _state.value = _state.value.withMessage(null)
+    }
     fun showMessage(message: String) { _state.value = _state.value.withMessage(message) }
 
     private fun persistRules() = writeEncodedRules(encodeRules(_state.value.rules, nextRuleIdCounter))
@@ -1467,6 +1539,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pendingExportPayload = null
         pendingImportEncoded = null
         pendingImportRules = null
+        deletedHistoryRecord = null
+        deletedRules = null
         // The database is shared with the listener and the widget, so it outlives this owner.
         super.onCleared()
     }

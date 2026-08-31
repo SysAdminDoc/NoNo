@@ -38,6 +38,31 @@ class RuleOperationsTest {
     }
 
     @Test
+    fun `an undoable deletion restores the exact rule at its old position`() {
+        val result = deleteRuleWithUndo(rules, 2L)!!
+
+        assertEquals(listOf(1L, 3L), result.remaining.map { it.id })
+        assertEquals(rules, restoreDeletedRules(result.remaining, result.deletion))
+        assertNull(
+            "a live rule with the old id must not be overwritten",
+            restoreDeletedRules(
+                result.remaining + SignalRule(id = 2L, name = "Different rule"),
+                result.deletion,
+            ),
+        )
+    }
+
+    @Test
+    fun `delete all is restored as one ordered batch without losing later rules`() {
+        val result = deleteAllRulesWithUndo(rules)!!
+        val createdLater = SignalRule(id = 4L, name = "Created later")
+
+        assertTrue(result.remaining.isEmpty())
+        assertEquals(3, result.deletion.count)
+        assertEquals(rules + createdLater, restoreDeletedRules(listOf(createdLater), result.deletion))
+    }
+
+    @Test
     fun `duplicating a rule appends a copy with a fresh id`() {
         val expanded = duplicateRule(rules, 2L, counter = 4L)
 
