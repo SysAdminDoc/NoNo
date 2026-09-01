@@ -343,9 +343,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
         }
         viewModelScope.launch {
-            historyDatabase.notificationDao().observeIngestionDiagnostics().collect { diagnostics ->
-                ListenerHealth.restoreDurableIngestionMetrics(diagnostics?.toMetrics() ?: com.sysadmindoc.nono.runtime.IngestionMetrics())
-            }
+            historyDatabase.notificationDao().observeIngestionDiagnostics()
+                .catch { emit(null) }
+                .collect { diagnostics ->
+                    ListenerHealth.restoreDurableIngestionMetrics(diagnostics?.toMetrics() ?: com.sysadmindoc.nono.runtime.IngestionMetrics())
+                }
         }
         viewModelScope.launch {
             historyDatabase.notificationDao().observeTotalCount()

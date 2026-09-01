@@ -609,4 +609,23 @@ class MainViewModelStateTest {
         val restoredHistory = awaitState("history never came back") { it.history.isNotEmpty() }
         assertTrue("the starred record survived", restoredHistory.history.any { it.starred })
     }
+
+    /**
+     * The diagnostics flow was the one Room collect in the model without `.catch`, so a database
+     * error inside that query killed the whole process instead of one screen's data. This drives
+     * the race the connected suite kept dying on: a model's startup queries landing on a pool
+     * that [SignalDatabase.resetForTest] has already closed. Twenty rounds of build-then-close
+     * makes the overlap effectively certain; an unguarded collect takes the process down and the
+     * whole run aborts with "Process crashed".
+     */
+    @Test
+    fun modelSurvivesTheDatabaseClosingUnderItsCollectors() {
+        repeat(20) {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { model = createModel() }
+            SignalDatabase.resetForTest(application)
+        }
+        Thread.sleep(500L)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { model = createModel() }
+        awaitState("a model built after the churn never loaded") { it.rulesLoaded }
+    }
 }
