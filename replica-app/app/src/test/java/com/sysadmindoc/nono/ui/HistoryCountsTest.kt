@@ -2,6 +2,7 @@ package com.sysadmindoc.nono.ui
 
 import com.sysadmindoc.nono.model.HISTORY_PAGE_SIZE
 import com.sysadmindoc.nono.model.HistoryRecord
+import com.sysadmindoc.nono.model.InsightHourCount
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import org.junit.Assert.assertEquals
@@ -49,6 +50,28 @@ class HistoryCountsTest {
         val deep = UiState(historyLimit = HISTORY_PAGE_SIZE * 3)
 
         assertEquals(HISTORY_PAGE_SIZE, deep.resetHistoryWindow().historyLimit)
+    }
+
+    @Test
+    fun theChartDrawsTheHoursTheDatabaseCounted() {
+        // The overview chart used to render seven hardcoded bar heights under a real time axis,
+        // whatever the hours actually were. These pin it to the aggregate rows.
+        val oneBusyHour = historyHourTotals(listOf(InsightHourCount(hour = 20, count = 6)))
+
+        assertEquals(24, oneBusyHour.size)
+        assertEquals(6, oneBusyHour[20])
+        assertEquals(0, oneBusyHour.sum() - oneBusyHour[20])
+        // Out-of-range and non-positive rows cannot invent a bar.
+        assertEquals(List(24) { 0 }, historyHourTotals(listOf(InsightHourCount(24, 5), InsightHourCount(-1, 5), InsightHourCount(3, 0))))
+    }
+
+    @Test
+    fun theChartSpeaksRealValuesOrNothing() {
+        assertEquals(
+            "All retained notifications by hour of day. Busiest at 8 PM with 6.",
+            historyChartDescription(historyHourTotals(listOf(InsightHourCount(20, 6), InsightHourCount(9, 4)))),
+        )
+        assertEquals("No retained notifications yet.", historyChartDescription(historyHourTotals(emptyList())))
     }
 
     @Test

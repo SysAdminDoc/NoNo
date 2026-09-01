@@ -61,6 +61,8 @@ import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
+import com.sysadmindoc.nono.model.InsightHourCount
+import com.sysadmindoc.nono.model.formatInsightHour
 import com.sysadmindoc.nono.model.NO_DEVICE_ACTION_LABEL
 import com.sysadmindoc.nono.data.formatStoredTime
 import com.sysadmindoc.nono.model.NotificationContentState
@@ -94,7 +96,7 @@ fun HistoryScreen(state: UiState, model: MainViewModel) {
                 SignalIconButton(Icons.Rounded.FilterAlt, "Filter history metadata", { model.showOverlay(Overlay.HISTORY_FILTERS) })
             }
         }
-        item { HistoryOverview(state.historyTotalCount, state.historyFilteredCount, state.historyFilter) }
+        item { HistoryOverview(state.historyTotalCount, state.historyFilteredCount, state.historyFilter, state.historyHourCounts) }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 historyFilterCatalog.forEach { filter ->
@@ -196,7 +198,7 @@ private fun SearchHistory(state: UiState, model: MainViewModel) {
  * reaches.
  */
 @Composable
-private fun HistoryOverview(total: Int, filtered: Int, filter: String) {
+private fun HistoryOverview(total: Int, filtered: Int, filter: String, hours: List<InsightHourCount>) {
     SignalGroupedSurface(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
             Text(filtered.toString(), style = MaterialTheme.typography.displayLarge)
@@ -205,12 +207,20 @@ private fun HistoryOverview(total: Int, filtered: Int, filter: String) {
                 color = SignalColors.Secondary,
                 style = MaterialTheme.typography.bodyLarge,
             )
-            HistoryActivityChart(filtered, Modifier.fillMaxWidth().height(106.dp).padding(top = 12.dp))
+            HistoryActivityChart(hours, Modifier.fillMaxWidth().height(106.dp).padding(top = 12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 listOf("12AM", "6AM", "12PM", "6PM", "12AM").forEach {
                     Text(it, color = SignalColors.Muted, style = MaterialTheme.typography.labelMedium)
                 }
             }
+            // The chart covers everything retained, and the number above may be filtered; this
+            // line is what keeps the two honest next to each other.
+            Text(
+                "All retained, by hour",
+                color = SignalColors.Muted,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(top = 6.dp),
+            )
         }
     }
 }
@@ -226,21 +236,46 @@ internal fun historyCountCaption(total: Int, filtered: Int, filter: String): Str
     }
 }
 
+/** One slot per hour of day, summed from the aggregate rows and clamped to a real clock. */
+internal fun historyHourTotals(hours: List<InsightHourCount>): List<Int> {
+    val totals = MutableList(24) { 0 }
+    hours.forEach { row ->
+        if (row.hour in totals.indices && row.count > 0) totals[row.hour] += row.count
+    }
+    return totals
+}
+
+/**
+ * What the chart says, spoken as one node in the Insights chart's style: a screen reader
+ * stepping through twenty-four unlabelled bars learns nothing.
+ */
+internal fun historyChartDescription(totals: List<Int>): String {
+    val peak = totals.maxOrNull() ?: 0
+    if (peak <= 0) return "No retained notifications yet."
+    val busiest = totals.indexOf(peak)
+    return "All retained notifications by hour of day. Busiest at ${formatInsightHour(busiest)} with $peak."
+}
+
 @Composable
-private fun HistoryActivityChart(count: Int, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
+private fun HistoryActivityChart(hours: List<InsightHourCount>, modifier: Modifier = Modifier) {
+    val totals = historyHourTotals(hours)
+    val description = historyChartDescription(totals)
+    Canvas(modifier.semantics { contentDescription = description }) {
         val baseline = size.height - 10.dp.toPx()
         drawLine(SignalColors.Border, Offset(0f, baseline), Offset(size.width, baseline), 1.dp.toPx())
-        if (count > 0) {
-            val bars = listOf(0.22f, 0.38f, 0.18f, 0.62f, 0.34f, 0.78f, 0.46f)
-            val gap = size.width / (bars.size + 2)
-            bars.forEachIndexed { index, fraction ->
-                val x = gap * (index + 1.5f)
+        val peak = totals.max()
+        if (peak > 0) {
+            // Hour 0 sits under the left 12AM label and hour 23 just before the right one, so
+            // the bars and the axis describe the same clock.
+            val slot = size.width / totals.size
+            totals.forEachIndexed { index, value ->
+                if (value <= 0) return@forEachIndexed
+                val x = slot * (index + 0.5f)
                 drawLine(
                     color = SignalColors.Yellow,
                     start = Offset(x, baseline),
-                    end = Offset(x, baseline - (size.height - 20.dp.toPx()) * fraction),
-                    strokeWidth = 5.dp.toPx(),
+                    end = Offset(x, baseline - (size.height - 20.dp.toPx()) * (value.toFloat() / peak)),
+                    strokeWidth = 3.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
             }

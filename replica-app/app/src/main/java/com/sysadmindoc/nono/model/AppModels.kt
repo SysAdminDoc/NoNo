@@ -478,6 +478,8 @@ data class UiState(
     val historyFilteredCount: Int = 0,
     /** Everything retained, ignoring the filters. */
     val historyTotalCount: Int = 0,
+    /** Real per-hour counts over everything retained, for the History overview chart. */
+    val historyHourCounts: List<InsightHourCount> = emptyList(),
     /** Aggregates over everything retained, for the Insights screen. */
     val insights: LocalInsights = LocalInsights(),
     /** True while the lock is hiding every rule and every record behind the unlock screen. */

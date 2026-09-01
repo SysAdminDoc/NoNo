@@ -350,6 +350,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
         }
         viewModelScope.launch {
+            // Real hours for the History overview chart. Same whole-table aggregate Insights
+            // uses, so it is likewise on only while its screen is.
+            _state
+                .map { it.route == Route.ROOT && it.rootTab == RootTab.HISTORY }
+                .distinctUntilChanged()
+                .flatMapLatest { open ->
+                    if (!open) {
+                        flowOf(emptyList())
+                    } else {
+                        historyDatabase.notificationDao().observeInsightHours().catch { emit(emptyList()) }
+                    }
+                }
+                .collect { hours -> _state.value = _state.value.copy(historyHourCounts = hours) }
+        }
+        viewModelScope.launch {
             historyDatabase.notificationDao().observeTotalCount()
                 .catch { emit(0) }
                 .collect { total -> _state.value = _state.value.copy(historyTotalCount = total) }
