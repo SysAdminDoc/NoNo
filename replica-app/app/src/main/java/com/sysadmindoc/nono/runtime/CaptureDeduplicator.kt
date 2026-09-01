@@ -77,5 +77,16 @@ class CaptureDeduplicator(
             true
         }
 
+    /**
+     * Drops one key's stamp so its next post always captures.
+     *
+     * Called when the key's notification is removed: cancel-then-repost inside the window is a
+     * common update pattern, and a suppressed repost would leave the stored record saying the
+     * notification left the shade while it is back on screen.
+     */
+    fun forget(notificationKey: String) {
+        synchronized(this) { seen.remove(notificationKey) }
+    }
+
     fun clear() = synchronized(this) { seen.clear() }
 }

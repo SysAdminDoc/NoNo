@@ -100,6 +100,22 @@ class CaptureDeduplicatorTest {
     }
 
     @Test
+    fun `a forgotten key captures again inside the window`() {
+        // The listener forgets a key when its notification is removed. Without that, an app that
+        // cancels and reposts inside the window is suppressed before clearRemoval runs, and the
+        // stored row keeps saying a notification on screen left the shade.
+        val deduplicator = CaptureDeduplicator(windowMillis = 2_000L)
+
+        assertTrue(deduplicator.shouldCapture("n-1", "same", 0L))
+        deduplicator.forget("n-1")
+        assertTrue(deduplicator.shouldCapture("n-1", "same", 500L))
+        // Only the forgotten key was dropped.
+        assertTrue(deduplicator.shouldCapture("n-2", "same", 0L))
+        deduplicator.forget("n-1")
+        assertFalse(deduplicator.shouldCapture("n-2", "same", 500L))
+    }
+
+    @Test
     fun `the map cannot grow without limit`() {
         val deduplicator = CaptureDeduplicator(windowMillis = 60_000L, maxEntries = 4)
 

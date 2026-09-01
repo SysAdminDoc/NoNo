@@ -222,6 +222,10 @@ class SignalNotificationListener : NotificationListenerService() {
         val removedAt = System.currentTimeMillis()
         val key = pseudonyms.pseudonym(notification.key).orEmpty()
         if (key.isEmpty()) return
+        // A removed key's next post must always reach clearRemoval, even an identical repost
+        // inside the deduplication window; otherwise the row keeps saying the notification left
+        // the shade while it is back on screen.
+        deduplicator.forget(key)
         serviceScope.launch {
             runCatching {
                 database.notificationDao().markRemoved(key, removedAt, removalReason.name)

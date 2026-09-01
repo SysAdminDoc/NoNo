@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.runtime.CaptureDeduplicator
 import com.sysadmindoc.nono.model.RemovalReason
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -120,6 +121,27 @@ class RemovalRecordTest {
 
         // And it can be marked again the next time it goes.
         assertEquals(1, dao.markRemoved("key-d", 10_000L, RemovalReason.DISMISSED.name))
+    }
+
+    @Test
+    fun anIdenticalRepostInsideTheDedupWindowStillClearsTheRemoval() = runBlocking {
+        // The listener's order is dedup gate first, clearRemoval second. Cancel-then-repost
+        // inside the window used to be suppressed at the gate, so the row kept saying a
+        // notification on screen had left the shade. Removal now forgets the key.
+        val deduplicator = CaptureDeduplicator(windowMillis = 2_000L)
+        val dao = database.notificationDao()
+        store("key-e")
+        assertTrue(deduplicator.shouldCapture("key-e", "same", 0L))
+
+        // The removal path: mark the row, forget the key.
+        dao.markRemoved("key-e", 1_000L, RemovalReason.WITHDRAWN_BY_APP.name)
+        deduplicator.forget("key-e")
+
+        // An identical repost half a second later passes the gate and reaches clearRemoval.
+        assertTrue(deduplicator.shouldCapture("key-e", "same", 1_500L))
+        dao.clearRemoval("key-e", RemovalReason.UNKNOWN.name)
+
+        assertNull(dao.readAllForExport().single().toHistoryRecord().removedAtEpochMillis)
     }
 
     @Test
