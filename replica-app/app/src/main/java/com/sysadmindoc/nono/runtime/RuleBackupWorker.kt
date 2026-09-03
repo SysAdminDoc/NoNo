@@ -2,6 +2,8 @@ package com.sysadmindoc.nono.runtime
 
 import android.content.Context
 import android.net.Uri
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -26,6 +28,21 @@ private const val BACKUP_NOW_WORK_NAME = "nono-rule-backup-now"
 
 /** Said alongside a success, because the backup was written and only the tidying was not done. */
 const val ROTATION_INCOMPLETE = "Older backups could not be removed from that folder."
+
+/**
+ * Records what the run did, and never throws.
+ *
+ * A full disk is the realistic failure for a job whose whole purpose is writing files, and it is
+ * exactly when the status matters most. An IOException out of this write used to leave `doWork`,
+ * so WorkManager recorded the run as failed and Settings kept whatever it last said — over a
+ * backup that had in fact been written. Failing to say what happened is not a reason to also
+ * misreport it.
+ */
+internal suspend fun writeBackupStatus(store: DataStore<Preferences>, status: BackupStatus) {
+    runCatching {
+        store.edit { it[SignalPreferences.BACKUP_STATUS] = encodeBackupStatus(status) }
+    }
+}
 
 /**
  * Writes an encrypted copy of the saved rules into the folder the user picked.
@@ -91,16 +108,14 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
             }
         }.getOrDefault(false)
 
-        store.edit {
-            it[SignalPreferences.BACKUP_STATUS] = encodeBackupStatus(
-                BackupStatus(
-                    BackupOutcome.SUCCEEDED,
-                    now,
-                    rules.size,
-                    if (rotated) "" else ROTATION_INCOMPLETE,
-                ),
-            )
-        }
+        // The backup is on disk by this point. An IOException out of the status write — a full
+        // disk is the realistic one for a job whose whole purpose is writing files — would throw
+        // out of doWork, WorkManager would record the run as failed, and Settings would keep
+        // whatever it last said over a backup that did in fact happen.
+        writeBackupStatus(
+            store,
+            BackupStatus(BackupOutcome.SUCCEEDED, now, rules.size, if (rotated) "" else ROTATION_INCOMPLETE),
+        )
         return Result.success()
     }
 
@@ -109,11 +124,10 @@ class RuleBackupWorker(context: Context, parameters: WorkerParameters) :
      * the next scheduled run is soon enough once they have.
      */
     private suspend fun recordFailure(context: Context, detail: String): Result {
-        SignalPreferences.get(context).edit {
-            it[SignalPreferences.BACKUP_STATUS] = encodeBackupStatus(
-                BackupStatus(BackupOutcome.FAILED, System.currentTimeMillis(), 0, detail),
-            )
-        }
+        writeBackupStatus(
+            SignalPreferences.get(context),
+            BackupStatus(BackupOutcome.FAILED, System.currentTimeMillis(), 0, detail),
+        )
         return Result.success()
     }
 }
