@@ -116,10 +116,12 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         )
         Overlay.ADD_FILTER -> MenuDialog(
             "Add a filter",
+            // One entry, named for the screen it opens. "Extra property" and "Filter group" were
+            // two names for the identical destination, which reads as a bug and teaches that the
+            // labels in this menu do not mean anything.
             listOf(
                 MenuItem("Words or phrase", Icons.Rounded.Add) { model.setPhraseDraft(""); model.navigate(Route.PHRASE_EDITOR) },
-                MenuItem("Extra property", Icons.Rounded.FilterAlt) { model.navigate(Route.FILTER_GROUP) },
-                MenuItem("Filter group", Icons.Rounded.Tune) { model.navigate(Route.FILTER_GROUP) },
+                MenuItem("Metadata filters", Icons.Rounded.Tune) { model.navigate(Route.FILTER_GROUP) },
             ),
             model::dismissOverlay,
         )

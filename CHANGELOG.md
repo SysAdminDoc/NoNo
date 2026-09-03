@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - The History metadata filter dialog scrolls. It grows a row for every app, channel and group in your history, so on a phone that hears from a few chatty apps it used to run off the bottom of the screen with the extra rows and the Cancel button out of reach.
+- The "Add a filter" menu offers one entry per destination. "Extra property" and "Filter group" opened the identical screen, so whichever you picked you got the same thing, and the one entry is now named for the screen it opens.
 - Picking a backup folder while the schedule is still Off now tells you to choose Daily or Weekly, which is the same nudge you already got for doing it the other way round.
 - Every Cancel in a dialog is announced as a button and is at least as tall as the minimum this app holds itself to everywhere else. The one in the smaller dialogs measured about 44 points, and none of the three told a screen reader what they were.
 - Searching History behaves like the list it searches. It used to say "No matching notifications" while the search was still running and again when the store could not be read at all, with nothing to retry. It now says which of those is happening, offers a retry when reading fails, shows how many records matched rather than only the page it drew, and lets you load the rest.

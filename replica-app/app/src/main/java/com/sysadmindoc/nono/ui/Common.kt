@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,7 +38,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.withFrameNanos
@@ -84,17 +82,6 @@ fun SignalTopBar(
 }
 
 @Composable
-fun HeroTitle(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
-    Column(modifier.padding(horizontal = SignalMetrics.pageHorizontal)) {
-        Text(title, style = MaterialTheme.typography.headlineLarge)
-        if (subtitle != null) {
-            Spacer(Modifier.height(8.dp))
-            Text(subtitle, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
 fun SignalPrimaryButton(
     label: String,
     onClick: () -> Unit,
@@ -122,57 +109,6 @@ fun SignalIconButton(icon: ImageVector, description: String, onClick: () -> Unit
     IconButton(onClick = onClick, modifier = Modifier.size(48.dp).semantics { contentDescription = description }) {
         Icon(icon, contentDescription = null, tint = tint)
     }
-}
-
-@Composable
-fun SettingRow(
-    icon: ImageVector,
-    label: String,
-    value: String? = null,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 20.dp, vertical = 11.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(44.dp).background(SignalColors.Surface, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = if (enabled) SignalColors.White else SignalColors.Muted, modifier = Modifier.size(22.dp))
-        }
-        Column(Modifier.weight(1f).padding(start = 16.dp)) {
-            Text(label, color = if (enabled) SignalColors.White else SignalColors.Muted, fontSize = 17.sp)
-            if (value != null) Text(value, color = SignalColors.Secondary, fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
-fun SectionLabel(label: String) {
-    Text(
-        label.uppercase(),
-        color = SignalColors.Secondary,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        letterSpacing = 0.8.sp,
-        modifier = Modifier.padding(start = SignalMetrics.pageHorizontal, top = 24.dp, bottom = 10.dp),
-    )
-}
-
-@Composable
-fun TokenButton(label: String, error: Boolean = false, onClick: () -> Unit) {
-    Text(
-        label,
-        color = if (error) SignalColors.Error else SignalColors.Yellow,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.SemiBold,
-        textDecoration = TextDecoration.Underline,
-        modifier = Modifier
-            .heightIn(min = 48.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .border(1.dp, Color.Transparent, RoundedCornerShape(4.dp))
-            .padding(horizontal = 3.dp, vertical = 10.dp)
-            .semantics { contentDescription = "Edit $label" },
-    )
 }
 
 @Composable
