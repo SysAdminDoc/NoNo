@@ -83,12 +83,13 @@ import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.counted
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
 import com.sysadmindoc.nono.runtime.NO_DEVICE_CREDENTIAL
 import com.sysadmindoc.nono.runtime.BackupOutcome
 import com.sysadmindoc.nono.runtime.BackupStatus
-import java.text.SimpleDateFormat
+import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 
@@ -313,12 +314,19 @@ internal fun describeAppLock(state: UiState): String = when {
 internal fun describeBackupStatus(status: BackupStatus): String = when (status.outcome) {
     BackupOutcome.NEVER_RUN -> "No backup has run yet."
     BackupOutcome.SUCCEEDED -> "Last backup ${formatBackupTime(status.atEpochMillis)}, " +
-        "${status.ruleCount} ${if (status.ruleCount == 1) "rule" else "rules"}."
+        "${counted(status.ruleCount, "rule")}."
     BackupOutcome.FAILED -> "Last attempt failed ${formatBackupTime(status.atEpochMillis)}. ${status.detail}"
 }
 
+/**
+ * The moment a backup ran, in the reader's own conventions.
+ *
+ * A hardcoded "HH:mm" prints 24-hour time to somebody whose phone is set to 12-hour, which is the
+ * one line in Settings that has to be read at a glance and believed.
+ */
 private fun formatBackupTime(epochMillis: Long): String =
-    SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(epochMillis))
+    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault())
+        .format(Date(epochMillis))
 private const val NO_ACTION_ENGINE = "No notification action engine is present."
 
 private fun openUrl(context: android.content.Context, url: String) {

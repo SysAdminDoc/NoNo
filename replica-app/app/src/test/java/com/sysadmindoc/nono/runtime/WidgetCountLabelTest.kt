@@ -1,8 +1,11 @@
 package com.sysadmindoc.nono.runtime
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * The widget's number stands for "notifications that arrived", which is not the same as "rows
@@ -52,6 +55,34 @@ class WidgetCountLabelTest {
     fun oneOfSomethingIsSingular() {
         assertEquals("1 rule match", SignalWidgetProvider.countLabel(WidgetScope.RULE_MATCHED, 1, 0))
         assertEquals("1 starred notification", SignalWidgetProvider.countLabel(WidgetScope.STARRED, 1, 0))
+        // The ALL_CAPTURED branch built its own strings and said "1 notifications".
+        assertEquals("1 notification", SignalWidgetProvider.countLabel(WidgetScope.ALL_CAPTURED, 1, 0))
+        assertEquals(
+            "1 group summary, no notifications",
+            SignalWidgetProvider.countLabel(WidgetScope.ALL_CAPTURED, 0, 1),
+        )
+        assertEquals(
+            "1 notification, plus 1 group summary not counted",
+            SignalWidgetProvider.countLabel(WidgetScope.ALL_CAPTURED, 1, 1),
+        )
+    }
+
+    @Test
+    fun aMomentFromAnotherDayCarriesItsDate() {
+        // A bare time reads as today, so a widget on a phone whose listener died on Monday said
+        // "Last metadata: 3:04 PM" all week.
+        val zone = TimeZone.getTimeZone("UTC")
+        val monday = 1_756_000_000_000L
+        val sameDayLater = monday + 3_600_000L
+        val nextDay = monday + 86_400_000L
+
+        val today = SignalWidgetProvider.formatMoment(monday, sameDayLater, zone, Locale.US)
+        val earlier = SignalWidgetProvider.formatMoment(monday, nextDay, zone, Locale.US)
+
+        // en-US writes a short date with slashes and a short time without one.
+        assertFalse("today should be a time alone: $today", today.contains("/"))
+        assertTrue("another day needs its date: $earlier", earlier.contains("/"))
+        assertTrue("the time is still there: $earlier", earlier.endsWith(today))
     }
 
     @Test

@@ -1242,12 +1242,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     transferAdditions = 0,
                     transferConflicts = 0,
                 ).withMessage(
-                    buildString {
-                        append("Imported ${preview.additions.size} new rule(s). Notification history was not imported.")
-                        if (channelReselections > 0) {
-                            append(" Select $channelReselections channel filter(s) again before those rules can match.")
-                        }
-                    },
+                    StatusMessages.importOutcome(
+                        added = preview.additions.size,
+                        replaced = if (resolution == ConflictResolution.REPLACE_EXISTING) preview.conflicts.size else 0,
+                        channelReselections = channelReselections,
+                    ),
                 )
                 // Keep the in-memory counter in step with what was just written.
                 nextRuleIdCounter = decodeRuleStore(encoded)?.nextRuleId ?: nextRuleIdCounter

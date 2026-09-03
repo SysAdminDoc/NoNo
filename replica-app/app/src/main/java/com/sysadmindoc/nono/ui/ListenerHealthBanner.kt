@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.counted
 import com.sysadmindoc.nono.runtime.ListenerActivity
 import com.sysadmindoc.nono.runtime.ListenerActivityLog
 import com.sysadmindoc.nono.MainViewModel
@@ -167,10 +168,11 @@ private fun vendorGuidance(): String = when (Build.MANUFACTURER.lowercase()) {
 
 private fun describeAge(millis: Long): String = when {
     millis < 60_000L -> "less than a minute ago"
-    millis < 3_600_000L -> "${millis / 60_000L} min ago"
-    millis < 86_400_000L -> "${millis / 3_600_000L} h ago"
-    else -> "${millis / 86_400_000L} days ago"
+    millis < 3_600_000L -> "${counted(millis / 60_000L, "minute")} ago"
+    millis < 86_400_000L -> "${counted(millis / 3_600_000L, "hour")} ago"
+    else -> "${counted(millis / 86_400_000L, "day")} ago"
 }
+
 
 private fun describeWallClock(epochMillis: Long): String =
     java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)

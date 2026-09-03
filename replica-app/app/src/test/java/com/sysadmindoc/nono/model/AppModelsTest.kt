@@ -56,6 +56,17 @@ class AppModelsTest {
     }
 
     @Test
+    fun aCountAndItsNounAgree() {
+        assertEquals("0 rules", counted(0, "rule"))
+        assertEquals("1 rule", counted(1, "rule"))
+        assertEquals("2 rules", counted(2, "rule"))
+        assertEquals("1 group summary", counted(1, "group summary", "group summaries"))
+        assertEquals("3 group summaries", counted(3, "group summary", "group summaries"))
+        // The banner counts elapsed time, which is a Long.
+        assertEquals("1 day", counted(1L, "day"))
+    }
+
+    @Test
     fun contentStateLabels_readAsProseRatherThanEnumNames() {
         val labels = NotificationContentState.values().map { contentStateLabel(it) }
 

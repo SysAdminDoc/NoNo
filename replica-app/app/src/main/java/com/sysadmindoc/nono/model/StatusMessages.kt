@@ -50,6 +50,26 @@ object StatusMessages {
         "Export failed. Nothing on this device was changed, but the file at the destination may be incomplete."
     }
 
+    /**
+     * What a rule import actually did.
+     *
+     * Only additions used to be reported, so replacing five conflicting rules and adding none
+     * read as "Imported 0 new rule(s)." — a sentence that describes a no-op over a change to
+     * every rule the file touched.
+     */
+    fun importOutcome(added: Int, replaced: Int, channelReselections: Int): String = buildString {
+        when {
+            added > 0 && replaced > 0 -> append("Imported ${counted(added, "new rule")} and replaced ${counted(replaced, "rule")}.")
+            replaced > 0 -> append("Replaced ${counted(replaced, "rule")}.")
+            added > 0 -> append("Imported ${counted(added, "new rule")}.")
+            else -> append("Nothing was imported.")
+        }
+        append(" Notification history was not imported.")
+        if (channelReselections > 0) {
+            append(" Select ${counted(channelReselections, "channel filter")} again before those rules can match.")
+        }
+    }
+
     /** Every sentence above that claims a write succeeded. Used to prove failures never reach one. */
     val successPhrases: List<String> = listOf(
         "Kept until you unstar it.",

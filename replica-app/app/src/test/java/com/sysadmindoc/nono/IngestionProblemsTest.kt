@@ -135,4 +135,35 @@ class IngestionProblemsTest {
         assertFalse("a removed file must not be described as possibly incomplete", removed.contains("incomplete"))
         assertTrue(left, left.contains("may be incomplete"))
     }
+
+    @Test
+    fun anImportSaysWhatItActuallyDid() {
+        // Replacing five conflicting rules and adding none used to read "Imported 0 new rule(s).",
+        // which describes a no-op over a change to every rule the file touched.
+        assertEquals(
+            "Replaced 5 rules. Notification history was not imported.",
+            StatusMessages.importOutcome(added = 0, replaced = 5, channelReselections = 0),
+        )
+        assertEquals(
+            "Imported 2 new rules and replaced 5 rules. Notification history was not imported.",
+            StatusMessages.importOutcome(added = 2, replaced = 5, channelReselections = 0),
+        )
+        assertEquals(
+            "Imported 1 new rule. Notification history was not imported.",
+            StatusMessages.importOutcome(added = 1, replaced = 0, channelReselections = 0),
+        )
+        assertEquals(
+            "Nothing was imported. Notification history was not imported.",
+            StatusMessages.importOutcome(added = 0, replaced = 0, channelReselections = 0),
+        )
+    }
+
+    @Test
+    fun theChannelReminderIsCountedRatherThanBracketed() {
+        val one = StatusMessages.importOutcome(added = 1, replaced = 0, channelReselections = 1)
+        val several = StatusMessages.importOutcome(added = 1, replaced = 0, channelReselections = 3)
+
+        assertTrue(one, one.endsWith("Select 1 channel filter again before those rules can match."))
+        assertTrue(several, several.endsWith("Select 3 channel filters again before those rules can match."))
+    }
 }

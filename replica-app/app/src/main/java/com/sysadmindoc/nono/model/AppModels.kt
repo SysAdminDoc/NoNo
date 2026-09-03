@@ -449,6 +449,19 @@ enum class NotificationContentState {
     NOT_STORED,
 }
 
+/**
+ * A count and the noun it counts, agreeing in number.
+ *
+ * The app is careful about this in the places somebody thought about ("1 active rule", "1 rule"),
+ * and was not in the places nobody did: "1 notifications", "1 days ago", "N rule(s)". A shared
+ * helper so the next count added does not have to remember.
+ */
+fun counted(value: Long, singular: String, plural: String = "${singular}s"): String =
+    "$value ${if (value == 1L) singular else plural}"
+
+fun counted(value: Int, singular: String, plural: String = "${singular}s"): String =
+    counted(value.toLong(), singular, plural)
+
 /** A short human name for a picker row; the stored enum name is an implementation detail. */
 fun contentStateLabel(state: NotificationContentState): String = when (state) {
     NotificationContentState.AVAILABLE -> "Content was available"

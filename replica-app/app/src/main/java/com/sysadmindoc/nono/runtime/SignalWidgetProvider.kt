@@ -12,8 +12,12 @@ import com.sysadmindoc.nono.R
 import com.sysadmindoc.nono.data.SignalDatabase
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.model.NotificationContentState
+import com.sysadmindoc.nono.model.counted
 import java.text.DateFormat
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -118,7 +122,7 @@ class SignalWidgetProvider : AppWidgetProvider() {
             latestContentState: String?,
         ): RemoteViews = RemoteViews(context.packageName, R.layout.widget_signal_status).apply {
             setTextViewText(R.id.widget_count, countLabel(scope, count, groupSummaryCount))
-            setTextViewText(R.id.widget_latest, latestEpochMillis?.let { "Last metadata: ${formatTime(it)}" } ?: "Last metadata: none yet")
+            setTextViewText(R.id.widget_latest, latestEpochMillis?.let { "Last metadata: ${formatMoment(it)}" } ?: "Last metadata: none yet")
             setTextViewText(R.id.widget_provenance, if (CaptureGate.isPaused()) "Capture paused" else provenanceLabel(latestContentState))
             setOnClickPendingIntent(
                 R.id.widget_root,
@@ -139,17 +143,46 @@ class SignalWidgetProvider : AppWidgetProvider() {
          * for the same reason: three different questions have three different answers, and a bare
          * number cannot say which one it is answering.
          */
-        internal fun countLabel(scope: WidgetScope, count: Int, groupSummaryCount: Int): String = when {
-            scope != WidgetScope.ALL_CAPTURED && count == 0 -> "No ${scope.plural}"
-            scope != WidgetScope.ALL_CAPTURED -> "$count ${scope.noun(count)}"
-            count == 0 && groupSummaryCount == 0 -> "No metadata captured"
-            groupSummaryCount == 0 -> "$count notifications"
-            count == 0 -> "$groupSummaryCount group summaries, no notifications"
-            else -> "$count notifications, plus $groupSummaryCount group summaries not counted"
+        internal fun countLabel(scope: WidgetScope, count: Int, groupSummaryCount: Int): String {
+            val notifications = counted(count, scope.singular, scope.plural)
+            val summaries = counted(groupSummaryCount, "group summary", "group summaries")
+            return when {
+                scope != WidgetScope.ALL_CAPTURED && count == 0 -> "No ${scope.plural}"
+                scope != WidgetScope.ALL_CAPTURED -> notifications
+                count == 0 && groupSummaryCount == 0 -> "No metadata captured"
+                groupSummaryCount == 0 -> notifications
+                count == 0 -> "$summaries, no notifications"
+                else -> "$notifications, plus $summaries not counted"
+            }
         }
 
-        private fun formatTime(epochMillis: Long): String =
-            DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(epochMillis))
+        /**
+         * The moment, with a date whenever it is not today.
+         *
+         * A time on its own reads as today. A widget on a phone whose listener stopped three days
+         * ago showed "Last metadata: 3:04 PM", which is exactly the wrong impression to give.
+         */
+        internal fun formatMoment(
+            epochMillis: Long,
+            nowEpochMillis: Long = System.currentTimeMillis(),
+            zone: TimeZone = TimeZone.getDefault(),
+            locale: Locale = Locale.getDefault(),
+        ): String {
+            val time = DateFormat.getTimeInstance(DateFormat.SHORT, locale)
+            val dateAndTime = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale)
+            time.timeZone = zone
+            dateAndTime.timeZone = zone
+            val format = if (isSameDay(epochMillis, nowEpochMillis, zone)) time else dateAndTime
+            return format.format(Date(epochMillis))
+        }
+
+        private fun isSameDay(first: Long, second: Long, zone: TimeZone): Boolean {
+            val left = Calendar.getInstance(zone).apply { timeInMillis = first }
+            val right = Calendar.getInstance(zone).apply { timeInMillis = second }
+            return left.get(Calendar.ERA) == right.get(Calendar.ERA) &&
+                left.get(Calendar.YEAR) == right.get(Calendar.YEAR) &&
+                left.get(Calendar.DAY_OF_YEAR) == right.get(Calendar.DAY_OF_YEAR)
+        }
 
         private fun provenanceLabel(contentState: String?): String = when (contentState?.let { runCatching { NotificationContentState.valueOf(it) }.getOrNull() }) {
             NotificationContentState.HIDDEN_BY_SYSTEM -> "Latest: recorded as hidden by an earlier build"

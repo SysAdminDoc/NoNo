@@ -81,6 +81,7 @@ import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.CategoryCondition
 import com.sysadmindoc.nono.model.contentStateLabel
+import com.sysadmindoc.nono.model.counted
 import com.sysadmindoc.nono.model.ChannelCondition
 import com.sysadmindoc.nono.model.ConversationCondition
 import com.sysadmindoc.nono.model.ImportanceCondition
@@ -737,7 +738,8 @@ private fun TransferPassphraseDialog(
 private fun TransferPreviewDialog(state: UiState, model: MainViewModel) {
     DialogFrame("Review rule import", model::cancelTransfer) {
         Text(
-            "${state.transferAdditions} new rule(s), ${state.transferConflicts} conflict(s). Notification history is never imported.",
+            "${counted(state.transferAdditions, "new rule")}, ${counted(state.transferConflicts, "conflict")}. " +
+                "Notification history is never imported.",
             color = SignalColors.Secondary,
             lineHeight = 22.sp,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
