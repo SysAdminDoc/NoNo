@@ -21,6 +21,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -196,8 +197,18 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             val channels = state.historyFilterChannels
             val groups = state.historyFilterGroups
             val items = buildList {
+                // Every fixed row first. The three lists below arrive from the database a moment
+                // after the dialog opens, and inserting them between fixed rows moved everything
+                // under a finger that was already on its way down.
                 add(MenuItem("Clear metadata filters", Icons.Rounded.FilterAlt) { model.clearHistoryMetadataFilters() })
                 add(MenuItem("Group summaries only", Icons.Rounded.Tune) { model.setHistoryGroupSummaryOnly(true) })
+                add(MenuItem("Conversations only", Icons.Rounded.Tune) { model.setHistoryConversationFilter(true) })
+                importanceCatalog.forEach { (level, label) ->
+                    add(MenuItem("Importance: $label", Icons.Rounded.FilterAlt) { model.setHistoryImportanceFilter(level) })
+                }
+                NotificationContentState.values().forEach { value ->
+                    add(MenuItem("Content: ${contentStateLabel(value)}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })
+                }
                 packages.forEach { value ->
                     add(MenuItem("Package: $value", Icons.Rounded.FilterAlt) { model.setHistoryPackageFilter(value) })
                 }
@@ -206,13 +217,6 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                 }
                 groups.forEach { value ->
                     add(MenuItem("Group: $value", Icons.Rounded.FilterAlt) { model.setHistoryGroupFilter(value) })
-                }
-                add(MenuItem("Conversations only", Icons.Rounded.Tune) { model.setHistoryConversationFilter(true) })
-                importanceCatalog.forEach { (level, label) ->
-                    add(MenuItem("Importance: $label", Icons.Rounded.FilterAlt) { model.setHistoryImportanceFilter(level) })
-                }
-                NotificationContentState.values().forEach { value ->
-                    add(MenuItem("Content: ${contentStateLabel(value)}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })
                 }
             }
             MenuDialog("History metadata filters", items, model::dismissOverlay)
@@ -365,7 +369,7 @@ internal fun sensitiveNotificationsAppOpsCommand(packageName: String): String =
     "adb shell cmd appops set --user 0 $packageName RECEIVE_SENSITIVE_NOTIFICATIONS allow"
 
 @Composable
-private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
+private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
@@ -383,7 +387,10 @@ private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composab
 @Composable
 private fun ChoiceDialog(title: String, choices: List<String>, selected: String?, onDismiss: () -> Unit, onChoice: (String) -> Unit) {
     DialogFrame(title, onDismiss) {
-        LazyColumn(Modifier.heightIn(max = 570.dp).semantics { selectableGroup() }) {
+        // Weighted so the Column measures the Cancel affordance first and this takes what is
+        // left. Unweighted, a list this tall claims the whole dialog in a short window and
+        // Cancel measures to nothing.
+        LazyColumn(Modifier.weight(1f, fill = false).heightIn(max = 570.dp).semantics { selectableGroup() }) {
             items(choices) { choice ->
                 ChoiceRow(choice, choice == selected, { onChoice(choice) })
             }
@@ -613,7 +620,7 @@ private fun MenuDialog(title: String, items: List<MenuItem>, onDismiss: () -> Un
     DialogFrame(title, onDismiss) {
         // The history-filter menu grows a row per distinct package, channel and group, so it can
         // outgrow any screen. Same cap as ChoiceDialog; Cancel stays outside the scroll region.
-        LazyColumn(Modifier.heightIn(max = 570.dp)) {
+        LazyColumn(Modifier.weight(1f, fill = false).heightIn(max = 570.dp)) {
             items(items) { item ->
                 val enabled = item.unavailable == null
                 Row(

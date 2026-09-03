@@ -59,6 +59,7 @@ import com.sysadmindoc.nono.MainViewModel
 import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.categoryLabel
+import com.sysadmindoc.nono.model.contentStateLabel
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.InsightHourCount
@@ -372,7 +373,7 @@ private fun historyMetadataSummary(state: UiState): String = listOfNotNull(
     state.historyPackageFilter?.let { "package=$it" },
     state.historyChannelFilter?.let { "channel=$it" },
     state.historyGroupFilter?.let { "group=$it" },
-    state.historyContentStateFilter?.let { "content=${it.name}" },
+    state.historyContentStateFilter?.let { "content: ${contentStateLabel(it).lowercase()}" },
     "summaries".takeIf { state.historyGroupSummaryOnly },
     importanceLabel(state.historyImportanceFilter)?.let { "importance $it" },
     "conversations".takeIf { state.historyConversationFilter == true },

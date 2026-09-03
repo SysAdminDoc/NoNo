@@ -129,6 +129,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -353,14 +354,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             // The filter dialog offers what the store holds, not what the loaded page happens to
             // show: a filtered page only contains its own values, which made switching straight
-            // from one filter to another impossible. Bounded scans, on only while the dialog is.
+            // from one filter to another impossible. Bounded scans, subscribed only while the
+            // dialog is open; the last answer is kept when it closes, so the next open draws a
+            // full list straight away and a fresh read only corrects it.
             val dao = historyDatabase.notificationDao()
             _state
                 .map { it.overlay == Overlay.HISTORY_FILTERS }
                 .distinctUntilChanged()
                 .flatMapLatest { open ->
+                    // emptyFlow rather than empty lists: closing the dialog unsubscribes the
+                    // three queries without wiping what they last said.
                     if (!open) {
-                        flowOf(Triple(emptyList<String>(), emptyList<String>(), emptyList<String>()))
+                        emptyFlow()
                     } else {
                         combine(
                             dao.observeObservedPackages().catch { emit(emptyList()) },

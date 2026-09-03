@@ -108,6 +108,18 @@ fun stripFormatCharacters(value: String): String =
     value.filterNot { Character.getType(it) == Character.FORMAT.toInt() }
 
 /**
+ * The first [MAX_MATCHED_CHARS] characters, never ending mid-character.
+ *
+ * A `String` is UTF-16, so an emoji is two chars. Cutting between them leaves a lone high
+ * surrogate, which is not the character that was there and not any other character either.
+ */
+internal fun String.takeMatchable(): String {
+    if (length <= MAX_MATCHED_CHARS) return this
+    val end = if (this[MAX_MATCHED_CHARS - 1].isHighSurrogate()) MAX_MATCHED_CHARS - 1 else MAX_MATCHED_CHARS
+    return substring(0, end)
+}
+
+/**
  * How much of one field is searched.
  *
  * Rule evaluation happens synchronously on the listener's callback thread, and a REGEX rule runs
@@ -117,7 +129,8 @@ fun stripFormatCharacters(value: String): String =
  * moving evaluation off the payload's stack frame, which the privacy design forbids.
  *
  * The same 4KB a rule's own fields are limited to on import (`RuleTransferLimits.MAX_FIELD_CHARS`),
- * which is far more than any notification a person reads.
+ * which is far more than any notification a person reads. Counted after format characters are
+ * stripped, so padding a field with zero-width characters cannot push readable text past it.
  */
 const val MAX_MATCHED_CHARS = 4 * 1024
 
@@ -144,7 +157,7 @@ enum class PhraseMatchFailure(val message: String) {
     NO_TEXT("The notification carried no text in the selected fields."),
     INVALID_PATTERN("That pattern is not valid, so nothing was tested against it."),
     NO_FIELD_SELECTED("No field is selected, so there is nothing to search."),
-    PATTERN_TOO_SLOW("That pattern took too long on this text, so it was abandoned part way through."),
+    PATTERN_ABANDONED("That pattern could not be finished on this text, so it was given up on part way through."),
 }
 
 /**
@@ -153,8 +166,15 @@ enum class PhraseMatchFailure(val message: String) {
  * A quantifier of [PhraseQuantifier.NONE] over text that is not there is deliberately *not* a
  * match: absent text is not evidence that a phrase is absent from it, and treating it as such made
  * every negated rule match every metadata-only history row.
+ *
+ * @param budget shared across every rule evaluated for one notification. A caller testing a single
+ * condition, such as the rule tester, gets a fresh one.
  */
-fun evaluatePhrase(condition: PhraseCondition, fields: MatchableFields): PhraseMatchResult {
+fun evaluatePhrase(
+    condition: PhraseCondition,
+    fields: MatchableFields,
+    budget: PhraseMatchBudget = PhraseMatchBudget(),
+): PhraseMatchResult {
     val phrases = condition.phrases.filter { it.isNotBlank() }
     if (phrases.isEmpty()) return PhraseMatchResult(matched = true, fieldMatches = emptyList())
     if (condition.fields.isEmpty()) {
@@ -165,92 +185,119 @@ fun evaluatePhrase(condition: PhraseCondition, fields: MatchableFields): PhraseM
         return PhraseMatchResult(false, emptyList(), PhraseMatchFailure.NO_TEXT)
     }
 
-    // One budget for the whole condition, not one per phrase per field, so the worst case does not
-    // multiply by how many of each the rule has.
-    val deadline = MatchDeadline(System.nanoTime() + MATCH_DEADLINE_MILLIS * 1_000_000L)
     val matchers = phrases.map { phrase ->
         when (condition.mode) {
             MatchMode.CONTAINS -> ContainsMatcher(phrase, condition.caseSensitive)
-            MatchMode.REGEX -> compileRegex(phrase, condition.caseSensitive, deadline)
+            MatchMode.REGEX -> compileRegex(phrase, condition.caseSensitive, budget)
                 ?: return PhraseMatchResult(false, emptyList(), PhraseMatchFailure.INVALID_PATTERN)
         }
     }
 
+    /** True where some field matched the phrase at that index. */
+    val found = BooleanArray(phrases.size)
+
+    /** True where some field could not be decided, so `found` may understate the answer. */
+    val givenUp = BooleanArray(phrases.size)
+
     val fieldMatches = buildList {
         for (field in selected) {
-            // Capped before any matcher sees it. See [MAX_MATCHED_CHARS].
-            val value = fields.valueOf(field)?.take(MAX_MATCHED_CHARS)
+            val raw = fields.valueOf(field)
+            // Stripped first, then capped. The other order let an app pad a field with thousands
+            // of zero-width characters and push everything a person can actually read past the
+            // cap, which is the same evasion stripFormatCharacters exists to close.
+            val value = raw?.let { stripFormatCharacters(it).takeMatchable() }
             for ((index, matcher) in matchers.withIndex()) {
+                val outcome = if (value == null) false else matcher.matches(value)
+                if (outcome == null) givenUp[index] = true
+                if (outcome == true) found[index] = true
                 add(
                     FieldMatch(
                         field = field,
                         phrase = phrases[index],
-                        matched = value != null && matcher.matches(value),
-                        available = !value.isNullOrEmpty(),
+                        matched = outcome == true,
+                        available = !raw.isNullOrEmpty(),
                     ),
                 )
             }
         }
     }
 
-    val presentPerPhrase = phrases.indices.map { index ->
-        fieldMatches.filterIndexed { position, _ -> position % phrases.size == index }.any { it.matched }
+    fun decide(undecidedAre: Boolean): Boolean {
+        val present = phrases.indices.map { found[it] || (undecidedAre && givenUp[it]) }
+        return when (condition.quantifier) {
+            PhraseQuantifier.ANY -> present.any { it }
+            PhraseQuantifier.ALL -> present.all { it }
+            PhraseQuantifier.NONE -> present.none { it }
+        }
     }
-    val matched = when (condition.quantifier) {
-        PhraseQuantifier.ANY -> presentPerPhrase.any { it }
-        PhraseQuantifier.ALL -> presentPerPhrase.all { it }
-        PhraseQuantifier.NONE -> presentPerPhrase.none { it }
+
+    // A phrase the matcher gave up on has no answer, and which way that matters depends on the
+    // quantifier: NONE over one abandoned phrase would otherwise read as "the phrase is not
+    // there" and fire the rule. Deciding it both ways says whether the outcome rests on the part
+    // that was never established. Where it does, the condition failed rather than not matching.
+    val optimistic = decide(undecidedAre = true)
+    val pessimistic = decide(undecidedAre = false)
+    return if (optimistic != pessimistic) {
+        PhraseMatchResult(false, fieldMatches, PhraseMatchFailure.PATTERN_ABANDONED)
+    } else {
+        PhraseMatchResult(pessimistic, fieldMatches)
     }
-    // A pattern that ran out of budget did not decide anything, so an unmatched result has to say
-    // so rather than reading as a clean "the phrase is not there". Anything that did match still
-    // stands: the budget was spent, not the evidence.
-    val failure = if (!matched && deadline.exceeded) PhraseMatchFailure.PATTERN_TOO_SLOW else null
-    return PhraseMatchResult(matched, fieldMatches, failure)
 }
 
 /** True when [pattern] is something `java.util.regex` will accept. */
 fun isValidPattern(pattern: String): Boolean =
-    compileRegex(pattern, caseSensitive = false, deadline = MatchDeadline(Long.MAX_VALUE)) != null
+    compileRegex(pattern, caseSensitive = false, budget = PhraseMatchBudget(millis = Long.MAX_VALUE / 2_000_000L)) != null
 
 private interface PhraseMatcher {
-    fun matches(value: String): Boolean
+    /** True, false, or null when the matcher gave up without deciding. */
+    fun matches(value: String): Boolean?
 }
 
 /**
- * The wall-clock budget one phrase condition gets.
+ * How long pattern matching may take, in total.
  *
  * Capping the text bounds ordinary matching, but not backtracking: `(a+)+b` over a few thousand
  * `a`s is exponential whatever the length. The listener evaluates rules synchronously, so the only
  * safe answer to a pattern that will not finish is to stop it.
  */
-private const val MATCH_DEADLINE_MILLIS = 250L
+const val MATCH_BUDGET_MILLIS = 250L
 
 /** Thrown out of a running match. Carries no stack trace: it is control flow, not a fault. */
-private class MatchDeadlineExceeded : RuntimeException(null, null, false, false)
+private class MatchBudgetSpent : RuntimeException(null, null, false, false)
 
-private class MatchDeadline(private val atNanos: Long) {
-    var exceeded: Boolean = false
+/**
+ * One budget, shared by everything evaluated for one arriving notification.
+ *
+ * Held by the caller rather than made fresh inside [evaluatePhrase], because a budget per
+ * condition multiplies: someone with twenty rules carrying a slow pattern would have spent five
+ * seconds on the listener's thread, which is an ANR rather than a bounded cost. Spending it stops
+ * the remaining patterns instead, and a rule whose pattern was stopped does not fire.
+ */
+class PhraseMatchBudget(millis: Long = MATCH_BUDGET_MILLIS) {
+    private val atNanos = System.nanoTime() + millis * 1_000_000L
+
+    internal var spent: Boolean = false
         private set
 
-    fun check() {
+    internal fun check() {
         if (System.nanoTime() >= atNanos) {
-            exceeded = true
-            throw MatchDeadlineExceeded()
+            spent = true
+            throw MatchBudgetSpent()
         }
     }
 }
 
 /**
- * The searched text, seen through the deadline.
+ * The searched text, seen through the budget.
  *
  * `java.util.regex` offers no step limit and no way to interrupt a running match, but it reads its
  * input one character at a time, so a `CharSequence` that refuses to keep answering is the one
  * place a runaway pattern can be stopped. The clock is read every [CHECK_INTERVAL] characters so
  * that ordinary matching does not pay for it.
  */
-private class DeadlineText(
+private class BudgetedText(
     private val value: CharSequence,
-    private val deadline: MatchDeadline,
+    private val budget: PhraseMatchBudget,
 ) : CharSequence {
     private var countdown = CHECK_INTERVAL
 
@@ -259,13 +306,13 @@ private class DeadlineText(
     override fun get(index: Int): Char {
         if (--countdown <= 0) {
             countdown = CHECK_INTERVAL
-            deadline.check()
+            budget.check()
         }
         return value[index]
     }
 
     override fun subSequence(startIndex: Int, endIndex: Int): CharSequence =
-        DeadlineText(value.subSequence(startIndex, endIndex), deadline)
+        BudgetedText(value.subSequence(startIndex, endIndex), budget)
 
     override fun toString(): String = value.toString()
 
@@ -277,25 +324,32 @@ private class DeadlineText(
 private class ContainsMatcher(phrase: String, private val caseSensitive: Boolean) : PhraseMatcher {
     // Both sides are stripped: the phrase because the user may have pasted it out of a
     // notification that carried a zero-width character, the text for the same reason in reverse.
+    // The value arrives already stripped from [evaluatePhrase], which caps what it strips.
     private val needle = stripFormatCharacters(phrase.trim())
 
-    override fun matches(value: String): Boolean =
-        stripFormatCharacters(value).contains(needle, ignoreCase = !caseSensitive)
+    override fun matches(value: String): Boolean = value.contains(needle, ignoreCase = !caseSensitive)
 }
 
-private class RegexMatcher(private val regex: Regex, private val deadline: MatchDeadline) : PhraseMatcher {
-    // The text is stripped, the pattern is not. A pattern is a program: editing it here would
-    // change what the user wrote, and \\p{Cf} is something they can ask for themselves.
-    override fun matches(value: String): Boolean = try {
-        regex.containsMatchIn(DeadlineText(stripFormatCharacters(value), deadline))
-    } catch (_: MatchDeadlineExceeded) {
-        // Abandoned, not decided. The caller reads [MatchDeadline.exceeded] and says so.
-        false
+private class RegexMatcher(private val regex: Regex, private val budget: PhraseMatchBudget) : PhraseMatcher {
+    // The pattern is never edited, only the text it is applied to. A pattern is a program:
+    // rewriting it here would change what the user wrote, and \\p{Cf} is something they can ask
+    // for themselves.
+    override fun matches(value: String): Boolean? = try {
+        regex.containsMatchIn(BudgetedText(value, budget))
+    } catch (_: MatchBudgetSpent) {
+        null
+    } catch (_: StackOverflowError) {
+        // `java.util.regex` recurses once per repetition of an alternation, so (a|b)*c blows the
+        // stack somewhere around two thousand characters — well inside the cap, and well inside
+        // what an app can send. Catching an Error is otherwise indefensible; here the alternative
+        // is a pattern the user typed killing the notification listener, and the stack has
+        // already unwound by the time this runs.
+        null
     }
 }
 
-private fun compileRegex(pattern: String, caseSensitive: Boolean, deadline: MatchDeadline): PhraseMatcher? =
+private fun compileRegex(pattern: String, caseSensitive: Boolean, budget: PhraseMatchBudget): PhraseMatcher? =
     runCatching {
         val options = if (caseSensitive) emptySet() else setOf(RegexOption.IGNORE_CASE)
-        RegexMatcher(Regex(pattern, options), deadline)
+        RegexMatcher(Regex(pattern, options), budget)
     }.getOrNull()

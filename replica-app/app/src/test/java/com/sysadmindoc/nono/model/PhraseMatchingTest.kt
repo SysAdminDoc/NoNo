@@ -259,7 +259,7 @@ class PhraseMatchingTest {
         val elapsedMillis = (System.nanoTime() - started) / 1_000_000
 
         assertFalse(result.matched)
-        assertEquals(PhraseMatchFailure.PATTERN_TOO_SLOW, result.failure)
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
         assertTrue("took ${elapsedMillis}ms", elapsedMillis < 1_000)
     }
 
@@ -292,5 +292,92 @@ class PhraseMatchingTest {
         assertFalse(
             evaluatePhrase(condition("arrives at last", fields = setOf(MatchField.BIG_TEXT)), fields).matched,
         )
+    }
+
+    @Test
+    fun `the cap counts what a person can see, not what an app padded the field with`() {
+        // A zero-width space renders as nothing, so an app can put thousands of them in front of
+        // the real message and the notification looks the same on screen. Capping before
+        // stripping would have let that push the message out of range of every rule.
+        val zeroWidth = "​"
+        val fields = MatchableFields(bigText = zeroWidth.repeat(MAX_MATCHED_CHARS * 2) + "your parcel")
+
+        assertTrue(
+            evaluatePhrase(condition("your parcel", fields = setOf(MatchField.BIG_TEXT)), fields).matched,
+        )
+    }
+
+    @Test
+    fun `a negated rule does not fire because the pattern was given up on`() {
+        // NONE asks whether the phrase is absent. A pattern that never finished says nothing
+        // about that, and reading it as "absent" would fire the rule on the strength of a
+        // question nobody answered.
+        val condition = condition("(x+x+)+y", quantifier = PhraseQuantifier.NONE, mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(100_000))
+
+        val result = evaluatePhrase(condition, fields)
+
+        assertFalse(result.matched)
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
+    }
+
+    @Test
+    fun `a negated rule still fires when the phrase that was decided settles it`() {
+        // "xxx" is present, so NONE is false whatever the abandoned phrase would have said. The
+        // outcome does not rest on the part that was never established, so it is not a failure.
+        val condition = condition("xxx", "(x+x+)+y", quantifier = PhraseQuantifier.NONE, mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(100_000))
+
+        val result = evaluatePhrase(condition, fields)
+
+        assertFalse(result.matched)
+        assertNull(result.failure)
+    }
+
+    @Test
+    fun `one budget covers many conditions rather than one each`() {
+        // A budget made inside evaluatePhrase multiplied by rule count: twenty rules carrying a
+        // slow pattern spent five seconds on the listener's thread, which is an ANR rather than a
+        // bounded cost. The caller holds it, so twenty conditions cost what one does.
+        val condition = condition("(x+x+)+y", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(100_000))
+        val budget = PhraseMatchBudget()
+
+        val started = System.nanoTime()
+        repeat(20) { evaluatePhrase(condition, fields, budget) }
+        val elapsedMillis = (System.nanoTime() - started) / 1_000_000
+
+        assertTrue("twenty conditions took ${elapsedMillis}ms", elapsedMillis < 1_000)
+    }
+
+    @Test
+    fun `the surviving text never ends half way through a character`() {
+        // An emoji is two chars in UTF-16. Cutting between them leaves a lone high surrogate,
+        // which is neither the character that was there nor any other.
+        val emoji = "😀"
+        val split = ("b".repeat(MAX_MATCHED_CHARS - 1) + emoji + "tail").takeMatchable()
+        val whole = ("b".repeat(MAX_MATCHED_CHARS - 2) + emoji + "tail").takeMatchable()
+
+        assertEquals(MAX_MATCHED_CHARS - 1, split.length)
+        assertFalse(split.last().isHighSurrogate())
+        // A pair that fits is kept whole, so the cap is not shortened when it need not be.
+        assertEquals(MAX_MATCHED_CHARS, whole.length)
+        assertTrue(whole.endsWith(emoji))
+        // Text under the cap is untouched, surrogates and all.
+        assertEquals("hi $emoji", "hi $emoji".takeMatchable())
+    }
+
+    @Test
+    fun `a pattern that overflows the stack is given up on rather than crashing`() {
+        // java.util.regex recurses once per repetition of an alternation, so (a|b)*c throws a
+        // StackOverflowError somewhere around two thousand characters - inside the cap, and well
+        // inside what an app can send. Uncaught, that unwinds through the listener callback.
+        val condition = condition("(a|b)*c", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "a".repeat(MAX_MATCHED_CHARS))
+
+        val result = evaluatePhrase(condition, fields)
+
+        assertFalse(result.matched)
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
     }
 }

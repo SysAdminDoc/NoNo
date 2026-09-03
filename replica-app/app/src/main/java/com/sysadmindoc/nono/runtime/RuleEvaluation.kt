@@ -12,6 +12,7 @@ import com.sysadmindoc.nono.model.RuleMatchState
 import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.SummaryCondition
 import com.sysadmindoc.nono.model.MatchableFields
+import com.sysadmindoc.nono.model.PhraseMatchBudget
 import com.sysadmindoc.nono.model.PhraseMatchFailure
 import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.displayValue
@@ -41,8 +42,11 @@ enum class EvaluationReason {
     /** No field is selected, so there is nothing to search. */
     NO_FIELD_SELECTED,
 
-    /** The rule's pattern ran past its budget on this text and was abandoned. */
-    PATTERN_TOO_SLOW,
+    /**
+     * The rule's pattern could not be finished on this text, so what it would have said is not
+     * known. A rule never fires on that: the evidence was never gathered.
+     */
+    PATTERN_ABANDONED,
 
     /** The notification arrived outside the rule's schedule window. */
     OUTSIDE_SCHEDULE,
@@ -115,8 +119,11 @@ fun evaluateRules(
 ): RuleEvaluationTrace {
     val contentState = classifyNotificationContent(payload, sdkInt)
     val matchableFields = matchableNotificationFields(payload, sdkInt)
+    // One budget for the whole notification. Made here rather than inside each condition, because
+    // a budget per rule multiplies by however many rules the user has written.
+    val budget = PhraseMatchBudget()
     val conditions = rules.map { rule ->
-        evaluateRule(rule, payload, contentState, matchableFields, atEpochMillis, zone)
+        evaluateRule(rule, payload, contentState, matchableFields, atEpochMillis, zone, budget)
     }
     val matchingRules = rules.filter { rule ->
         conditions.first { it.ruleId == rule.id }.matched
@@ -235,6 +242,7 @@ private fun evaluateRule(
     matchableFields: MatchableFields?,
     atEpochMillis: Long,
     zone: TimeZone,
+    budget: PhraseMatchBudget,
 ): RuleConditionTrace {
     if (!rule.enabled) return RuleConditionTrace(rule.id, matched = false, reasons = listOf(EvaluationReason.DISABLED))
 
@@ -258,12 +266,12 @@ private fun evaluateRule(
             matchableFields == null -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             contentState != NotificationContentState.AVAILABLE -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
             else -> {
-                val result = evaluatePhrase(condition, matchableFields)
+                val result = evaluatePhrase(condition, matchableFields, budget)
                 when (result.failure) {
                     PhraseMatchFailure.INVALID_PATTERN -> add(EvaluationReason.INVALID_PATTERN)
                     PhraseMatchFailure.NO_FIELD_SELECTED -> add(EvaluationReason.NO_FIELD_SELECTED)
                     PhraseMatchFailure.NO_TEXT -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
-                    PhraseMatchFailure.PATTERN_TOO_SLOW -> add(EvaluationReason.PATTERN_TOO_SLOW)
+                    PhraseMatchFailure.PATTERN_ABANDONED -> add(EvaluationReason.PATTERN_ABANDONED)
                     null -> if (!result.matched) add(EvaluationReason.PHRASE_MISMATCH)
                 }
             }
