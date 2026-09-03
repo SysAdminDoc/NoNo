@@ -41,6 +41,9 @@ enum class EvaluationReason {
     /** No field is selected, so there is nothing to search. */
     NO_FIELD_SELECTED,
 
+    /** The rule's pattern ran past its budget on this text and was abandoned. */
+    PATTERN_TOO_SLOW,
+
     /** The notification arrived outside the rule's schedule window. */
     OUTSIDE_SCHEDULE,
 }
@@ -260,6 +263,7 @@ private fun evaluateRule(
                     PhraseMatchFailure.INVALID_PATTERN -> add(EvaluationReason.INVALID_PATTERN)
                     PhraseMatchFailure.NO_FIELD_SELECTED -> add(EvaluationReason.NO_FIELD_SELECTED)
                     PhraseMatchFailure.NO_TEXT -> add(EvaluationReason.CONTENT_NOT_AVAILABLE)
+                    PhraseMatchFailure.PATTERN_TOO_SLOW -> add(EvaluationReason.PATTERN_TOO_SLOW)
                     null -> if (!result.matched) add(EvaluationReason.PHRASE_MISMATCH)
                 }
             }

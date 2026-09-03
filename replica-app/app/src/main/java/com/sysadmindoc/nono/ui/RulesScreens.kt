@@ -3,6 +3,7 @@ package com.sysadmindoc.nono.ui
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import com.sysadmindoc.nono.model.groupRulesByFolder
+import com.sysadmindoc.nono.model.MAX_MATCHED_CHARS
 import com.sysadmindoc.nono.model.MatchField
 import com.sysadmindoc.nono.model.MatchMode
 import com.sysadmindoc.nono.model.MatchableFields
@@ -780,6 +781,15 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
                     }
                 }
             }
+        }
+        item {
+            Text(
+                "Only the first ${"%,d".format(MAX_MATCHED_CHARS)} characters of each field are " +
+                    "searched, and a pattern still working after a quarter of a second is " +
+                    "abandoned, so nothing an app sends can hold up the phone.",
+                color = SignalColors.Secondary,
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
         item { MatchTester(state, model) }
     }

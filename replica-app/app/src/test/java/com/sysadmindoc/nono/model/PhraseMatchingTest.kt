@@ -244,4 +244,67 @@ class PhraseMatchingTest {
             ),
         )
     }
+
+    @Test
+    fun `a catastrophic pattern is abandoned rather than left to run`() {
+        // (x+x+)+y over a run of x's does not finish. Measured on this JDK, 4,096 x's was still
+        // running after 90 seconds, so the 4KB cap alone does not save the listener's thread; the
+        // deadline is what makes this return. The result says the pattern was abandoned rather
+        // than claiming the text does not contain a match, which nothing established.
+        val condition = condition("(x+x+)+y", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(100_000))
+
+        val started = System.nanoTime()
+        val result = evaluatePhrase(condition, fields)
+        val elapsedMillis = (System.nanoTime() - started) / 1_000_000
+
+        assertFalse(result.matched)
+        assertEquals(PhraseMatchFailure.PATTERN_TOO_SLOW, result.failure)
+        assertTrue("took ${elapsedMillis}ms", elapsedMillis < 1_000)
+    }
+
+    @Test
+    fun `an ordinary pattern over a huge notification stays quick because the text is capped`() {
+        // (a+)+b is quadratic rather than catastrophic on this JDK: about 120ms over 4KB, and
+        // roughly a minute over the 100KB an app is free to send. The cap is what bounds it, and
+        // the answer is a real one, so no failure is reported.
+        val condition = condition("(a+)+b", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "a".repeat(100_000))
+
+        val started = System.nanoTime()
+        val result = evaluatePhrase(condition, fields)
+        val elapsedMillis = (System.nanoTime() - started) / 1_000_000
+
+        assertFalse(result.matched)
+        assertNull(result.failure)
+        assertTrue("took ${elapsedMillis}ms", elapsedMillis < 1_000)
+    }
+
+    @Test
+    fun `a phrase that does match still matches when another one ran out of budget`() {
+        val condition = condition("(x+x+)+y", "xxx", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(100_000))
+
+        val result = evaluatePhrase(condition, fields)
+
+        assertTrue(result.matched)
+        assertNull(result.failure)
+    }
+
+    @Test
+    fun `text under the cap still matches to its end`() {
+        val tail = "arrives at last"
+        val fields = MatchableFields(bigText = "b".repeat(MAX_MATCHED_CHARS - tail.length) + tail)
+
+        assertTrue(evaluatePhrase(condition(tail, fields = setOf(MatchField.BIG_TEXT)), fields).matched)
+    }
+
+    @Test
+    fun `text past the cap is not searched`() {
+        val fields = MatchableFields(bigText = "b".repeat(MAX_MATCHED_CHARS) + "arrives at last")
+
+        assertFalse(
+            evaluatePhrase(condition("arrives at last", fields = setOf(MatchField.BIG_TEXT)), fields).matched,
+        )
+    }
 }
