@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -382,7 +383,7 @@ private fun DialogFrame(title: String, onDismiss: () -> Unit, content: @Composab
         ) {
             Text(title, style = androidx.compose.material3.MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp))
             content()
-            Text("Cancel", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.End).clickable(onClick = onDismiss).padding(12.dp))
+            Text("Cancel", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.End).clickable(role = Role.Button, onClick = onDismiss).padding(horizontal = 12.dp).heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically))
         }
     }
 }
@@ -692,7 +693,7 @@ private fun TextEntryDialog(title: String, value: String, onValueChange: (String
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp).focusRequester(focusRequester),
             )
             SignalPrimaryButton("Done", { keyboard?.hide(); onDone() }, modifier = Modifier.padding(top = 14.dp))
-            Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable { keyboard?.hide(); onDismiss() }.padding(18.dp))
+            Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable(role = Role.Button) { keyboard?.hide(); onDismiss() }.padding(horizontal = 18.dp).heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically))
         }
     }
 }
@@ -731,7 +732,7 @@ private fun TransferPassphraseDialog(
                 modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
             )
             SignalPrimaryButton("Continue", { onDone(passphrase) }, modifier = Modifier.padding(top = 14.dp))
-            Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable(onClick = onDismiss).padding(18.dp))
+            Text("CANCEL", color = SignalColors.Yellow, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clickable(role = Role.Button, onClick = onDismiss).padding(horizontal = 18.dp).heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically))
         }
     }
 }
