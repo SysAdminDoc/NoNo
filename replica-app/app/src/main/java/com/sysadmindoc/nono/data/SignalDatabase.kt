@@ -383,6 +383,20 @@ interface NotificationDao {
     @Query("SELECT DISTINCT packageName FROM notification_history ORDER BY packageName")
     fun observeObservedPackages(): Flow<List<String>>
 
+    /**
+     * Every channel pseudonym in the store, for the history filter dialog.
+     *
+     * Deriving these from the loaded page meant a filtered page offered only its own values, so
+     * switching straight from one filter to another was impossible. Bounded scans, subscribed
+     * only while the dialog is open.
+     */
+    @Query("SELECT DISTINCT channelId FROM notification_history WHERE channelId IS NOT NULL AND channelId != '' ORDER BY channelId")
+    fun observeObservedChannels(): Flow<List<String>>
+
+    /** Every group key in the store, for the history filter dialog. See [observeObservedChannels]. */
+    @Query("SELECT DISTINCT groupKey FROM notification_history WHERE groupKey IS NOT NULL AND groupKey != '' ORDER BY groupKey")
+    fun observeObservedGroups(): Flow<List<String>>
+
     @Query("SELECT * FROM ingestion_diagnostics WHERE singletonId = 1 LIMIT 1")
     fun observeIngestionDiagnostics(): Flow<IngestionDiagnosticsEntity?>
 

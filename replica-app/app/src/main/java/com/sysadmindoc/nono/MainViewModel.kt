@@ -350,6 +350,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
         }
         viewModelScope.launch {
+            // The filter dialog offers what the store holds, not what the loaded page happens to
+            // show: a filtered page only contains its own values, which made switching straight
+            // from one filter to another impossible. Bounded scans, on only while the dialog is.
+            val dao = historyDatabase.notificationDao()
+            _state
+                .map { it.overlay == Overlay.HISTORY_FILTERS }
+                .distinctUntilChanged()
+                .flatMapLatest { open ->
+                    if (!open) {
+                        flowOf(Triple(emptyList<String>(), emptyList<String>(), emptyList<String>()))
+                    } else {
+                        combine(
+                            dao.observeObservedPackages().catch { emit(emptyList()) },
+                            dao.observeObservedChannels().catch { emit(emptyList()) },
+                            dao.observeObservedGroups().catch { emit(emptyList()) },
+                        ) { packages, channels, groups -> Triple(packages, channels, groups) }
+                    }
+                }
+                .collect { (packages, channels, groups) ->
+                    _state.value = _state.value.copy(
+                        historyFilterPackages = packages,
+                        historyFilterChannels = channels,
+                        historyFilterGroups = groups,
+                    )
+                }
+        }
+        viewModelScope.launch {
             // Real hours for the History overview chart. Same whole-table aggregate Insights
             // uses, so it is likewise on only while its screen is.
             _state

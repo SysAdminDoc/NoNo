@@ -471,4 +471,45 @@ class SignalDatabaseTest {
         dao.deleteBefore(1_000L)
         assertEquals(emptyList<String>(), dao.observeHistory(query = "", filter = "All").first().map { it.notificationKey })
     }
+
+    @Test
+    fun observedFilterValuesComeFromTheWholeStore() = runBlocking {
+        val dao = database.notificationDao()
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "chat",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                channelId = "messages",
+                groupKey = "conversation",
+            ),
+        )
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "shop",
+                packageName = "com.example.shop",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+                channelId = "offers",
+                groupKey = "",
+            ),
+        )
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "bare",
+                packageName = "com.example.shop",
+                postedAtEpochMillis = 3_000L,
+                contentState = NotificationContentState.NOT_STORED.name,
+            ),
+        )
+
+        // Distinct, sorted, and no empty or absent value offered as something to filter on.
+        assertEquals(
+            listOf("com.example.chat", "com.example.shop"),
+            dao.observeObservedPackages().first(),
+        )
+        assertEquals(listOf("messages", "offers"), dao.observeObservedChannels().first())
+        assertEquals(listOf("conversation"), dao.observeObservedGroups().first())
+    }
 }

@@ -449,6 +449,14 @@ enum class NotificationContentState {
     NOT_STORED,
 }
 
+/** A short human name for a picker row; the stored enum name is an implementation detail. */
+fun contentStateLabel(state: NotificationContentState): String = when (state) {
+    NotificationContentState.AVAILABLE -> "Content was available"
+    NotificationContentState.HIDDEN_BY_SYSTEM -> "Hidden by an earlier build"
+    NotificationContentState.NOT_AVAILABLE -> "No content supplied"
+    NotificationContentState.NOT_STORED -> "Metadata only"
+}
+
 data class UiState(
     val route: Route = Route.ONBOARDING,
     val rootTab: RootTab = RootTab.RULES,
@@ -480,6 +488,12 @@ data class UiState(
     val historyTotalCount: Int = 0,
     /** Real per-hour counts over everything retained, for the History overview chart. */
     val historyHourCounts: List<InsightHourCount> = emptyList(),
+    /** Every stored package, for the filter dialog; the loaded page is not the store. */
+    val historyFilterPackages: List<String> = emptyList(),
+    /** Every stored channel pseudonym, for the filter dialog. */
+    val historyFilterChannels: List<String> = emptyList(),
+    /** Every stored group key, for the filter dialog. */
+    val historyFilterGroups: List<String> = emptyList(),
     /** Aggregates over everything retained, for the Insights screen. */
     val insights: LocalInsights = LocalInsights(),
     /** True while the lock is hiding every rule and every record behind the unlock screen. */

@@ -79,6 +79,7 @@ import com.sysadmindoc.nono.model.Overlay
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
 import com.sysadmindoc.nono.model.CategoryCondition
+import com.sysadmindoc.nono.model.contentStateLabel
 import com.sysadmindoc.nono.model.ChannelCondition
 import com.sysadmindoc.nono.model.ConversationCondition
 import com.sysadmindoc.nono.model.ImportanceCondition
@@ -189,9 +190,11 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         Overlay.CONTENT_HIDDEN -> ContentHiddenDialog(model)
         Overlay.LISTENER_CHECKLIST -> ListenerChecklistDialog(model)
         Overlay.HISTORY_FILTERS -> {
-            val packages = state.history.map { it.appPackageName ?: it.app }.distinct().sorted()
-            val channels = state.history.mapNotNull { it.channelId }.distinct().sorted()
-            val groups = state.history.mapNotNull { it.groupKey }.distinct().sorted()
+            // From the store, not the loaded page: a filtered page offers only its own values,
+            // and rows past the page limit were never offered at all.
+            val packages = state.historyFilterPackages
+            val channels = state.historyFilterChannels
+            val groups = state.historyFilterGroups
             val items = buildList {
                 add(MenuItem("Clear metadata filters", Icons.Rounded.FilterAlt) { model.clearHistoryMetadataFilters() })
                 add(MenuItem("Group summaries only", Icons.Rounded.Tune) { model.setHistoryGroupSummaryOnly(true) })
@@ -209,7 +212,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
                     add(MenuItem("Importance: $label", Icons.Rounded.FilterAlt) { model.setHistoryImportanceFilter(level) })
                 }
                 NotificationContentState.values().forEach { value ->
-                    add(MenuItem("Content: ${value.name}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })
+                    add(MenuItem("Content: ${contentStateLabel(value)}", Icons.Rounded.FilterAlt) { model.setHistoryContentStateFilter(value) })
                 }
             }
             MenuDialog("History metadata filters", items, model::dismissOverlay)
@@ -608,35 +611,39 @@ private data class MenuItem(
 @Composable
 private fun MenuDialog(title: String, items: List<MenuItem>, onDismiss: () -> Unit) {
     DialogFrame(title, onDismiss) {
-        items.forEach { item ->
-            val enabled = item.unavailable == null
-            Row(
-                Modifier.fillMaxWidth()
-                    .clickable(enabled = enabled, role = Role.Button, onClick = item.action)
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
-                    .semantics { if (!enabled) contentDescription = "${item.label}. Unavailable: ${item.unavailable}" },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    item.icon,
-                    contentDescription = null,
-                    tint = when {
-                        !enabled -> SignalColors.Muted
-                        item.destructive -> SignalColors.Error
-                        else -> SignalColors.Yellow
-                    },
-                )
-                Column(Modifier.padding(start = 16.dp)) {
-                    Text(
-                        item.label,
-                        color = when {
+        // The history-filter menu grows a row per distinct package, channel and group, so it can
+        // outgrow any screen. Same cap as ChoiceDialog; Cancel stays outside the scroll region.
+        LazyColumn(Modifier.heightIn(max = 570.dp)) {
+            items(items) { item ->
+                val enabled = item.unavailable == null
+                Row(
+                    Modifier.fillMaxWidth()
+                        .clickable(enabled = enabled, role = Role.Button, onClick = item.action)
+                        .padding(horizontal = 8.dp, vertical = 12.dp)
+                        .semantics { if (!enabled) contentDescription = "${item.label}. Unavailable: ${item.unavailable}" },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        item.icon,
+                        contentDescription = null,
+                        tint = when {
                             !enabled -> SignalColors.Muted
                             item.destructive -> SignalColors.Error
-                            else -> SignalColors.White
+                            else -> SignalColors.Yellow
                         },
-                        fontSize = 17.sp,
                     )
-                    item.unavailable?.let { Text(it, color = SignalColors.Secondary, fontSize = 13.sp) }
+                    Column(Modifier.padding(start = 16.dp)) {
+                        Text(
+                            item.label,
+                            color = when {
+                                !enabled -> SignalColors.Muted
+                                item.destructive -> SignalColors.Error
+                                else -> SignalColors.White
+                            },
+                            fontSize = 17.sp,
+                        )
+                        item.unavailable?.let { Text(it, color = SignalColors.Secondary, fontSize = 13.sp) }
+                    }
                 }
             }
         }

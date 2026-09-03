@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- The History metadata filter dialog scrolls. It grows a row for every app, channel and group in your history, so on a phone that hears from a few chatty apps it used to run off the bottom of the screen with the extra rows and the Cancel button out of reach.
+- That same dialog now offers everything in your history rather than everything in the part of it currently on screen. Filtering to one app and then trying to switch straight to another used to be impossible, because the only app the dialog knew about was the one you had already picked. Anything past the first page of records was never offered either. The content options read as sentences now instead of showing the names the database uses.
+
 ## [1.5.1] (2026-08-31)
 
 ### Fixed

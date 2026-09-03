@@ -1,6 +1,7 @@
 package com.sysadmindoc.nono.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -52,5 +53,16 @@ class AppModelsTest {
         assertEquals(listOf(1L), filterHistory(records, "call", "All").map { it.id })
         assertEquals(listOf(1L), filterHistory(records, "", "Rule-triggered").map { it.id })
         assertEquals(listOf(2L), filterHistory(records, "", "Dismissed").map { it.id })
+    }
+
+    @Test
+    fun contentStateLabels_readAsProseRatherThanEnumNames() {
+        val labels = NotificationContentState.values().map { contentStateLabel(it) }
+
+        assertEquals(NotificationContentState.values().size, labels.distinct().size)
+        labels.forEach { label ->
+            assertFalse(label, label.contains('_'))
+            assertFalse(label, label == label.uppercase())
+        }
     }
 }
