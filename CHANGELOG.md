@@ -3,9 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.6.0] (2026-09-03)
+
+### Added
+
+- Declining notification access no longer leaves you stuck on the first screen. "Not now" takes you into the app, where the banner on the Rules tab explains what is missing and how to turn it on when you want to. Nothing is captured until you do, and the screen says so.
 
 ### Fixed
+
+- A failed restore no longer claims the record came back. Undoing a deletion could fail in two ways: the notification had been posted again, so the record genuinely was there, or the write itself failed and the record was gone. Both said the record was back on the device, which was the opposite of the truth in the second case.
+- A backup that succeeds is reported as one even if the app then cannot write down that it happened. Recording the result could fail on a full disk, which is exactly when a backup matters, and the whole run was then reported as a failure over a file that had been written.
 
 - The History metadata filter dialog scrolls. It grows a row for every app, channel and group in your history, so on a phone that hears from a few chatty apps it used to run off the bottom of the screen with the extra rows and the Cancel button out of reach.
 - The "Add a filter" menu offers one entry per destination. "Extra property" and "Filter group" opened the identical screen, so whichever you picked you got the same thing, and the one entry is now named for the screen it opens.
@@ -21,7 +28,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Exporting rules or history over a file that already exists now replaces it properly. Saving a smaller export on top of a bigger one could leave the tail of the old file behind, and a rules file in that state fails to import later with nothing to explain why. If the write fails once it has started, the half-written file is deleted; if it fails before that, your existing file is left exactly where it was and untouched. The message says which of the three happened.
 - Choosing to keep your existing rules during an import now says how many rules in the file were skipped, the same way replacing them says how many were replaced.
 - The status and navigation bars follow the theme you picked. The bar behind the three navigation buttons was painted the dark theme's near-black whatever theme the app was in, so switching to Light left dark buttons on a black strip under a white app. Both bars now take their colour from the same palette as the rest of the screen, in whichever theme, and regardless of what the phone itself is set to.
-- A rule written as a regular expression can no longer freeze or crash the phone. Rules are checked the moment a notification arrives, and some patterns take an unreasonable amount of time on long text, which any app is free to send. Each field is now searched only as far as its first few thousand characters, and all your rules together get a quarter of a second to finish their patterns. A pattern still working when that runs out is given up on, and so is one that runs out of stack space, which used to take the whole app down. A rule never fires on a pattern that was given up on, and a rule that says "none of these" no longer counts an unfinished pattern as proof the words were absent. The character limit counts what a person can actually see, so an app cannot push a message out of range by padding it with invisible characters.
+- A rule written as a regular expression can no longer freeze or crash the phone. Rules are checked the moment a notification arrives, and some patterns take an unreasonable amount of time on long text, which any app is free to send. Each field is now searched only as far as its first few thousand characters, and each rule gets a share of a quarter of a second to finish its patterns. A pattern still working when its share runs out is given up on, and so is one that runs out of stack space, which used to take the whole app down. A slow rule only ever spends its own share, so it cannot quietly stop the rules after it from working. A rule never fires on a pattern that was given up on, and a rule that says "none of these" no longer counts an unfinished pattern as proof the words were absent. The character limit counts what a person can actually see, so an app cannot push a message out of range by padding it with invisible characters.
 - That same dialog now offers everything in your history rather than everything in the part of it currently on screen. Filtering to one app and then trying to switch straight to another used to be impossible, because the only app the dialog knew about was the one you had already picked. Anything past the first page of records was never offered either. The apps, channels and groups it finds are listed after the fixed options rather than in among them, so nothing shifts under your finger while the list loads. The content options read as sentences now, in the dialog and on the filter summary, instead of showing the names the database uses.
 
 ## [1.5.1] (2026-08-31)

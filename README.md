@@ -1,6 +1,6 @@
 # NoNo
 
-[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android%2024%2B-brightgreen.svg)](replica-app/app/build.gradle)
 
@@ -26,6 +26,19 @@ for the privacy and capability boundary.
 ![NoNo capture self-test result](replica-app/docs/screenshots/nono-capture-self-test-v1.4.1.png)
 
 ![NoNo rule deletion with an Undo action](replica-app/docs/screenshots/nono-rule-delete-undo-v1.4.1.png)
+
+Version 1.6.0 is a correctness and honesty pass over things the app was saying and doing wrongly.
+A rule written as a regular expression can no longer freeze or crash the phone: each field is
+searched only as far as its first few thousand characters, counted after invisible padding is
+removed, and a pattern still running when its share of the time is gone is given up on rather than
+allowed to fire the rule. History search treats what you type as text, so a search for `100%` no
+longer returns everything, and the metadata filter dialog scrolls and offers your whole history
+rather than the part of it currently on screen. The status and navigation bars follow the theme you
+picked instead of staying dark under a light app. Exporting over an existing file replaces it
+properly and, if the write fails before it starts, leaves your existing file alone. Settings is
+honest about the rows that do nothing in this build, the capture row is a switch rather than
+something that looks like it opens a screen, and declining notification access no longer traps you
+on the first screen. Counts read as English when there is one of something.
 
 Version 1.5.1 is a small fix. Type a filter in the action chooser, rotate the phone, and what you
 typed is still there; it used to clear itself while the rest of the screen came back. This release
