@@ -50,6 +50,10 @@ object StatusMessages {
         "Export failed. Nothing on this device was changed, but the file at the destination may be incomplete."
     }
 
+    /** Said out loud, because pausing capture stops everything else in the app quietly. */
+    fun captureOutcome(paused: Boolean): String =
+        if (paused) "Capture paused. Nothing is being recorded." else "Capture resumed."
+
     /**
      * What a rule import actually did.
      *

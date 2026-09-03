@@ -199,11 +199,19 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                     )
                 }
                 SignalDivider()
-                PreferenceRow(
-                    if (state.capturePaused) Icons.Rounded.PauseCircle else Icons.Rounded.Notifications,
-                    "Notification capture",
-                    value = if (state.capturePaused) "Paused" else "Active",
-                    onClick = { model.setCapturePaused(!state.capturePaused) },
+                // A switch, because that is what it does. As a preference row it looked like
+                // something that opens a screen and TalkBack heard a button with a static value,
+                // so pausing all capture was one mistaken tap in a list of rows that open dialogs.
+                SwitchRow(
+                    icon = if (state.capturePaused) Icons.Rounded.PauseCircle else Icons.Rounded.Notifications,
+                    title = "Notification capture",
+                    summary = if (state.capturePaused) {
+                        "Paused. Nothing is being recorded."
+                    } else {
+                        "Active. Metadata is recorded as notifications arrive."
+                    },
+                    checked = !state.capturePaused,
+                    onCheckedChange = { model.setCapturePaused(!it) },
                 )
                 SignalDivider()
                 PersistentSwitchRow(
@@ -390,7 +398,9 @@ private fun PreferenceRow(
     val enabled = unavailable == null && onClick != null
     val titleColor = when {
         destructive -> SignalColors.Error
-        !enabled && onClick == null -> SignalColors.Muted
+        // Any row that cannot be operated reads as one. It used to depend on *why* it could not
+        // be, so a row carrying both an explanation and an onClick looked live.
+        !enabled -> SignalColors.Muted
         else -> SignalColors.White
     }
     Row(
@@ -433,20 +443,47 @@ private fun PersistentSwitchRow(
     // The stored key is given separately from the displayed title. Keying by the title meant the
     // "Dismiss fixed notifications" row read and wrote a preference nothing seeded, while the
     // seeded "Allow dismissing fixed notifications" sat there unread.
+    SwitchRow(
+        icon = icon,
+        title = title,
+        summary = summary,
+        checked = state.settings[settingKey] == "On",
+        unavailable = unavailable,
+        onCheckedChange = { model.setSetting(settingKey, if (it) "On" else "Off") },
+    )
+}
+
+/**
+ * A row whose whole width is one switch.
+ *
+ * Separate from [PreferenceRow] because the two answer different questions: a preference row opens
+ * something, a switch row is the control. Rendering a toggle as a preference row is how the
+ * capture switch came to look like navigation and sound to TalkBack like a button with a static
+ * value.
+ */
+@Composable
+private fun SwitchRow(
+    icon: ImageVector,
+    title: String,
+    summary: String,
+    checked: Boolean,
+    unavailable: String? = null,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     val enabled = unavailable == null
-    val checked = enabled && state.settings[settingKey] == "On"
+    val on = enabled && checked
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp)
             .toggleable(
-                value = checked,
+                value = on,
                 enabled = enabled,
                 role = Role.Switch,
-                onValueChange = { model.setSetting(settingKey, if (it) "On" else "Off") },
+                onValueChange = onCheckedChange,
             )
             .semantics {
-                stateDescription = if (checked) "On" else "Off"
+                stateDescription = if (on) "On" else "Off"
                 contentDescription = title
             }
             .padding(horizontal = 14.dp, vertical = 10.dp),
@@ -460,7 +497,7 @@ private fun PersistentSwitchRow(
             Text(unavailable ?: summary, color = SignalColors.Secondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
         }
         Switch(
-            checked = checked,
+            checked = on,
             enabled = enabled,
             onCheckedChange = null,
             modifier = Modifier.clearAndSetSemantics { },

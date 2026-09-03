@@ -137,6 +137,16 @@ class IngestionProblemsTest {
     }
 
     @Test
+    fun pausingCaptureIsAnnouncedRatherThanSilent() {
+        val paused = StatusMessages.captureOutcome(paused = true)
+        val resumed = StatusMessages.captureOutcome(paused = false)
+
+        assertTrue(paused, paused.contains("paused", ignoreCase = true))
+        assertTrue("the consequence has to be stated: $paused", paused.contains("Nothing is being recorded"))
+        assertTrue(resumed, resumed.contains("resumed", ignoreCase = true))
+    }
+
+    @Test
     fun anImportSaysWhatItActuallyDid() {
         // Replacing five conflicting rules and adding none used to read "Imported 0 new rule(s).",
         // which describes a no-op over a change to every rule the file touched.

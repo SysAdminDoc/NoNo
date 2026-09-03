@@ -967,6 +967,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setCapturePaused(paused: Boolean) {
         CaptureGate.setPaused(getApplication(), paused)
+        // Turning capture off is the largest thing this screen can do and it used to happen in
+        // silence, so the only evidence was a word on the row you had just tapped.
+        _state.value = _state.value.withMessage(StatusMessages.captureOutcome(paused))
     }
     fun beginExport() {
         _state.value = _state.value.copy(overlay = Overlay.TRANSFER_EXPORT_PASSPHRASE, transientMessage = null, transientUndo = null)
