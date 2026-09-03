@@ -162,7 +162,7 @@ private fun SearchHistory(state: UiState, model: MainViewModel) {
             OutlinedTextField(
                 value = state.historySearch,
                 onValueChange = model::setHistorySearch,
-                placeholder = { Text("Search history") },
+                placeholder = { Text("Search app, channel or group") },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { keyboard?.hide(); model.closeHistorySearch() }) {

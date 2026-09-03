@@ -473,6 +473,45 @@ class SignalDatabaseTest {
     }
 
     @Test
+    fun searchTermsAreTextAndNotPatterns() = runBlocking {
+        val dao = database.notificationDao()
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "literal",
+                packageName = "com.example.100%off",
+                postedAtEpochMillis = 1_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+            ),
+        )
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "plain",
+                packageName = "com.example.chat",
+                postedAtEpochMillis = 2_000L,
+                contentState = NotificationContentState.NOT_AVAILABLE.name,
+            ),
+        )
+
+        // '%' used to match every row and '_' any single character.
+        assertEquals(
+            listOf("literal"),
+            dao.observeHistory(query = "%", filter = "All").first().map { it.notificationKey },
+        )
+        assertEquals(1, dao.observeFilteredCount(query = "%", filter = "All").first())
+        assertEquals(0, dao.observeFilteredCount(query = "_", filter = "All").first())
+
+        // 'not' used to match every NOT_AVAILABLE and NOT_STORED row through contentState, which
+        // no placeholder explained. The dedicated content-state filter covers that.
+        assertEquals(0, dao.observeFilteredCount(query = "not", filter = "All").first())
+
+        // Ordinary terms still work.
+        assertEquals(
+            listOf("plain"),
+            dao.observeHistory(query = "chat", filter = "All").first().map { it.notificationKey },
+        )
+    }
+
+    @Test
     fun observedFilterValuesComeFromTheWholeStore() = runBlocking {
         val dao = database.notificationDao()
         dao.upsert(

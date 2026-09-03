@@ -207,6 +207,24 @@ fun NotificationEntity.toHistoryRecord(): HistoryRecord {
     )
 }
 
+/**
+ * Makes a typed search term mean itself inside a LIKE pattern.
+ *
+ * `%` and `_` are wildcards to SQLite, so searching for `%` used to return every record and `_`
+ * matched any single character. Both are ordinary characters to somebody typing into a search
+ * box. The escape character has to be escaped first, or a term ending in one would escape the
+ * pattern's own trailing `%`.
+ *
+ * Paired with `ESCAPE '\'` on every LIKE that takes a search term; one without the other is worse
+ * than neither.
+ */
+fun escapeLikeTerm(value: String): String = buildString(value.length) {
+    for (character in value) {
+        if (character == '\\' || character == '%' || character == '_') append('\\')
+        append(character)
+    }
+}
+
 @Dao
 interface NotificationDao {
     @Query("SELECT * FROM notification_history ORDER BY postedAtEpochMillis DESC, id DESC LIMIT :limit")
@@ -225,11 +243,10 @@ interface NotificationDao {
     @Query(
         """
         SELECT * FROM notification_history
-        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' OR
-            notificationKey LIKE '%' || :query || '%' OR
-            contentState LIKE '%' || :query || '%' OR
-            COALESCE(channelId, '') LIKE '%' || :query || '%' OR
-            COALESCE(groupKey, '') LIKE '%' || :query || '%')
+        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' ESCAPE '\' OR
+            notificationKey LIKE '%' || :query || '%' ESCAPE '\' OR
+            COALESCE(channelId, '') LIKE '%' || :query || '%' ESCAPE '\' OR
+            COALESCE(groupKey, '') LIKE '%' || :query || '%' ESCAPE '\')
           AND (
             :filter = 'All'
             OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
@@ -248,7 +265,7 @@ interface NotificationDao {
         LIMIT :limit
         """,
     )
-    fun observeHistory(
+    fun observeHistoryMatching(
         query: String,
         filter: String,
         packageName: String? = null,
@@ -263,6 +280,39 @@ interface NotificationDao {
     ): Flow<List<NotificationEntity>>
 
     /**
+     * The same query, taking what the user typed rather than a LIKE pattern.
+     *
+     * Escaping here and not at the call site is deliberate: the annotated query above interpolates
+     * its parameter straight into a pattern, so anything reaching it unescaped is a wildcard, and
+     * that is not something a caller should have to remember.
+     */
+    fun observeHistory(
+        query: String,
+        filter: String,
+        packageName: String? = null,
+        channelId: String? = null,
+        contentState: String? = null,
+        groupKey: String? = null,
+        groupSummary: Boolean? = null,
+        importance: Int? = null,
+        conversation: Boolean? = null,
+        fromEpochMillis: Long? = null,
+        limit: Int = 100,
+    ): Flow<List<NotificationEntity>> = observeHistoryMatching(
+        query = escapeLikeTerm(query),
+        filter = filter,
+        packageName = packageName,
+        channelId = channelId,
+        contentState = contentState,
+        groupKey = groupKey,
+        groupSummary = groupSummary,
+        importance = importance,
+        conversation = conversation,
+        fromEpochMillis = fromEpochMillis,
+        limit = limit,
+    )
+
+    /**
      * How many rows the same filters select, whatever the page limit is.
      *
      * Separate from the page query on purpose. The screen used to show the size of the loaded
@@ -272,11 +322,10 @@ interface NotificationDao {
     @Query(
         """
         SELECT COUNT(*) FROM notification_history
-        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' OR
-            notificationKey LIKE '%' || :query || '%' OR
-            contentState LIKE '%' || :query || '%' OR
-            COALESCE(channelId, '') LIKE '%' || :query || '%' OR
-            COALESCE(groupKey, '') LIKE '%' || :query || '%')
+        WHERE (:query = '' OR packageName LIKE '%' || :query || '%' ESCAPE '\' OR
+            notificationKey LIKE '%' || :query || '%' ESCAPE '\' OR
+            COALESCE(channelId, '') LIKE '%' || :query || '%' ESCAPE '\' OR
+            COALESCE(groupKey, '') LIKE '%' || :query || '%' ESCAPE '\')
           AND (
             :filter = 'All'
             OR (:filter = 'Rule-triggered' AND matchedRuleIds IS NOT NULL AND matchedRuleIds != '')
@@ -293,7 +342,7 @@ interface NotificationDao {
           AND (:fromEpochMillis IS NULL OR postedAtEpochMillis >= :fromEpochMillis)
         """,
     )
-    fun observeFilteredCount(
+    fun observeFilteredCountMatching(
         query: String,
         filter: String,
         packageName: String? = null,
@@ -305,6 +354,31 @@ interface NotificationDao {
         conversation: Boolean? = null,
         fromEpochMillis: Long? = null,
     ): Flow<Int>
+
+    /** The count for what the user typed. See [observeHistory] on why the escaping lives here. */
+    fun observeFilteredCount(
+        query: String,
+        filter: String,
+        packageName: String? = null,
+        channelId: String? = null,
+        contentState: String? = null,
+        groupKey: String? = null,
+        groupSummary: Boolean? = null,
+        importance: Int? = null,
+        conversation: Boolean? = null,
+        fromEpochMillis: Long? = null,
+    ): Flow<Int> = observeFilteredCountMatching(
+        query = escapeLikeTerm(query),
+        filter = filter,
+        packageName = packageName,
+        channelId = channelId,
+        contentState = contentState,
+        groupKey = groupKey,
+        groupSummary = groupSummary,
+        importance = importance,
+        conversation = conversation,
+        fromEpochMillis = fromEpochMillis,
+    )
 
     /** Everything retained, whatever the user has filtered to. */
     @Query("SELECT COUNT(*) FROM notification_history")
