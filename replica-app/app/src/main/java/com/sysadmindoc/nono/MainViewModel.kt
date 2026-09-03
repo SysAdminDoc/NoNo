@@ -1014,20 +1014,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch(Dispatchers.IO) {
             val resolver = getApplication<Application>().contentResolver
+            // Set the moment the stream opens, which is the moment the document's old contents
+            // are gone. Everything before that leaves the destination exactly as it was, and a
+            // failure there must not touch it: the picker's overwrite path hands back a file the
+            // user already had, so deleting on a refused open destroys an intact export and then
+            // reports that nothing changed.
+            var truncated = false
             val result = runCatching {
-                // "wt" and not the default "w". The picker's overwrite path hands back the
-                // existing document, and "w" is not required to truncate it, so a shorter export
-                // over a longer file could leave the old tail behind and produce a rule file that
-                // later fails to import. A provider that does not understand "wt" refuses here,
-                // which is a reported failure rather than a silently corrupt file.
-                resolver.openOutputStream(uri, "wt")?.use { output ->
-                    output.write(payload.toByteArray(Charsets.UTF_8))
-                } ?: error("The selected location could not be opened.")
+                // "wt" and not the default "w". "w" is not required to truncate, so a shorter
+                // export over a longer file could leave the old tail behind and produce a rule
+                // file that later fails to import. A provider that does not understand "wt"
+                // refuses here, which is a reported failure rather than a silently corrupt file.
+                val stream = resolver.openOutputStream(uri, "wt")
+                    ?: error("The selected location could not be opened.")
+                truncated = true
+                stream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
             }
-            // A failure part way through leaves a truncated document at the destination. Saying
-            // nothing was changed would be a lie about a file the user can see, so it goes the
-            // same way the scheduled backup's partial writes do.
-            val partialRemoved = result.isFailure &&
+            // Only a document this write already emptied. Left there it would be a rules file
+            // that looks like one and cannot be read, so it goes the same way the scheduled
+            // backup's partial writes do.
+            val partialRemoved = result.isFailure && truncated &&
                 runCatching { DocumentsContract.deleteDocument(resolver, uri) }.getOrDefault(false)
             withContext(Dispatchers.Main.immediate) {
                 _state.value = _state.value.withMessage(
@@ -1041,7 +1047,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 "Encrypted rules exported. Notification history was not included."
                             }
                         },
-                        { StatusMessages.exportFailure(partialRemoved) },
+                        { StatusMessages.exportFailure(reachedTheFile = truncated, partialRemoved = partialRemoved) },
                     ),
                 )
             }
@@ -1248,6 +1254,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     StatusMessages.importOutcome(
                         added = preview.additions.size,
                         replaced = if (resolution == ConflictResolution.REPLACE_EXISTING) preview.conflicts.size else 0,
+                        kept = if (resolution == ConflictResolution.KEEP_EXISTING) preview.conflicts.size else 0,
                         channelReselections = channelReselections,
                     ),
                 )

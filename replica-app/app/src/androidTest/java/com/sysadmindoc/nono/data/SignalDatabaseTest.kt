@@ -491,6 +491,14 @@ class SignalDatabaseTest {
                 contentState = NotificationContentState.NOT_AVAILABLE.name,
             ),
         )
+        dao.upsert(
+            NotificationEntity(
+                notificationKey = "underscored",
+                packageName = "com.example.a_b",
+                postedAtEpochMillis = 3_000L,
+                contentState = NotificationContentState.AVAILABLE.name,
+            ),
+        )
 
         // '%' used to match every row and '_' any single character.
         assertEquals(
@@ -498,7 +506,19 @@ class SignalDatabaseTest {
             dao.observeHistory(query = "%", filter = "All").first().map { it.notificationKey },
         )
         assertEquals(1, dao.observeFilteredCount(query = "%", filter = "All").first())
-        assertEquals(0, dao.observeFilteredCount(query = "_", filter = "All").first())
+        assertEquals(
+            listOf("underscored"),
+            dao.observeHistory(query = "_", filter = "All").first().map { it.notificationKey },
+        )
+
+        // The positive control the wildcard assertions need: a literal underscore still finds the
+        // row that has one, and does not stand in for the character beside it.
+        assertEquals(
+            listOf("underscored"),
+            dao.observeHistory(query = "a_b", filter = "All").first().map { it.notificationKey },
+        )
+        assertEquals(0, dao.observeFilteredCount(query = "a%b", filter = "All").first())
+        assertEquals(0, dao.observeFilteredCount(query = "axb", filter = "All").first())
 
         // 'not' used to match every NOT_AVAILABLE and NOT_STORED row through contentState, which
         // no placeholder explained. The dedicated content-state filter covers that.

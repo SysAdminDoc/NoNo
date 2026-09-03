@@ -65,10 +65,11 @@ object StatusMessages {
      * nothing was changed would be true of this device and false of the file the user is looking
      * at, so the sentence depends on whether the unfinished document could be removed.
      */
-    fun exportFailure(partialRemoved: Boolean): String = if (partialRemoved) {
-        "Export failed. The unfinished file was removed and nothing on this device was changed."
-    } else {
-        "Export failed. Nothing on this device was changed, but the file at the destination may be incomplete."
+    fun exportFailure(reachedTheFile: Boolean, partialRemoved: Boolean): String = when {
+        // The stream never opened, so whatever was at the destination is still there, untouched.
+        !reachedTheFile -> "Export failed. Nothing was written and the destination is unchanged."
+        partialRemoved -> "Export failed. The unfinished file was removed."
+        else -> "Export failed. The file at the destination is incomplete."
     }
 
     /** Said out loud, because pausing capture stops everything else in the app quietly. */
@@ -82,13 +83,16 @@ object StatusMessages {
      * read as "Imported 0 new rule(s)." — a sentence that describes a no-op over a change to
      * every rule the file touched.
      */
-    fun importOutcome(added: Int, replaced: Int, channelReselections: Int): String = buildString {
+    fun importOutcome(added: Int, replaced: Int, kept: Int = 0, channelReselections: Int = 0): String = buildString {
         when {
             added > 0 && replaced > 0 -> append("Imported ${counted(added, "new rule")} and replaced ${counted(replaced, "rule")}.")
             replaced > 0 -> append("Replaced ${counted(replaced, "rule")}.")
             added > 0 -> append("Imported ${counted(added, "new rule")}.")
             else -> append("Nothing was imported.")
         }
+        // Choosing to keep the existing rules is a decision about the ones in the file, and the
+        // count of what was left alone is the only evidence the file had them at all.
+        if (kept > 0) append(" ${counted(kept, "rule")} in the file already existed and ${if (kept == 1) "was" else "were"} left alone.")
         append(" Notification history was not imported.")
         if (channelReselections > 0) {
             append(" Select ${counted(channelReselections, "channel filter")} again before those rules can match.")

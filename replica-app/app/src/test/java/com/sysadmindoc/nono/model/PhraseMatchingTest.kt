@@ -335,19 +335,42 @@ class PhraseMatchingTest {
     }
 
     @Test
-    fun `one budget covers many conditions rather than one each`() {
+    fun `many rules together cost about what one rule costs`() {
         // A budget made inside evaluatePhrase multiplied by rule count: twenty rules carrying a
         // slow pattern spent five seconds on the listener's thread, which is an ANR rather than a
-        // bounded cost. The caller holds it, so twenty conditions cost what one does.
+        // bounded cost. A slice each keeps the total in the same place.
         val condition = condition("(x+x+)+y", mode = MatchMode.REGEX)
         val fields = MatchableFields(text = "x".repeat(100_000))
-        val budget = PhraseMatchBudget()
+        val slice = matchBudgetSliceMillis(20)
 
         val started = System.nanoTime()
-        repeat(20) { evaluatePhrase(condition, fields, budget) }
+        repeat(20) { evaluatePhrase(condition, fields, PhraseMatchBudget(slice)) }
         val elapsedMillis = (System.nanoTime() - started) / 1_000_000
 
         assertTrue("twenty conditions took ${elapsedMillis}ms", elapsedMillis < 1_000)
+    }
+
+    @Test
+    fun `a slow rule does not disable the rules after it`() {
+        // With one budget shared between them, the first condition spent it all and the second
+        // was abandoned even though its pattern is trivial. That made a rule's behaviour depend
+        // on where it happened to sit in the list, silently and on every notification.
+        val slice = matchBudgetSliceMillis(2)
+        val text = MatchableFields(text = "x".repeat(100_000))
+
+        evaluatePhrase(condition("(x+x+)+y", mode = MatchMode.REGEX), text, PhraseMatchBudget(slice))
+        val after = evaluatePhrase(condition("x+", mode = MatchMode.REGEX), text, PhraseMatchBudget(slice))
+
+        assertTrue(after.matched)
+        assertNull(after.failure)
+    }
+
+    @Test
+    fun `the slice shrinks with the rule count but never below the floor`() {
+        assertEquals(MATCH_BUDGET_MILLIS, matchBudgetSliceMillis(0))
+        assertEquals(MATCH_BUDGET_MILLIS, matchBudgetSliceMillis(1))
+        assertEquals(MATCH_BUDGET_MILLIS / 10, matchBudgetSliceMillis(10))
+        assertEquals(MIN_MATCH_BUDGET_MILLIS, matchBudgetSliceMillis(10_000))
     }
 
     @Test

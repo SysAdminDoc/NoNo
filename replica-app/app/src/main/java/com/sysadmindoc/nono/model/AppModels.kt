@@ -613,6 +613,9 @@ val muteModeCatalog: List<String> = listOf("Default", "Mute all sounds", "Aggres
 val muteImportanceCatalog: List<String> =
     listOf("All notifications", "All important notifications", "High and above", "Urgent only")
 
+/** What the Language dialog offers. Out here so it cannot drift from the seeded default. */
+val languageCatalog: List<String> = listOf("System default", "English", "Deutsch", "Español", "Français")
+
 /** The stored key behind the "Dismiss fixed notifications" row, which is not its title. */
 const val DISMISS_FIXED_SETTING = "Allow dismissing fixed notifications"
 

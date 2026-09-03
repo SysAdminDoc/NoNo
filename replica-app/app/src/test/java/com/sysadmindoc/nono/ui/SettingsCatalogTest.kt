@@ -2,6 +2,7 @@ package com.sysadmindoc.nono.ui
 
 import com.sysadmindoc.nono.model.DISMISS_FIXED_SETTING
 import com.sysadmindoc.nono.model.defaultSettings
+import com.sysadmindoc.nono.model.languageCatalog
 import com.sysadmindoc.nono.model.muteImportanceCatalog
 import com.sysadmindoc.nono.model.muteModeCatalog
 import com.sysadmindoc.nono.runtime.BackupCadence
@@ -26,6 +27,7 @@ class SettingsCatalogTest {
         "Notification history" to historyStorageCatalog,
         "History retention" to historyRetentionCatalog,
         "Theme" to themeCatalog(sdkInt = 31),
+        "Language" to languageCatalog,
         "Automatic backups" to BackupCadence.entries.map { it.label },
         "Widget count" to WidgetScope.entries.map { it.label },
     )

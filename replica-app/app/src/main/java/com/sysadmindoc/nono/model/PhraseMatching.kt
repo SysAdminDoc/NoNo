@@ -262,6 +262,26 @@ private interface PhraseMatcher {
  */
 const val MATCH_BUDGET_MILLIS = 250L
 
+/**
+ * The least any one rule gets, however many rules there are.
+ *
+ * A legitimate pattern over the capped 4KB finishes in microseconds, so this is generous. It
+ * exists so that someone with hundreds of rules does not end up with a slice so thin that normal
+ * matching starts failing.
+ */
+const val MIN_MATCH_BUDGET_MILLIS = 5L
+
+/**
+ * How long one rule out of [ruleCount] may spend.
+ *
+ * A budget shared by every rule bounds the total, but makes the outcome depend on the order rules
+ * happen to be in: one pathological pattern spends the lot and every later rule with a pattern is
+ * abandoned, silently and on every notification. Dividing it instead means a slow rule can only
+ * spend its own share, so it disables itself and nothing else.
+ */
+fun matchBudgetSliceMillis(ruleCount: Int): Long =
+    (MATCH_BUDGET_MILLIS / maxOf(1, ruleCount)).coerceAtLeast(MIN_MATCH_BUDGET_MILLIS)
+
 /** Thrown out of a running match. Carries no stack trace: it is control flow, not a fault. */
 private class MatchBudgetSpent : RuntimeException(null, null, false, false)
 

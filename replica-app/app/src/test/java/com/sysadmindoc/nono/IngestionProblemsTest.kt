@@ -103,8 +103,9 @@ class IngestionProblemsTest {
             StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.ALREADY_PRESENT),
             StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.FAILED),
             StatusMessages.acknowledgementOutcome(acknowledged = false),
-            StatusMessages.exportFailure(partialRemoved = true),
-            StatusMessages.exportFailure(partialRemoved = false),
+            StatusMessages.exportFailure(reachedTheFile = false, partialRemoved = false),
+            StatusMessages.exportFailure(reachedTheFile = true, partialRemoved = true),
+            StatusMessages.exportFailure(reachedTheFile = true, partialRemoved = false),
         )
         for (message in failures) {
             assertFalse("a failure must say something", message.isNullOrBlank())
@@ -141,14 +142,19 @@ class IngestionProblemsTest {
 
     @Test
     fun aFailedExportSaysWhatIsAtTheDestination() {
-        // "nothing on this device was changed" used to be said whatever happened, over a file the
-        // user can see sitting there half written.
-        val removed = StatusMessages.exportFailure(partialRemoved = true)
-        val left = StatusMessages.exportFailure(partialRemoved = false)
+        // Three outcomes, and the first is the one that matters most: a write that never opened
+        // the file left the user's existing export exactly as it was, and nothing should suggest
+        // otherwise or go near it.
+        val untouched = StatusMessages.exportFailure(reachedTheFile = false, partialRemoved = false)
+        val removed = StatusMessages.exportFailure(reachedTheFile = true, partialRemoved = true)
+        val left = StatusMessages.exportFailure(reachedTheFile = true, partialRemoved = false)
 
+        assertTrue(untouched, untouched.contains("unchanged"))
+        assertFalse("nothing was written, so nothing was removed", untouched.contains("removed"))
         assertTrue(removed, removed.contains("removed"))
-        assertFalse("a removed file must not be described as possibly incomplete", removed.contains("incomplete"))
-        assertTrue(left, left.contains("may be incomplete"))
+        assertFalse("a removed file cannot also be sitting there incomplete", removed.contains("incomplete"))
+        assertTrue(left, left.contains("incomplete"))
+        assertEquals("each outcome needs its own sentence", 3, listOf(untouched, removed, left).distinct().size)
     }
 
     @Test
@@ -180,6 +186,22 @@ class IngestionProblemsTest {
         assertEquals(
             "Nothing was imported. Notification history was not imported.",
             StatusMessages.importOutcome(added = 0, replaced = 0, channelReselections = 0),
+        )
+    }
+
+    @Test
+    fun keepingTheExistingRulesSaysHowManyTheFileHeld() {
+        // The mirror of the replace case. "Imported 0 new rules." over a file of five rules the
+        // user chose to skip describes an empty file rather than a decision they made.
+        assertEquals(
+            "Nothing was imported. 5 rules in the file already existed and were left alone. " +
+                "Notification history was not imported.",
+            StatusMessages.importOutcome(added = 0, replaced = 0, kept = 5),
+        )
+        assertEquals(
+            "Imported 2 new rules. 1 rule in the file already existed and was left alone. " +
+                "Notification history was not imported.",
+            StatusMessages.importOutcome(added = 2, replaced = 0, kept = 1),
         )
     }
 

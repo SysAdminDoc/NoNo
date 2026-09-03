@@ -94,6 +94,7 @@ import com.sysadmindoc.nono.model.OngoingCondition
 import com.sysadmindoc.nono.model.SummaryCondition
 import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.importanceCatalog
+import com.sysadmindoc.nono.model.languageCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
 import com.sysadmindoc.nono.model.metadataCondition
 import com.sysadmindoc.nono.model.muteImportanceCatalog
@@ -258,7 +259,7 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
         )
         Overlay.TRANSFER_PREVIEW -> TransferPreviewDialog(state, model)
         Overlay.THEME -> ChoiceDialog("Theme", themeCatalog(), state.settings["Theme"], model::dismissOverlay) { model.setSetting("Theme", it) }
-        Overlay.LANGUAGE -> ChoiceDialog("Language", listOf("System default", "English", "Deutsch", "Español", "Français"), state.settings["Language"], model::dismissOverlay) { model.setSetting("Language", it) }
+        Overlay.LANGUAGE -> ChoiceDialog("Language", languageCatalog, state.settings["Language"], model::dismissOverlay) { model.setSetting("Language", it) }
         Overlay.NONE -> Unit
     }
 }
@@ -491,7 +492,9 @@ private val scheduleDayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
 private fun ScheduleDialog(state: UiState, model: MainViewModel) {
     val schedule = state.draft.schedule
     DialogFrame("When this rule applies", model::dismissOverlay) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(max = 560.dp)) {
+        // Weighted for the same reason the two list dialogs are: unweighted, this claims the
+        // whole dialog in a short window and DialogFrame's Cancel measures to nothing.
+        Column(Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState()).heightIn(max = 560.dp)) {
             Row(
                 Modifier.fillMaxWidth()
                     .heightIn(min = 52.dp)

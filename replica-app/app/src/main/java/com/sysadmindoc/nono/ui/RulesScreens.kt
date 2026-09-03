@@ -785,9 +785,9 @@ fun PhraseEditorScreen(state: UiState, model: MainViewModel) {
         item {
             Text(
                 "Only the first ${"%,d".format(MAX_MATCHED_CHARS)} characters of each field are " +
-                    "searched, and every rule shares a quarter of a second to finish its " +
-                    "patterns. A pattern still working when that runs out is given up on, and a " +
-                    "rule never fires on a pattern that was given up on.",
+                    "searched, and each rule gets a share of a quarter of a second to finish its " +
+                    "patterns. A pattern still working when its share runs out is given up on, " +
+                    "and a rule never fires on a pattern that was given up on.",
                 color = SignalColors.Secondary,
                 style = MaterialTheme.typography.bodyMedium,
             )

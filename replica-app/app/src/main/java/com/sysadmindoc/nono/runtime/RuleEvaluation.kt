@@ -13,6 +13,7 @@ import com.sysadmindoc.nono.model.SignalRule
 import com.sysadmindoc.nono.model.SummaryCondition
 import com.sysadmindoc.nono.model.MatchableFields
 import com.sysadmindoc.nono.model.PhraseMatchBudget
+import com.sysadmindoc.nono.model.matchBudgetSliceMillis
 import com.sysadmindoc.nono.model.PhraseMatchFailure
 import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.displayValue
@@ -119,11 +120,13 @@ fun evaluateRules(
 ): RuleEvaluationTrace {
     val contentState = classifyNotificationContent(payload, sdkInt)
     val matchableFields = matchableNotificationFields(payload, sdkInt)
-    // One budget for the whole notification. Made here rather than inside each condition, because
-    // a budget per rule multiplies by however many rules the user has written.
-    val budget = PhraseMatchBudget()
+    // A share of the notification's budget each, rather than one budget they race for. Sharing
+    // one bounded the total but let a single pathological pattern spend it and leave every later
+    // rule abandoned; a slice bounds the total too and keeps the outcome independent of the order
+    // the rules happen to be in.
+    val slice = matchBudgetSliceMillis(rules.size)
     val conditions = rules.map { rule ->
-        evaluateRule(rule, payload, contentState, matchableFields, atEpochMillis, zone, budget)
+        evaluateRule(rule, payload, contentState, matchableFields, atEpochMillis, zone, PhraseMatchBudget(slice))
     }
     val matchingRules = rules.filter { rule ->
         conditions.first { it.ruleId == rule.id }.matched

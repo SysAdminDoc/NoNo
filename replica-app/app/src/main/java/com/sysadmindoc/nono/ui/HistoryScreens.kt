@@ -164,7 +164,11 @@ private fun SearchHistory(state: UiState, model: MainViewModel) {
             OutlinedTextField(
                 value = state.historySearch,
                 onValueChange = model::setHistorySearch,
-                placeholder = { Text("Search app, channel or group") },
+                // Names what is actually matched. Channel and group are stored as pseudonyms, so
+                // typing a channel's name can never find one; the value on a record's detail
+                // screen is the thing that can be searched for. The dropdown filters are the way
+                // to pick one without typing it.
+                placeholder = { Text("Search package name or a stored id") },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { keyboard?.hide(); model.closeHistorySearch() }) {
