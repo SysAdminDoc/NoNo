@@ -93,4 +93,15 @@ class PaletteContrastTest {
         assertTrue("light background must be lighter", luminance(LightPalette.background) > 0.5)
         assertTrue("dark background must be darker", luminance(DarkPalette.background) < 0.1)
     }
+
+    @Test
+    fun theSystemBarIconsAreLegibleOnTheScrimTheirThemeSupplies() {
+        // Both bars take their theme's background as their scrim, and the icons come from the
+        // platform: black where the app asks for light-appearance bars, white where it asks for
+        // dark. Those two choices used to be made independently, so the Light theme asked for dark
+        // icons over a scrim fixed at the dark palette's near-black. On a three-button device that
+        // is a row of controls you cannot see.
+        assertContrast("dark theme system bar icons", Color.White, DarkPalette.background, component)
+        assertContrast("light theme system bar icons", Color.Black, LightPalette.background, component)
+    }
 }

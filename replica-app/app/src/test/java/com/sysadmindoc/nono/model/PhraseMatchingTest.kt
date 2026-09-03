@@ -264,23 +264,6 @@ class PhraseMatchingTest {
     }
 
     @Test
-    fun `an ordinary pattern over a huge notification stays quick because the text is capped`() {
-        // (a+)+b is quadratic rather than catastrophic on this JDK: about 120ms over 4KB, and
-        // roughly a minute over the 100KB an app is free to send. The cap is what bounds it, and
-        // the answer is a real one, so no failure is reported.
-        val condition = condition("(a+)+b", mode = MatchMode.REGEX)
-        val fields = MatchableFields(text = "a".repeat(100_000))
-
-        val started = System.nanoTime()
-        val result = evaluatePhrase(condition, fields)
-        val elapsedMillis = (System.nanoTime() - started) / 1_000_000
-
-        assertFalse(result.matched)
-        assertNull(result.failure)
-        assertTrue("took ${elapsedMillis}ms", elapsedMillis < 1_000)
-    }
-
-    @Test
     fun `a phrase that does match still matches when another one ran out of budget`() {
         val condition = condition("(x+x+)+y", "xxx", mode = MatchMode.REGEX)
         val fields = MatchableFields(text = "x".repeat(100_000))
@@ -299,6 +282,9 @@ class PhraseMatchingTest {
         assertTrue(evaluatePhrase(condition(tail, fields = setOf(MatchField.BIG_TEXT)), fields).matched)
     }
 
+    // No test asserts that a merely slow pattern finishes *without* the deadline firing. (a+)+b
+    // over the capped 4KB measured around 120ms against a 250ms budget on this machine, which is
+    // close enough that the answer changes under load.
     @Test
     fun `text past the cap is not searched`() {
         val fields = MatchableFields(bigText = "b".repeat(MAX_MATCHED_CHARS) + "arrives at last")

@@ -2,6 +2,9 @@ package com.sysadmindoc.nono.ui
 
 import android.app.Activity
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -9,11 +12,13 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -129,6 +134,17 @@ fun themeCatalog(sdkInt: Int = Build.VERSION.SDK_INT): List<String> = buildList 
 
 const val DYNAMIC_THEME = "Match my wallpaper"
 
+/**
+ * A bar style that reads [dark] rather than the system's night mode.
+ *
+ * `SystemBarStyle.light(scrim, darkScrim)` picks its scrim from the same predicate it uses for the
+ * icon appearance, so passing [scrim] twice makes both halves of the answer come from the app's
+ * theme setting. Someone running the app in Light on a phone in dark mode gets a light bar with
+ * dark icons, which is what the rest of the screen looks like.
+ */
+internal fun systemBarStyle(dark: Boolean, scrim: Int): SystemBarStyle =
+    if (dark) SystemBarStyle.dark(scrim) else SystemBarStyle.light(scrim, scrim)
+
 @Composable
 fun SignalTheme(theme: String = "Dark", content: @Composable () -> Unit) {
     val dark = when (theme) {
@@ -166,6 +182,20 @@ fun SignalTheme(theme: String = "Dark", content: @Composable () -> Unit) {
             surfaceVariant = palette.surfaceSelected, onSurfaceVariant = palette.secondary,
             secondary = palette.ruleBlue, outline = palette.controlOutline, error = palette.error,
         )
+    }
+    // The system bars follow the app's own theme, not the system's. Their scrim is set here rather
+    // than once in onCreate, because a scrim fixed at the dark palette's near-black left the Light
+    // theme asking for dark icons on a near-black bar, which on a three-button device is close to
+    // invisible. Window.setNavigationBarColor is a no-op at this targetSdk, so the scrim has to go
+    // through enableEdgeToEdge, which is safe to call again.
+    val componentActivity = view.context as? ComponentActivity
+    val barScrim = palette.background.toArgb()
+    DisposableEffect(componentActivity, dark, barScrim) {
+        componentActivity?.enableEdgeToEdge(
+            statusBarStyle = systemBarStyle(dark, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = systemBarStyle(dark, barScrim),
+        )
+        onDispose {}
     }
     SideEffect {
         SignalColors.apply(palette)

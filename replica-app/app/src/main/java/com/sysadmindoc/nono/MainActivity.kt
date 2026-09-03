@@ -21,6 +21,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sysadmindoc.nono.audit.readAuditState
 import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
+import androidx.compose.ui.graphics.toArgb
+import com.sysadmindoc.nono.ui.DarkPalette
 import com.sysadmindoc.nono.ui.SignalApp
 import com.sysadmindoc.nono.ui.SignalTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,9 +68,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The first frame only. The theme setting has not been read from the store yet, so this
+        // uses the default, and SignalTheme re-applies both bars from the palette it resolves.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.rgb(10, 11, 13)),
+            navigationBarStyle = SystemBarStyle.dark(DarkPalette.background.toArgb()),
         )
         requestedAuditState.value = readAuditState(intent)
         requestedRuleId.value = intent.getLongExtra(EXTRA_RULE_ID, NO_RULE)
