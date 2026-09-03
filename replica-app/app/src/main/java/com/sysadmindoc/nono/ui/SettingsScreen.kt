@@ -83,6 +83,7 @@ import com.sysadmindoc.nono.model.CaptureSelfTestStatus
 import com.sysadmindoc.nono.model.RootTab
 import com.sysadmindoc.nono.model.Route
 import com.sysadmindoc.nono.model.UiState
+import com.sysadmindoc.nono.model.DISMISS_FIXED_SETTING
 import com.sysadmindoc.nono.model.counted
 import com.sysadmindoc.nono.data.SignalPreferences
 import com.sysadmindoc.nono.runtime.APP_LOCK_SETTING
@@ -132,7 +133,16 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
         item { SettingsSectionLabel("BEHAVIOR") }
         item {
             SettingsGroup {
-                PreferenceRow(Icons.AutoMirrored.Rounded.VolumeOff, "Mute mode", value = state.settings["Mute mode"], onClick = { model.showOverlay(Overlay.MUTE_MODE) })
+                // All three say the same thing, because all three are the same thing. Two of them
+                // used to accept and store a choice with nothing behind it, beside a sibling that
+                // was honest about it.
+                PreferenceRow(
+                    Icons.AutoMirrored.Rounded.VolumeOff,
+                    "Mute mode",
+                    value = state.settings["Mute mode"],
+                    unavailable = NO_ACTION_ENGINE,
+                    onClick = { model.showOverlay(Overlay.MUTE_MODE) },
+                )
                 SignalDivider()
                 PersistentSwitchRow(
                     state,
@@ -141,9 +151,16 @@ fun SettingsScreen(state: UiState, model: MainViewModel) {
                     "Dismiss fixed notifications",
                     "Off in preview-only builds.",
                     unavailable = NO_ACTION_ENGINE,
+                    settingKey = DISMISS_FIXED_SETTING,
                 )
                 SignalDivider()
-                PreferenceRow(Icons.Rounded.Tune, "Mute importance", value = state.settings["Mute importance"], onClick = { model.showOverlay(Overlay.MUTE_IMPORTANCE) })
+                PreferenceRow(
+                    Icons.Rounded.Tune,
+                    "Mute importance",
+                    value = state.settings["Mute importance"],
+                    unavailable = NO_ACTION_ENGINE,
+                    onClick = { model.showOverlay(Overlay.MUTE_IMPORTANCE) },
+                )
             }
         }
 
@@ -411,9 +428,13 @@ private fun PersistentSwitchRow(
     title: String,
     summary: String,
     unavailable: String? = null,
+    settingKey: String = title,
 ) {
+    // The stored key is given separately from the displayed title. Keying by the title meant the
+    // "Dismiss fixed notifications" row read and wrote a preference nothing seeded, while the
+    // seeded "Allow dismissing fixed notifications" sat there unread.
     val enabled = unavailable == null
-    val checked = enabled && state.settings[title] == "On"
+    val checked = enabled && state.settings[settingKey] == "On"
     Row(
         Modifier
             .fillMaxWidth()
@@ -422,7 +443,7 @@ private fun PersistentSwitchRow(
                 value = checked,
                 enabled = enabled,
                 role = Role.Switch,
-                onValueChange = { model.setSetting(title, if (it) "On" else "Off") },
+                onValueChange = { model.setSetting(settingKey, if (it) "On" else "Off") },
             )
             .semantics {
                 stateDescription = if (checked) "On" else "Off"

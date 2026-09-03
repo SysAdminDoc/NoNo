@@ -95,6 +95,8 @@ import com.sysadmindoc.nono.model.displayValue
 import com.sysadmindoc.nono.model.importanceCatalog
 import com.sysadmindoc.nono.model.matchTypeCatalog
 import com.sysadmindoc.nono.model.metadataCondition
+import com.sysadmindoc.nono.model.muteImportanceCatalog
+import com.sysadmindoc.nono.model.muteModeCatalog
 import com.sysadmindoc.nono.model.notificationCategoryCatalog
 import com.sysadmindoc.nono.runtime.historyRetentionCatalog
 import com.sysadmindoc.nono.runtime.historyStorageCatalog
@@ -222,8 +224,8 @@ fun SignalOverlay(state: UiState, model: MainViewModel) {
             }
             MenuDialog("History metadata filters", items, model::dismissOverlay)
         }
-        Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", listOf("Default", "Mute all sounds", "Aggressive"), state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
-        Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", listOf("All important notifications", "High and above", "Urgent only"), state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
+        Overlay.MUTE_MODE -> ChoiceDialog("Mute mode", muteModeCatalog, state.settings["Mute mode"], model::dismissOverlay) { model.setSetting("Mute mode", it) }
+        Overlay.MUTE_IMPORTANCE -> ChoiceDialog("Mute importance level", muteImportanceCatalog, state.settings["Mute importance"], model::dismissOverlay) { model.setSetting("Mute importance", it) }
         Overlay.HISTORY_STORAGE -> ChoiceDialog("Notification history", historyStorageCatalog, state.settings["Notification history"], model::dismissOverlay) { model.setSetting("Notification history", it) }
         Overlay.SCHEDULE -> ScheduleDialog(state, model)
         Overlay.HISTORY_RETENTION -> ChoiceDialog("Keep history for", historyRetentionCatalog, state.settings["History retention"], model::dismissOverlay) { model.setSetting("History retention", it) }

@@ -601,6 +601,21 @@ data class UiState(
     fun resetHistoryWindow(): UiState = copy(historyLimit = HISTORY_PAGE_SIZE)
 }
 
+/** What the Mute mode dialog offers. */
+val muteModeCatalog: List<String> = listOf("Default", "Mute all sounds", "Aggressive")
+
+/**
+ * What the Mute importance dialog offers.
+ *
+ * "All notifications" is the seeded default and belongs here: without it the dialog opened with
+ * nothing selected and showed a value the user could not choose again if they moved off it.
+ */
+val muteImportanceCatalog: List<String> =
+    listOf("All notifications", "All important notifications", "High and above", "Urgent only")
+
+/** The stored key behind the "Dismiss fixed notifications" row, which is not its title. */
+const val DISMISS_FIXED_SETTING = "Allow dismissing fixed notifications"
+
 val defaultSettings = mapOf(
     "Mute mode" to "Mute all sounds",
     "Mute importance" to "All notifications",
