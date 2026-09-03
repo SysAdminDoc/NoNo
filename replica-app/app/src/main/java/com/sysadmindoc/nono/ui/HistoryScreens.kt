@@ -60,6 +60,7 @@ import com.sysadmindoc.nono.model.HistoryLoadState
 import com.sysadmindoc.nono.model.HistoryRecord
 import com.sysadmindoc.nono.model.categoryLabel
 import com.sysadmindoc.nono.model.contentStateLabel
+import com.sysadmindoc.nono.model.counted
 import com.sysadmindoc.nono.model.historyFilterCatalog
 import com.sysadmindoc.nono.model.GroupSummaryOrigin
 import com.sysadmindoc.nono.model.InsightHourCount
@@ -176,14 +177,50 @@ private fun SearchHistory(state: UiState, model: MainViewModel) {
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             )
         }
-        if (state.history.isEmpty()) {
-            item { HistoryStatePanel("No matching notifications", "Try another search term.", Icons.Rounded.Search) }
-        } else {
-            item {
-                SignalGroupedSurface(Modifier.fillMaxWidth()) {
-                    state.history.forEachIndexed { index, item ->
-                        HistoryRecordRow(item, state.rules) { model.showHistoryOverlay(item.id) }
-                        if (index != state.history.lastIndex) SignalDivider()
+        // The same three states the main list distinguishes. Branching on emptiness alone said
+        // "No matching notifications · Try another search term" while the query was still running
+        // and again when the store could not be read at all, with no way to try again.
+        when (state.historyLoadState) {
+            HistoryLoadState.LOADING -> item {
+                HistoryStatePanel("Searching", "Reading the local metadata store.", Icons.Rounded.Search)
+            }
+            HistoryLoadState.ERROR -> item {
+                Column {
+                    HistoryStatePanel(
+                        "History is unavailable",
+                        state.historyError ?: "The local metadata store could not be read.",
+                        Icons.Rounded.Info,
+                    )
+                    SignalOutlineButton("Retry", model::retryHistory, Modifier.fillMaxWidth())
+                }
+            }
+            HistoryLoadState.READY -> if (state.history.isEmpty()) {
+                item { HistoryStatePanel("No matching notifications", "Try another search term.", Icons.Rounded.Search) }
+            } else {
+                item {
+                    Text(
+                        // Otherwise a search with three hundred hits shows twenty-five and implies
+                        // that is all of them.
+                        "${state.history.size} of ${counted(state.historyFilteredCount, "matching record")}",
+                        color = SignalColors.Secondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                item {
+                    SignalGroupedSurface(Modifier.fillMaxWidth()) {
+                        state.history.forEachIndexed { index, item ->
+                            HistoryRecordRow(item, state.rules) { model.showHistoryOverlay(item.id) }
+                            if (index != state.history.lastIndex) SignalDivider()
+                        }
+                    }
+                }
+                if (state.hasMoreHistory) {
+                    item {
+                        SignalOutlineButton(
+                            "Load more (${state.history.size} of ${state.historyFilteredCount})",
+                            model::loadMoreHistory,
+                            Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }
