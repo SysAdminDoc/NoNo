@@ -30,8 +30,29 @@ object StatusMessages {
     fun deleteOutcomeWithLostUndo(): String =
         "Record deleted. The record deleted just before it could not be put back."
 
-    fun restoreOutcome(restored: Boolean): String? =
-        if (restored) null else "That record could not be restored; it is back on this device."
+    /** What a restore did. Three outcomes, because two of them used to share one sentence. */
+    enum class RestoreOutcome {
+        /** The row went back. */
+        RESTORED,
+
+        /** The insert found the key already present, which means the app reposted it. */
+        ALREADY_PRESENT,
+
+        /** The insert threw. The record is not on the device and nothing is going to bring it back. */
+        FAILED,
+    }
+
+    /**
+     * @return null when there is nothing to say, which is the case for a restore that worked.
+     *
+     * The collision and the exception used to be the same `false` and so the same sentence, which
+     * told somebody whose disk had just refused the write that their record was back.
+     */
+    fun restoreOutcome(outcome: RestoreOutcome): String? = when (outcome) {
+        RestoreOutcome.RESTORED -> null
+        RestoreOutcome.ALREADY_PRESENT -> "That record is already back on this device."
+        RestoreOutcome.FAILED -> "That record could not be restored."
+    }
 
     fun acknowledgementOutcome(acknowledged: Boolean): String? =
         if (acknowledged) null else "Those counts could not be dismissed."

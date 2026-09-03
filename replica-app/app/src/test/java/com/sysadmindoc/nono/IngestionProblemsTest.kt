@@ -100,7 +100,8 @@ class IngestionProblemsTest {
             StatusMessages.starOutcome(updated = false, starred = true),
             StatusMessages.starOutcome(updated = false, starred = false),
             StatusMessages.deleteOutcome(removed = false),
-            StatusMessages.restoreOutcome(restored = false),
+            StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.ALREADY_PRESENT),
+            StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.FAILED),
             StatusMessages.acknowledgementOutcome(acknowledged = false),
             StatusMessages.exportFailure(partialRemoved = true),
             StatusMessages.exportFailure(partialRemoved = false),
@@ -120,8 +121,22 @@ class IngestionProblemsTest {
         assertEquals("No longer kept.", StatusMessages.starOutcome(updated = true, starred = false))
         assertEquals("Record deleted.", StatusMessages.deleteOutcome(removed = true))
         // Silence is the success case for these two: nothing was asked for, so nothing is said.
-        assertEquals(null, StatusMessages.restoreOutcome(restored = true))
+        assertEquals(null, StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.RESTORED))
         assertEquals(null, StatusMessages.acknowledgementOutcome(acknowledged = true))
+    }
+
+    @Test
+    fun aRestoreThatThrewIsNotReportedAsARecordThatIsBack() {
+        // The DAO returns false both when the key was already present (the app reposted it, so
+        // the record genuinely is back) and, through runCatching, when the insert threw (the
+        // record is gone). One sentence covered both and told the second case the opposite of
+        // the truth. This is why the old single-string assertion had to change.
+        val collision = StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.ALREADY_PRESENT)
+        val failure = StatusMessages.restoreOutcome(StatusMessages.RestoreOutcome.FAILED)
+
+        assertEquals("That record is already back on this device.", collision)
+        assertEquals("That record could not be restored.", failure)
+        assertFalse("a failure must not claim the record is present: $failure", failure!!.contains("back on this device"))
     }
 
     @Test

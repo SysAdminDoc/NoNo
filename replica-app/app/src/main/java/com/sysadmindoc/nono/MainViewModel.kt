@@ -1379,10 +1379,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     // A plain insert, not an upsert: a restore has to bring the row back as it
                     // was. If the app reposted that notification while the snackbar was up, the
                     // update path would keep the live row's identity and drop the star instead.
-                    val restored = runCatching {
-                        historyDatabase.notificationDao().restore(record)
-                    }.getOrDefault(false)
-                    _state.value = _state.value.withMessage(StatusMessages.restoreOutcome(restored))
+                    // The three outcomes are kept apart here. Collapsing the exception into the
+                    // same false the key collision returns is how a disk error came to report
+                    // that the record was back.
+                    val outcome = runCatching {
+                        if (historyDatabase.notificationDao().restore(record)) {
+                            StatusMessages.RestoreOutcome.RESTORED
+                        } else {
+                            StatusMessages.RestoreOutcome.ALREADY_PRESENT
+                        }
+                    }.getOrDefault(StatusMessages.RestoreOutcome.FAILED)
+                    _state.value = _state.value.withMessage(StatusMessages.restoreOutcome(outcome))
                 }
             }
             UndoableAction.RESTORE_DELETED_RULES -> {
