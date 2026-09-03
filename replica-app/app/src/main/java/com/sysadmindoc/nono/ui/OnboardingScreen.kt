@@ -106,9 +106,27 @@ fun OnboardingScreen(state: UiState, model: MainViewModel) {
                 icon = Icons.AutoMirrored.Rounded.OpenInNew,
             )
         }
+        // Declining used to hold the user on this screen for good: no Settings, no theme, no
+        // importing rules, nothing to read. The rest of the app already explains the missing
+        // capability in place, through the banner on the Rules tab, so the gate was stricter than
+        // anything needed it to be.
+        if (state.onboardingStep < 1) {
+            item {
+                SignalOutlineButton(
+                    "Not now",
+                    model::completeOnboarding,
+                    Modifier.fillMaxWidth(),
+                )
+            }
+        }
         item {
             Text(
-                "Nothing is executed. You can change access at any time.",
+                if (state.onboardingStep >= 1) {
+                    "Nothing is executed. You can change access at any time."
+                } else {
+                    "Nothing is executed. Without notification access NoNo captures nothing and no " +
+                        "rule can match, but you can look around and turn it on later."
+                },
                 color = SignalColors.Muted,
                 style = MaterialTheme.typography.bodyMedium,
             )
