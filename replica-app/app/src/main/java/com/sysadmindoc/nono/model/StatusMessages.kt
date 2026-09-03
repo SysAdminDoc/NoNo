@@ -36,6 +36,20 @@ object StatusMessages {
     fun acknowledgementOutcome(acknowledged: Boolean): String? =
         if (acknowledged) null else "Those counts could not be dismissed."
 
+    /**
+     * A write to a file the user chose, which is the one write whose failure leaves evidence
+     * outside the app.
+     *
+     * A stream that fails part way through has already put bytes at the destination. Saying
+     * nothing was changed would be true of this device and false of the file the user is looking
+     * at, so the sentence depends on whether the unfinished document could be removed.
+     */
+    fun exportFailure(partialRemoved: Boolean): String = if (partialRemoved) {
+        "Export failed. The unfinished file was removed and nothing on this device was changed."
+    } else {
+        "Export failed. Nothing on this device was changed, but the file at the destination may be incomplete."
+    }
+
     /** Every sentence above that claims a write succeeded. Used to prove failures never reach one. */
     val successPhrases: List<String> = listOf(
         "Kept until you unstar it.",

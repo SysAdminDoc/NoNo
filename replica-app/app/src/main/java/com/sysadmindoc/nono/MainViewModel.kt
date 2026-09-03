@@ -9,6 +9,7 @@ import android.content.ClipboardManager
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.DocumentsContract
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -1004,11 +1005,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
+            val resolver = getApplication<Application>().contentResolver
             val result = runCatching {
-                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { output ->
+                // "wt" and not the default "w". The picker's overwrite path hands back the
+                // existing document, and "w" is not required to truncate it, so a shorter export
+                // over a longer file could leave the old tail behind and produce a rule file that
+                // later fails to import. A provider that does not understand "wt" refuses here,
+                // which is a reported failure rather than a silently corrupt file.
+                resolver.openOutputStream(uri, "wt")?.use { output ->
                     output.write(payload.toByteArray(Charsets.UTF_8))
                 } ?: error("The selected location could not be opened.")
             }
+            // A failure part way through leaves a truncated document at the destination. Saying
+            // nothing was changed would be a lie about a file the user can see, so it goes the
+            // same way the scheduled backup's partial writes do.
+            val partialRemoved = result.isFailure &&
+                runCatching { DocumentsContract.deleteDocument(resolver, uri) }.getOrDefault(false)
             withContext(Dispatchers.Main.immediate) {
                 _state.value = _state.value.withMessage(
                     result.fold(
@@ -1021,7 +1033,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 "Encrypted rules exported. Notification history was not included."
                             }
                         },
-                        { "Export failed; nothing on this device was changed." },
+                        { StatusMessages.exportFailure(partialRemoved) },
                     ),
                 )
             }

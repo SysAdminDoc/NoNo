@@ -102,6 +102,8 @@ class IngestionProblemsTest {
             StatusMessages.deleteOutcome(removed = false),
             StatusMessages.restoreOutcome(restored = false),
             StatusMessages.acknowledgementOutcome(acknowledged = false),
+            StatusMessages.exportFailure(partialRemoved = true),
+            StatusMessages.exportFailure(partialRemoved = false),
         )
         for (message in failures) {
             assertFalse("a failure must say something", message.isNullOrBlank())
@@ -120,5 +122,17 @@ class IngestionProblemsTest {
         // Silence is the success case for these two: nothing was asked for, so nothing is said.
         assertEquals(null, StatusMessages.restoreOutcome(restored = true))
         assertEquals(null, StatusMessages.acknowledgementOutcome(acknowledged = true))
+    }
+
+    @Test
+    fun aFailedExportSaysWhatIsAtTheDestination() {
+        // "nothing on this device was changed" used to be said whatever happened, over a file the
+        // user can see sitting there half written.
+        val removed = StatusMessages.exportFailure(partialRemoved = true)
+        val left = StatusMessages.exportFailure(partialRemoved = false)
+
+        assertTrue(removed, removed.contains("removed"))
+        assertFalse("a removed file must not be described as possibly incomplete", removed.contains("incomplete"))
+        assertTrue(left, left.contains("may be incomplete"))
     }
 }
