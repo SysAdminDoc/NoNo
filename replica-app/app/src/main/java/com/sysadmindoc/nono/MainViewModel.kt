@@ -1746,8 +1746,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _state.value = _state.value.withMessage("Could not save the backup folder.")
                 return@launch
             }
-            _state.value = _state.value.copy(backupFolderLabel = label)
-                .withMessage("Backup folder set to $label.")
+            // The mirror of the warning setSetting gives when a cadence is chosen with no folder.
+            // Picking the folder first left the user with a confirmed folder, a status line still
+            // reading "No backup has run yet", and nothing saying what was left to do.
+            val cadenceNow = backupCadence(_state.value.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING])
+            _state.value = _state.value.copy(backupFolderLabel = label).withMessage(
+                if (cadenceNow.enabled) {
+                    "Backup folder set to $label."
+                } else {
+                    "Backup folder set to $label. Choose Daily or Weekly to start backups."
+                },
+            )
             // Handed back only once the replacement is stored. Holding on to it would keep this
             // app's access to a folder the user has stopped pointing it at, and the platform caps
             // how many of those an app may hold at once.
@@ -1756,9 +1765,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Only after the write lands: the worker reads the folder back out of this store, and
             // starting it first is how a run reports "No backup folder is selected" about the
             // folder the user just picked.
-            val cadence = backupCadence(_state.value.settings[SignalPreferences.AUTOMATIC_BACKUP_SETTING])
-            if (cadence.enabled) {
-                BackupScheduler.apply(app, cadence)
+            if (cadenceNow.enabled) {
+                BackupScheduler.apply(app, cadenceNow)
                 BackupScheduler.runOnce(app)
             }
         }
