@@ -213,12 +213,28 @@ cd replica-app
 
 The app targets SDK 36 today. The behavior changes below are gated on targeting Android 17, so
 none of them is in force yet; this is the check done before that move rather than after it. The
-list was read from the Android 17 behavior-changes page on **2026-08-31** and each entry was
-checked against the code rather than assumed. Recheck it when the target actually moves, and write
-the date you read it.
+list was read from the Android 17 behavior-changes page on **2026-08-31**, and read again on
+**2026-09-05**, which added the Content Capture entry below that the first pass had missed. Each
+entry was checked against the code rather than assumed. Recheck it when the target actually moves,
+and write the date you read it.
 
 Changes that would need something from this app: none. What was checked, and why each one is inert
 here:
+
+- **`setContentCaptureEnabled` no longer disables Content Capture.** Worth stating precisely,
+  because it is easy to read as a protection being taken away. This app never called that method,
+  so it loses nothing. What is true, and was true on every Android version this app has ever run
+  on, is that the only control it has over its own screen content is `FLAG_SECURE`, and it applies
+  that while the app lock is on and not otherwise. So with the app lock off, NoNo's screens can be
+  read by the platform's content capture and by anything that takes a screenshot.
+
+  **The posture, decided on 2026-09-05: leave it as it is, and revisit at the target bump.**
+  Applying `FLAG_SECURE` unconditionally would stop every user taking a screenshot of their own
+  rules to ask a question about them, which is a real loss for a protection nobody asked for; and
+  the honest place to offer it is a setting of its own rather than as a side effect of the app
+  lock. Nothing about this changes when the target moves, because the app never used the method
+  being deprecated, so the decision is not urgent and should be made with the rest of the
+  targetSdk 37 move rather than ahead of it.
 
 - **RemoteViews memory limit.** The home-screen widget is the only RemoteViews this app builds.
   `widget_signal_status.xml` is three `TextView`s and it sets text only, so no bitmap or icon ever
