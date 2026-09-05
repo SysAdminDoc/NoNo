@@ -9,6 +9,29 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageChops, ImageEnhance, ImageOps
 
+# scripts/ -> replica-app/ -> repository root.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def recorded_path(path: Path | None) -> str | None:
+    """How a file is named inside a metrics record.
+
+    Absolute paths pin a record to the machine that produced it: the committed metrics named a
+    hostname, a user account and a project name from a workstation this repository has not been
+    built on for a long time, which is both noise and a small leak. Relative to the repository
+    root the record says the same thing and keeps saying it anywhere the repo is checked out.
+
+    A path outside the repository is kept absolute rather than turned into a chain of parent
+    steps, because at that point the location genuinely is the useful information.
+    """
+    if path is None:
+        return None
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return resolved.as_posix()
+
 
 def load_mask(path: Path | None, size: tuple[int, int]) -> np.ndarray:
     mask = np.ones((size[1], size[0]), dtype=bool)
@@ -77,8 +100,8 @@ def main() -> int:
     if not dimensions_match:
         metrics = {
             "screen_id": args.screen_id,
-            "baseline": str(args.baseline.resolve()),
-            "current": str(args.current.resolve()),
+            "baseline": recorded_path(args.baseline),
+            "current": recorded_path(args.current),
             "baseline_dimensions": list(baseline.size),
             "current_dimensions": list(current.size),
             "dimensions_match": False,
@@ -125,9 +148,9 @@ def main() -> int:
     result = "PASS" if pixel_similarity >= args.threshold else "FAIL_THRESHOLD"
     metrics = {
         "screen_id": args.screen_id,
-        "baseline": str(args.baseline.resolve()),
-        "current": str(args.current.resolve()),
-        "mask": str(args.mask.resolve()) if args.mask else None,
+        "baseline": recorded_path(args.baseline),
+        "current": recorded_path(args.current),
+        "mask": recorded_path(args.mask),
         "baseline_dimensions": list(baseline.size),
         "current_dimensions": list(current.size),
         "dimensions_match": True,
