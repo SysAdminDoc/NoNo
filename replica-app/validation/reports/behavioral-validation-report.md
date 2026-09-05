@@ -36,9 +36,20 @@ Totals: 7 fully validated, 4 partially validated, 0 not implemented.
 
 ## Lifecycle and persistence evidence
 
-- Onboarding completion, saved rule, and enabled/disabled state survived force-stop/relaunch. Evidence: `lifecycle-populated-relaunch.xml`, `lifecycle-disabled-relaunch.xml`, and the corresponding screenshots under `validation/current`.
-- A persisted Settings switch changed from checked to unchecked and remained unchecked after a cold relaunch. Evidence: `settings-persistence-before.xml` and `settings-persistence-after.xml`.
-- The real capability path re-queried Android state on resume and automatically reached the Rules home after all three grants. Evidence: `permission-step-0.xml`, `permission-notification-dialog.xml`, `permission-battery-dialog.xml`, `permission-listener-settings.xml`, `permission-listener-warning.xml`, and `permission-complete-home.xml`.
+The sixteen view-hierarchy dumps this section used to cite were removed on 2026-09-05. They were
+captured in one run on 2026-08-01, before the app was renamed, so thirteen of them recorded the
+retired identity in their own captured text ("Welcome to Signal Rules"), and the onboarding they
+captured has since changed. Evidence that names a screen the app no longer draws is worse than no
+evidence, and unlike the audit package under `app-audit/` these are captures of the replica and can
+simply be taken again. Regenerate them with `scripts/run-full-validation.ps1 -Serial <serial>`
+against a device this repo owns, then restore the citations below.
+
+- Onboarding completion, saved rule, and enabled/disabled state survived force-stop/relaunch.
+  Observed 2026-08-29; capture pending regeneration.
+- A persisted Settings switch changed from checked to unchecked and remained unchecked after a cold
+  relaunch. Observed 2026-08-29; capture pending regeneration.
+- The real capability path re-queried Android state on resume and automatically reached the Rules
+  home after all three grants. Observed 2026-08-29; capture pending regeneration.
 - Temporary notification access, notification permission, and battery exemption granted for this test were removed afterward. Replica data was reset; the original audited app was not modified.
 - Portrait/landscape capture restored the prior `free` user-rotation mode and `accelerometer_rotation=1`.
 
