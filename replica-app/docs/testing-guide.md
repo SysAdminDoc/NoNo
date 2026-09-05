@@ -17,7 +17,7 @@ The visual gate is expected to return nonzero for the eight documented identity/
 
 ## Debug state reproduction
 
-Use `scripts\launch-replica.ps1 -Serial emulator-5554 -State SCREEN_ID`. Valid IDs are listed in `test-data\states\audit-state-map.csv`. The extra is consumed only when `BuildConfig.DEBUG` is true.
+Use `scripts\launch-replica.ps1 -Serial emulator-5554 -State SCREEN_ID`. Valid IDs are listed in `test-data/states/audit-state-map.csv`. The extra is consumed only when `BuildConfig.DEBUG` is true.
 
 To capture one state:
 
@@ -40,7 +40,7 @@ To compare it:
 - Mask definitions and reasons: `validation/masks`
 - Stable reports: `validation/reports`
 - Timestamped runner logs: `validation/logs`
-- Gradle test/lint HTML: `app\build\reports`
+- Gradle test/lint HTML: `app/build/reports`
 
 ## Safe reset
 

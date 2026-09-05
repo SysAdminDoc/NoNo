@@ -104,7 +104,7 @@ From the `replica-app` directory of your clone:
 .\scripts\launch-replica.ps1 -Serial emulator-5554
 ```
 
-That produces `app\build\outputs\apk\debug\app-debug.apk`, which is for development only.
+That produces `app/build/outputs/apk/debug/app-debug.apk`, which is for development only.
 
 ## Release builds
 
@@ -322,9 +322,9 @@ regulatory deadline is worth nothing without the date it was true.
 Android's notification manager, waits for the service callback, and confirms that neither History
 nor the ingestion counters changed.
 
-The visual command intentionally returns a nonzero result while any configured threshold miss remains. See `validation\reports\visual-validation-report.md` and `validation\reports\final-coverage-report.md` before interpreting that exit code.
+The visual command intentionally returns a nonzero result while any configured threshold miss remains. See `validation/reports/visual-validation-report.md` and `validation/reports/final-coverage-report.md` before interpreting that exit code.
 
-Gradle dependency verification is enabled through `gradle\verification-metadata.xml`, which
+Gradle dependency verification is enabled through `gradle/verification-metadata.xml`, which
 records SHA-256 hashes for the resolved artifacts. Refresh it only after reviewing the dependency
 diff with `gradlew --write-verification-metadata sha256 help`; PGP key verification is not enabled
 until the project owner reviews and approves the required signer keys. Run
@@ -353,7 +353,7 @@ Every native audit capture can be opened through a debug-only intent extra:
 .\scripts\launch-replica.ps1 -Serial emulator-5554 -State 062_rule_builder_complete
 ```
 
-The complete 76-state mapping is in `test-data\states\audit-state-map.csv`. Release builds do not accept this QA override.
+The complete 76-state mapping is in `test-data/states/audit-state-map.csv`. Release builds do not accept this QA override.
 
 ## Clean-room and asset notes
 
@@ -423,8 +423,8 @@ is tracked in the maintainer's working notes, which are not part of this reposit
 
 ## Documentation
 
-- `docs\rebuild-plan.md` covers scope and implementation order
-- `docs\audit-traceability-matrix.csv` maps all 88 audit rows to implementation and evidence
-- `docs\architecture.md` documents the clean-room architecture
-- `docs\testing-guide.md` contains the repeatable QA procedure
-- `validation\reports\final-coverage-report.md` records measured outcomes and remaining gaps
+- `docs/rebuild-plan.md` covers scope and implementation order
+- `docs/audit-traceability-matrix.csv` maps all 88 audit rows to implementation and evidence
+- `docs/architecture.md` documents the clean-room architecture
+- `docs/testing-guide.md` contains the repeatable QA procedure
+- `validation/reports/final-coverage-report.md` records measured outcomes and remaining gaps
