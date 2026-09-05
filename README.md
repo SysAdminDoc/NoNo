@@ -40,9 +40,13 @@ honest about the rows that do nothing in this build, the capture row is a switch
 something that looks like it opens a screen, and declining notification access no longer traps you
 on the first screen. Counts read as English when there is one of something.
 
+Versions 1.4.1, 1.5.0 and 1.5.1 below were never published on their own. They were built and
+tested, and everything they added first reached anyone inside 1.6.0. They are described separately
+because that is the version each change was made under.
+
 Version 1.5.1 is a small fix. Type a filter in the action chooser, rotate the phone, and what you
-typed is still there; it used to clear itself while the rest of the screen came back. This release
-also records the first check of the no-backup boundary against a real device, described in the app
+typed is still there; it used to clear itself while the rest of the screen came back. It also
+records the first check of the no-backup boundary against a real device, described in the app
 README.
 
 Version 1.5.0 added five things. Explore leads to an Insights screen that counts what History already

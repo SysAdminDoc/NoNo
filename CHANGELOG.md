@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Not every version below was published. Three of them — **1.4.1, 1.5.0 and 1.5.1** — were built,
+tested and recorded here, but never tagged and never released, so there is no download for any of
+them and there never was. Their changes reached people for the first time inside **1.6.0**, which
+is the release that carries them. The published releases are **1.3.3**, **1.4.0** and **1.6.0**,
+and `git tag` is the authority on that. Entries are kept per version rather than merged, because
+the version a change was made under is how the rest of this file and the working notes refer to it.
+
 ## [1.6.0] (2026-09-03)
 
 ### Added
