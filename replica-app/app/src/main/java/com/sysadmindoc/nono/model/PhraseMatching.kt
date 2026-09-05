@@ -296,14 +296,38 @@ private class MatchBudgetSpent : RuntimeException(null, null, false, false)
 class PhraseMatchBudget(millis: Long = MATCH_BUDGET_MILLIS) {
     private val atNanos = System.nanoTime() + millis * 1_000_000L
 
+    /**
+     * Reads still owed before the clock is read again.
+     *
+     * This lives on the budget rather than on [BudgetedText] because `subSequence` derives a new
+     * text against the same budget. A counter held per text hands every derived instance a fresh
+     * full-length grace period, so reads spread thinly across many short subsequences could add up
+     * without limit and never reach a check. Today's path never derives one — `containsMatchIn`
+     * calls `find` and never extracts a group, and only group extraction takes a subsequence — so
+     * this closes a hazard rather than a live leak, and it costs one shared field.
+     */
+    private var countdown = CHECK_INTERVAL
+
     internal var spent: Boolean = false
         private set
+
+    /** One read of the searched text. Consults the clock every [CHECK_INTERVAL] reads. */
+    internal fun sample() {
+        if (--countdown > 0) return
+        countdown = CHECK_INTERVAL
+        check()
+    }
 
     internal fun check() {
         if (System.nanoTime() >= atNanos) {
             spent = true
             throw MatchBudgetSpent()
         }
+    }
+
+    private companion object {
+        /** Reads between clock checks, so ordinary matching does not pay for `nanoTime`. */
+        const val CHECK_INTERVAL = 4096
     }
 }
 
@@ -312,22 +336,19 @@ class PhraseMatchBudget(millis: Long = MATCH_BUDGET_MILLIS) {
  *
  * `java.util.regex` offers no step limit and no way to interrupt a running match, but it reads its
  * input one character at a time, so a `CharSequence` that refuses to keep answering is the one
- * place a runaway pattern can be stopped. The clock is read every [CHECK_INTERVAL] characters so
- * that ordinary matching does not pay for it.
+ * place a runaway pattern can be stopped. Every read is reported to [PhraseMatchBudget.sample],
+ * which reads the clock periodically rather than on each character so that ordinary matching does
+ * not pay for it. The count belongs to the budget, so a subsequence taken from this text cannot
+ * start its own grace period.
  */
-private class BudgetedText(
+internal class BudgetedText(
     private val value: CharSequence,
     private val budget: PhraseMatchBudget,
 ) : CharSequence {
-    private var countdown = CHECK_INTERVAL
-
     override val length: Int get() = value.length
 
     override fun get(index: Int): Char {
-        if (--countdown <= 0) {
-            countdown = CHECK_INTERVAL
-            budget.check()
-        }
+        budget.sample()
         return value[index]
     }
 
@@ -335,10 +356,6 @@ private class BudgetedText(
         BudgetedText(value.subSequence(startIndex, endIndex), budget)
 
     override fun toString(): String = value.toString()
-
-    private companion object {
-        const val CHECK_INTERVAL = 4096
-    }
 }
 
 private class ContainsMatcher(phrase: String, private val caseSensitive: Boolean) : PhraseMatcher {

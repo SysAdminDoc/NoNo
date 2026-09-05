@@ -403,4 +403,43 @@ class PhraseMatchingTest {
         assertFalse(result.matched)
         assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
     }
+
+    @Test
+    fun `reads spread across derived subsequences still reach the budget check`() {
+        // The sampling counter reads the clock once every few thousand characters. Held per text,
+        // every subsequence would start its own grace period, so reads spread thinly across many
+        // short subsequences could add up without limit and never consult the deadline. Held on
+        // the budget, the reads accumulate however the text was sliced.
+        //
+        // This is the positive control for that: with a per-text counter no slice below gets
+        // anywhere near the interval on its own, so nothing is ever checked and the budget is
+        // never spent. Deliberately expired, so any check at all must stop it.
+        val budget = PhraseMatchBudget(millis = 0L)
+        val text: CharSequence = BudgetedText("x".repeat(SLICE), budget)
+
+        var reads = 0
+        val stopped = try {
+            repeat(SLICES) {
+                val slice = text.subSequence(0, SLICE)
+                for (i in 0 until SLICE) {
+                    slice[i]
+                    reads++
+                }
+            }
+            false
+        } catch (_: RuntimeException) {
+            true
+        }
+
+        assertTrue("the budget was never consulted across $reads reads", stopped)
+        assertTrue(budget.spent)
+    }
+
+    private companion object {
+        /** Short enough that no single subsequence approaches the sampling interval on its own. */
+        const val SLICE = 64
+
+        /** Enough slices that the reads together pass the interval several times over. */
+        const val SLICES = 400
+    }
 }
