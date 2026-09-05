@@ -2,8 +2,10 @@ package com.sysadmindoc.nono.model
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.FutureTask
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlinx.serialization.Serializable
@@ -318,9 +320,22 @@ class PhraseMatchBudget(
     internal fun remainingMillis(): Long =
         ((atNanos - System.nanoTime()) / 1_000_000L).coerceAtLeast(0L)
 
+    /**
+     * Records that a match was walked away from because the wall clock ran out.
+     *
+     * Distinct from the budget merely being spent, and the difference decides what the *next*
+     * match on this budget is allowed to cost. A budget spent by [check] was spent by an engine
+     * that was reading the text and reporting in, so the next phrase may still be worth a moment.
+     * A budget that timed out was not: nothing inside that match was answering, and every further
+     * phrase would buy the same wait again.
+     */
+    internal var timedOut: Boolean = false
+        private set
+
     /** Records that a match was given up on without the clock having been read from inside it. */
     internal fun abandon() {
         spent = true
+        timedOut = true
     }
 
     /**
@@ -396,15 +411,32 @@ private class ContainsMatcher(phrase: String, private val caseSensitive: Boolean
 }
 
 /**
+ * How many abandoned matches may be spinning at once before the app stops starting more.
+ *
+ * An abandoned thread is still running a pattern nothing can interrupt, so on a platform where the
+ * wall clock is the only thing stopping anything, one is created per notification and never comes
+ * back. Unbounded, that is a thread and a core per notification for as long as the patterns run.
+ * Bounded, the work is refused instead, which reads as the same outcome the timeout produces: the
+ * pattern was not established, so the rule does not fire.
+ */
+private const val MAX_MATCH_THREADS = 4
+
+/**
  * Where pattern matches run so that one can be walked away from.
  *
  * Daemon threads: an abandoned thread is still running a pattern nothing can interrupt, and it must
- * never hold the process open. Cached rather than fixed, because on an engine that reads its input
- * through `CharSequence` the work returns in microseconds and the thread goes straight back to the
- * pool. The pool only grows when a thread is genuinely stuck, which is the case this exists for,
- * and one stuck thread is a core spinning where the alternative is the listener not responding.
+ * never hold the process open. A `SynchronousQueue` with no core threads makes this behave like a
+ * cached pool for the normal case — on an engine that reads its input through `CharSequence` the
+ * work returns in microseconds and the thread goes straight back — while the maximum stops a
+ * pathological platform turning every notification into another permanently spinning core.
  */
-private val matchExecutor: ExecutorService = Executors.newCachedThreadPool { runnable ->
+private val matchExecutor: ExecutorService = ThreadPoolExecutor(
+    0,
+    MAX_MATCH_THREADS,
+    60L,
+    TimeUnit.SECONDS,
+    SynchronousQueue(),
+) { runnable ->
     Thread(runnable, "nono-phrase-match").apply { isDaemon = true }
 }
 
@@ -420,11 +452,19 @@ private class RegexMatcher(private val regex: Regex, private val budget: PhraseM
     // callback whatever the engine does. BudgetedText stays as the fast path: where it works, the
     // match returns long before the join times out and no thread is left behind.
     override fun matches(value: String): Boolean? {
-        // Floored at the same minimum a rule is guaranteed anywhere else. An exhausted budget must
-        // not mean "refuse to look": the counting guard only consults the clock every few thousand
-        // characters, so a phrase that matches in the first few always finished even after an
-        // earlier phrase had spent the budget, and a rule that used to match must keep matching.
-        // Five milliseconds is microseconds of headroom for any pattern that was going to finish.
+        // Once one match on this budget has timed out, every later one gives up without waiting.
+        // Without this the floor below is charged per phrase and per field rather than per rule,
+        // and on the platform this whole mechanism exists for - where nothing inside a match ever
+        // reports in - a notification carrying many regex phrases across several fields would wait
+        // the floor for each of them and add up to seconds on the listener's thread. One timeout
+        // is enough evidence that the rest will cost the same and answer nothing.
+        if (budget.timedOut) return null
+
+        // Floored at the same minimum a rule is guaranteed anywhere else. A budget merely spent
+        // must not mean "refuse to look": the counting guard only consults the clock every few
+        // thousand characters, so a phrase that matches in the first few always finished even
+        // after an earlier phrase had spent the budget, and a rule that used to match must keep
+        // matching. Five milliseconds is microseconds of headroom for a pattern that would finish.
         val joinMillis = budget.remainingMillis().coerceAtLeast(MIN_MATCH_BUDGET_MILLIS)
         val task = FutureTask {
             try {
@@ -440,7 +480,15 @@ private class RegexMatcher(private val regex: Regex, private val budget: PhraseM
                 null
             }
         }
-        matchExecutor.execute(task)
+        try {
+            matchExecutor.execute(task)
+        } catch (_: RejectedExecutionException) {
+            // Every match thread is already stuck on a pattern that will not finish. Starting
+            // another would add a spinning core and answer nothing, so this reports what is true:
+            // the pattern was not established.
+            budget.abandon()
+            return null
+        }
         return try {
             task.get(joinMillis, TimeUnit.MILLISECONDS)
         } catch (_: TimeoutException) {

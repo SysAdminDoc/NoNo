@@ -463,6 +463,37 @@ class PhraseMatchingTest {
     }
 
     @Test(timeout = 30_000)
+    fun `many runaway phrases across many fields still cost one budget between them`() {
+        // The wall-clock bound is charged per matcher call, and a condition is matched once per
+        // phrase per selected field. Twenty phrases over four fields is eighty calls; if each one
+        // were allowed its own minimum wait after the budget was already gone, this would run for
+        // most of a second on the listener's thread - which is the ANR the bound exists to stop,
+        // arrived at the long way round. One timeout has to be enough for the whole condition.
+        // Four hundred characters rather than a thousand, and a small budget: the pattern still
+        // takes far longer than the budget, but a thread walked away from here finishes in a
+        // fraction of a second instead of spinning a core for the rest of the suite.
+        val runaway = Array(PHRASES) { "(x+x+)+y" }
+        val budget = PhraseMatchBudget(millis = SHORT_BOUND_MILLIS, samplesReads = false)
+        val condition = condition(*runaway, mode = MatchMode.REGEX, fields = MatchField.ALL)
+        val text = "x".repeat(400)
+        val fields = MatchableFields(title = text, text = text, bigText = text, conversation = text)
+
+        val startedAt = System.nanoTime()
+        val result = evaluatePhrase(condition, fields, budget)
+        val elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000L
+
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
+        assertFalse(result.matched)
+        // Charged per call, this would be the budget plus 79 more minimum waits. Charged once for
+        // the condition, it is the budget and little else.
+        assertTrue(
+            "${PHRASES * MatchField.entries.size} abandoned matches took ${elapsedMillis}ms " +
+                "against a ${SHORT_BOUND_MILLIS}ms budget",
+            elapsedMillis <= SHORT_BOUND_MILLIS * 2,
+        )
+    }
+
+    @Test(timeout = 30_000)
     fun `a phrase that is never established does not satisfy a none-of-these rule`() {
         // The dangerous reading of an abandoned pattern: "we did not find it" is not "it is not
         // there". A NONE rule that treats an unfinished match as absence fires on notifications
@@ -493,5 +524,14 @@ class PhraseMatchingTest {
          * and far below the seconds the pattern would otherwise take.
          */
         const val BOUND_MILLIS = 200L
+
+        /** Phrases in the many-phrase bound test; times four fields is the number of matcher calls. */
+        const val PHRASES = 20
+
+        /**
+         * Small enough that eighty minimum waits would dwarf it, large enough that thread hand-off
+         * on a loaded machine cannot reach twice it on its own.
+         */
+        const val SHORT_BOUND_MILLIS = 40L
     }
 }
