@@ -2,7 +2,14 @@
 
 This is the canonical count. The behavioral and visual reports cover one dimension each and are
 summarised here; where a number appears in more than one place, this file is the one to trust.
-Test totals are as of the run on 2026-08-31.
+
+Every number below names the run it came from. The unit total is from a forced full run on
+**2026-09-05** (`scripts/run-unit-tests.ps1`, which re-runs the suite rather than accepting an
+up-to-date task, and refuses to record evidence for a suite that did not execute); its machine-readable
+form is `validation/reports/unit-test-results.json`. The instrumentation total is from **2026-08-31**
+and has not been re-measured since; the suite has grown since that run, so the source count and the
+last measured count are given separately rather than merged. The visual figures are from the
+2026-08-31 capture sweep.
 
 ## Outcome
 
@@ -26,8 +33,9 @@ This is a functional clean-room reconstruction with material visual and integrat
 | Fully behaviorally validated flows | 7 | PASS |
 | Partially validated flows | 4 | PARTIAL |
 | Not implemented flows | 0 | - |
-| Unit tests | 265 | PASS |
-| Instrumentation tests | 51 | PASS |
+| Unit tests (run 2026-09-05) | 469 | PASS, 0 failures |
+| Instrumentation tests (last run 2026-08-31) | 70 | PASS, 0 failures |
+| Instrumentation tests present in source | 109 | Not re-measured since 2026-08-31 |
 
 ## Visual results
 
@@ -57,7 +65,7 @@ The misses are concentrated in onboarding and Explore/suggestion content where t
 - Kotlin/Compose debug build: PASS
 - Android lint: PASS
 - Unit tests: PASS
-- On-device instrumentation: PASS
+- On-device instrumentation: PASS as of 2026-08-31; not re-run since
 - Streamed APK installation: PASS
 - Cold launch: PASS
 - Full 76-state capture: PASS
@@ -70,7 +78,7 @@ The misses are concentrated in onboarding and Explore/suggestion content where t
 - Independent name, icon, code-native artwork, article summaries, and system font differ from the original.
 - The prompt's preferred 0.985 visual target was not achieved.
 - Real notification-changing integrations are simulated locally.
-- Rule serialization and launcher-shortcut pinning are implemented. Automatic scheduled backup is not: nothing in this build runs on a timer.
+- Rule serialization and launcher-shortcut pinning are implemented. Scheduled backup is implemented as of 1.5.0 and runs on a timer through WorkManager: a copy of the saved rules is written to a user-picked folder daily or weekly without the app open. It encrypts with a key held in the device keystore, because a job on a timer has nobody to ask for a passphrase, so those files restore only on the device that wrote them; the passphrase-protected export remains the way to move rules between devices. Notification history is never included.
 - Destructive, financial, privacy-sensitive, external-content, and permission-denial branches remain safely untested or disabled.
 - Exact animation timing and full TalkBack traversal were not exhaustively measured.
 

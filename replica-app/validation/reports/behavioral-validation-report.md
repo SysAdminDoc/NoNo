@@ -5,10 +5,16 @@ Device: `emulator-5566` (`irlstreamer_drain_api35`, Android 15/API 35, 1080 × 2
 
 ## Automated results
 
-- Unit tests: **PASS**, 265 tests, 0 failures.
-- Android lint: **PASS**.
-- Instrumentation: **PASS**, 51 tests, 0 failures on the validation emulator.
-- Build/install/launch: **PASS** for `com.sysadmindoc.nono.debug`.
+The flow coverage below was observed on 2026-08-29 on the device named above. The automated totals
+are stated with the date each was measured, because they have moved since.
+
+- Unit tests: **PASS**, 469 tests, 0 failures, measured 2026-09-05.
+- Android lint: **PASS**, 2026-09-05.
+- Instrumentation: **PASS**, 70 tests, 0 failures, measured 2026-08-31 on an API 35 emulator. The
+  suite now holds 109 test methods in source and has not been re-run since that date.
+- Build/install/launch: **PASS** for `com.sysadmindoc.nono.debug`, 2026-08-29.
+
+`validation/reports/final-coverage-report.md` is the canonical count where these disagree.
 
 ## Flow coverage
 
@@ -24,7 +30,7 @@ Device: `emulator-5566` (`irlstreamer_drain_api35`, Android 15/API 35, 1080 × 2
 | F08 Explore articles and scroll | PARTIAL | Native list/scroll/handoff works; external article contents and original editorial assets are excluded. |
 | F09 Explore suggestion preview | PASS | Deterministic suggestion opens a populated rule builder. |
 | F10 Settings and dialogs | PARTIAL | All observed sections/dialogs and preference persistence work; destructive and integration effects remain safe simulations. |
-| F11 Rule import/export | PASS | Encrypted and plaintext files round-trip through the picker with a passphrase, a preview, a conflict choice, and bounded reads. History export writes every retained record. There is no backup scheduler; that is a stated absence, not an untested one. |
+| F11 Rule import/export | PASS | Encrypted and plaintext files round-trip through the picker with a passphrase, a preview, a conflict choice, and bounded reads. History export writes every retained record. The scheduled rule backup added in 1.5.0 is covered by `RuleBackupWorker` tests rather than by this sweep, which predates it. |
 
 Totals: 7 fully validated, 4 partially validated, 0 not implemented.
 
