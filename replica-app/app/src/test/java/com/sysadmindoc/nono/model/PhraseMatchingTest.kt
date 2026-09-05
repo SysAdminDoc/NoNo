@@ -435,11 +435,63 @@ class PhraseMatchingTest {
         assertTrue(budget.spent)
     }
 
+    @Test(timeout = 30_000)
+    fun `a runaway pattern is bounded even where reads of the text are never counted`() {
+        // The character-counting guard works only because java.util.regex reads its input through
+        // CharSequence. Where it does not - Android's was historically ICU-backed, and
+        // Matcher.reset stored input.toString() - nothing inside the match ever consults the
+        // deadline. This budget stands in for that platform: sampling is off, so the only thing
+        // that can stop the pattern is the wall clock outside it.
+        //
+        // A thousand characters, because (x+x+)+y takes about 2.5 seconds over that on this JDK:
+        // long enough to be abandoned many times over, short enough that the thread this walks
+        // away from finishes shortly after rather than spinning for the rest of the suite.
+        val budget = PhraseMatchBudget(millis = BOUND_MILLIS, samplesReads = false)
+        val condition = condition("(x+x+)+y", mode = MatchMode.REGEX)
+        val fields = MatchableFields(text = "x".repeat(1_000))
+
+        val startedAt = System.nanoTime()
+        val result = evaluatePhrase(condition, fields, budget)
+        val elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000L
+
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
+        assertFalse(result.matched)
+        assertTrue(
+            "took ${elapsedMillis}ms, which is more than twice the ${BOUND_MILLIS}ms budget",
+            elapsedMillis <= BOUND_MILLIS * 2,
+        )
+    }
+
+    @Test(timeout = 30_000)
+    fun `a phrase that is never established does not satisfy a none-of-these rule`() {
+        // The dangerous reading of an abandoned pattern: "we did not find it" is not "it is not
+        // there". A NONE rule that treats an unfinished match as absence fires on notifications
+        // nobody asked it to fire on.
+        val budget = PhraseMatchBudget(millis = BOUND_MILLIS, samplesReads = false)
+        val condition = condition(
+            "(x+x+)+y",
+            quantifier = PhraseQuantifier.NONE,
+            mode = MatchMode.REGEX,
+        )
+        val fields = MatchableFields(text = "x".repeat(1_000))
+
+        val result = evaluatePhrase(condition, fields, budget)
+
+        assertFalse(result.matched)
+        assertEquals(PhraseMatchFailure.PATTERN_ABANDONED, result.failure)
+    }
+
     private companion object {
         /** Short enough that no single subsequence approaches the sampling interval on its own. */
         const val SLICE = 64
 
         /** Enough slices that the reads together pass the interval several times over. */
         const val SLICES = 400
+
+        /**
+         * Generous enough that thread hand-off noise on a loaded machine cannot reach twice it,
+         * and far below the seconds the pattern would otherwise take.
+         */
+        const val BOUND_MILLIS = 200L
     }
 }

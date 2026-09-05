@@ -1,5 +1,11 @@
 package com.sysadmindoc.nono.model
 
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlinx.serialization.Serializable
 
 /** How a phrase is compared against a field. */
@@ -293,8 +299,29 @@ private class MatchBudgetSpent : RuntimeException(null, null, false, false)
  * seconds on the listener's thread, which is an ANR rather than a bounded cost. Spending it stops
  * the remaining patterns instead, and a rule whose pattern was stopped does not fire.
  */
-class PhraseMatchBudget(millis: Long = MATCH_BUDGET_MILLIS) {
+class PhraseMatchBudget(
+    millis: Long = MATCH_BUDGET_MILLIS,
+    /**
+     * Whether reads of the searched text are counted at all.
+     *
+     * True everywhere in the app. It is false only to stand in for a platform whose
+     * `java.util.regex` does not read its input through `CharSequence` — historically Android's was
+     * ICU-backed and `Matcher.reset` stored `input.toString()`, in which case [sample] is never
+     * reached and the deadline is never consulted. That is a real platform condition rather than a
+     * test fiction, and it is the case the wall-clock bound in [RegexMatcher] exists to survive.
+     */
+    private val samplesReads: Boolean = true,
+) {
     private val atNanos = System.nanoTime() + millis * 1_000_000L
+
+    /** Milliseconds left, floored at zero. Used as the join timeout for a running match. */
+    internal fun remainingMillis(): Long =
+        ((atNanos - System.nanoTime()) / 1_000_000L).coerceAtLeast(0L)
+
+    /** Records that a match was given up on without the clock having been read from inside it. */
+    internal fun abandon() {
+        spent = true
+    }
 
     /**
      * Reads still owed before the clock is read again.
@@ -313,6 +340,7 @@ class PhraseMatchBudget(millis: Long = MATCH_BUDGET_MILLIS) {
 
     /** One read of the searched text. Consults the clock every [CHECK_INTERVAL] reads. */
     internal fun sample() {
+        if (!samplesReads) return
         if (--countdown > 0) return
         countdown = CHECK_INTERVAL
         check()
@@ -367,21 +395,66 @@ private class ContainsMatcher(phrase: String, private val caseSensitive: Boolean
     override fun matches(value: String): Boolean = value.contains(needle, ignoreCase = !caseSensitive)
 }
 
+/**
+ * Where pattern matches run so that one can be walked away from.
+ *
+ * Daemon threads: an abandoned thread is still running a pattern nothing can interrupt, and it must
+ * never hold the process open. Cached rather than fixed, because on an engine that reads its input
+ * through `CharSequence` the work returns in microseconds and the thread goes straight back to the
+ * pool. The pool only grows when a thread is genuinely stuck, which is the case this exists for,
+ * and one stuck thread is a core spinning where the alternative is the listener not responding.
+ */
+private val matchExecutor: ExecutorService = Executors.newCachedThreadPool { runnable ->
+    Thread(runnable, "nono-phrase-match").apply { isDaemon = true }
+}
+
 private class RegexMatcher(private val regex: Regex, private val budget: PhraseMatchBudget) : PhraseMatcher {
     // The pattern is never edited, only the text it is applied to. A pattern is a program:
     // rewriting it here would change what the user wrote, and \\p{Cf} is something they can ask
     // for themselves.
-    override fun matches(value: String): Boolean? = try {
-        regex.containsMatchIn(BudgetedText(value, budget))
-    } catch (_: MatchBudgetSpent) {
-        null
-    } catch (_: StackOverflowError) {
-        // `java.util.regex` recurses once per repetition of an alternation, so (a|b)*c blows the
-        // stack somewhere around two thousand characters — well inside the cap, and well inside
-        // what an app can send. Catching an Error is otherwise indefensible; here the alternative
-        // is a pattern the user typed killing the notification listener, and the stack has
-        // already unwound by the time this runs.
-        null
+    //
+    // Run on a thread this can stop waiting for, rather than inline. BudgetedText stops a runaway
+    // pattern only because java.util.regex reads its input one character at a time; an engine that
+    // copies the input to a String first never consults the deadline, and the match then runs to
+    // completion on whichever thread called it. Off the caller's thread, the wall clock bounds the
+    // callback whatever the engine does. BudgetedText stays as the fast path: where it works, the
+    // match returns long before the join times out and no thread is left behind.
+    override fun matches(value: String): Boolean? {
+        // Floored at the same minimum a rule is guaranteed anywhere else. An exhausted budget must
+        // not mean "refuse to look": the counting guard only consults the clock every few thousand
+        // characters, so a phrase that matches in the first few always finished even after an
+        // earlier phrase had spent the budget, and a rule that used to match must keep matching.
+        // Five milliseconds is microseconds of headroom for any pattern that was going to finish.
+        val joinMillis = budget.remainingMillis().coerceAtLeast(MIN_MATCH_BUDGET_MILLIS)
+        val task = FutureTask {
+            try {
+                regex.containsMatchIn(BudgetedText(value, budget))
+            } catch (_: MatchBudgetSpent) {
+                null
+            } catch (_: StackOverflowError) {
+                // `java.util.regex` recurses once per repetition of an alternation, so (a|b)*c
+                // blows the stack somewhere around two thousand characters — well inside the cap,
+                // and well inside what an app can send. Catching an Error is otherwise
+                // indefensible; here the alternative is a pattern the user typed killing the
+                // notification listener, and the stack has already unwound by the time this runs.
+                null
+            }
+        }
+        matchExecutor.execute(task)
+        return try {
+            task.get(joinMillis, TimeUnit.MILLISECONDS)
+        } catch (_: TimeoutException) {
+            // Deliberately not cancelled: interruption does not stop java.util.regex, so the flag
+            // would only lie about it having stopped. The thread is left to finish on its own and
+            // its answer is discarded.
+            budget.abandon()
+            null
+        } catch (_: ExecutionException) {
+            null
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            null
+        }
     }
 }
 
