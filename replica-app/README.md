@@ -108,11 +108,11 @@ That produces `app\build\outputs\apk\debug\app-debug.apk`, which is for developm
 
 ## Release builds
 
-The APK in `dist\` is the signed, non-debuggable release, and `dist\SHA256SUMS.txt` records its
+The APK in `dist/` is the signed, non-debuggable release, and `dist/SHA256SUMS.txt` records its
 hash. The APK is not tracked in git; the checksum file is, so a downloaded artifact can be
 checked against it.
 
-Signing credentials live in `replica-app\keystore.properties`, which is gitignored and never
+Signing credentials live in `replica-app/keystore.properties`, which is gitignored and never
 committed. It names four values:
 
 ```properties
@@ -283,9 +283,9 @@ participating. `adb install` keeps working, as does building this project and ru
 install unverified apps directly. That flow exists precisely because direct installation is not
 the thing being switched off.
 
-This project has not chosen a distribution channel. `..\Roadmap_Blocked.md` records that decision
-as open, and nothing here should be read as a plan to publish through a particular store or to
-avoid one. Whether verification applies depends entirely on that choice.
+This project has not chosen a distribution channel. That decision is recorded as open in the
+maintainer's working notes, which are not tracked in this repository, and nothing here should be
+read as a plan to publish through a particular store or to avoid one. Whether verification applies depends entirely on that choice.
 
 **Before any release, recheck this.** The dates and the country list above are a snapshot taken on
 2026-08-31 and they will move. Read the official developer-verification page again, write the date
@@ -402,8 +402,8 @@ question it is not. Group summaries are excluded from all three, as they are fro
 in the app.
 
 Settings that would depend on the absent action engine are shown disabled with the reason
-inline. See `docs\known-deviations.md` for the full list and `..\ROADMAP.md` for what is
-planned.
+inline. See [`docs/known-deviations.md`](docs/known-deviations.md) for the full list. Planned work
+is tracked in the maintainer's working notes, which are not part of this repository.
 
 ## Documentation
 

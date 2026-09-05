@@ -33,13 +33,13 @@ To compare it:
 
 ## Artifacts
 
-- Baselines: `validation\baseline`
-- Replica captures: `validation\current`
-- Metrics, side-by-side images, raw diffs, and heatmaps: `validation\diffs`
-- 50% overlays: `validation\overlays`
-- Mask definitions and reasons: `validation\masks`
-- Stable reports: `validation\reports`
-- Timestamped runner logs: `validation\logs`
+- Baselines: `validation/baseline`
+- Replica captures: `validation/current`
+- Metrics, side-by-side images, raw diffs, and heatmaps: `validation/diffs`
+- 50% overlays: `validation/overlays`
+- Mask definitions and reasons: `validation/masks`
+- Stable reports: `validation/reports`
+- Timestamped runner logs: `validation/logs`
 - Gradle test/lint HTML: `app\build\reports`
 
 ## Safe reset
